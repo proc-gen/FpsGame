@@ -23,7 +23,7 @@ namespace FpsGame
         protected override void Initialize()
         {
             screenManager = new ScreenManager(this);
-            screenManager.AddScreen(ScreenNames.MainMenu, new MainMenu());
+            screenManager.AddScreen(ScreenNames.MainMenu, new MainMenu(this));
             screenManager.SetActiveScreen(ScreenNames.MainMenu);
             base.Initialize();
         }

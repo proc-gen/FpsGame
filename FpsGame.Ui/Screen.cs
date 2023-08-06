@@ -9,6 +9,12 @@ namespace FpsGame.Ui
     {
         private bool disposedValue;
         protected Widget RootWidget;
+        protected Game Game;
+
+        public Screen(Game game)
+        {
+            Game = game;
+        }
 
         public void SetActive(Desktop desktop)
         {
