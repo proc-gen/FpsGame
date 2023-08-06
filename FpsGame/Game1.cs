@@ -1,4 +1,5 @@
-﻿using FpsGame.Screens;
+﻿using FpsGame.Common.Constants;
+using FpsGame.Screens;
 using FpsGame.Ui;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -22,8 +23,8 @@ namespace FpsGame
         protected override void Initialize()
         {
             screenManager = new ScreenManager(this);
-            screenManager.AddScreen("main-menu", new MainMenu());
-            screenManager.SetActiveScreen("main-menu");
+            screenManager.AddScreen(ScreenNames.MainMenu, new MainMenu());
+            screenManager.SetActiveScreen(ScreenNames.MainMenu);
             base.Initialize();
         }
 
