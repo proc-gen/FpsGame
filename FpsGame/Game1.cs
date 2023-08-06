@@ -1,4 +1,5 @@
-﻿using FpsGame.Ui;
+﻿using FpsGame.Screens;
+using FpsGame.Ui;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -16,18 +17,19 @@ namespace FpsGame
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
-            screenManager = new ScreenManager(this);
         }
 
         protected override void Initialize()
         {
+            screenManager = new ScreenManager(this);
+            screenManager.AddScreen("main-menu", new MainMenu());
+            screenManager.SetActiveScreen("main-menu");
             base.Initialize();
         }
 
         protected override void LoadContent()
         {
             spriteBatch = new SpriteBatch(GraphicsDevice);
-
         }
 
         protected override void Update(GameTime gameTime)
@@ -42,7 +44,7 @@ namespace FpsGame
 
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
+            GraphicsDevice.Clear(Color.Black);
 
             screenManager.Draw(gameTime);
 

@@ -16,12 +16,13 @@ namespace FpsGame.Ui
 
         private Dictionary<string, Screen> screens;
 
-        public string ActiveScreen { get; set; }
+        public string ActiveScreen { get; private set; }
 
         public ScreenManager(Game game)
         {
             MyraEnvironment.Game = game;
             screens = new Dictionary<string, Screen>();
+            desktop = new Desktop();
         }
 
         public void Update(GameTime gameTime)
@@ -38,6 +39,8 @@ namespace FpsGame.Ui
             {
                 screens[ActiveScreen].Draw(gameTime);
             }
+
+            desktop.Render();
         }
 
         public void AddScreen(string screenName, Screen screen)
@@ -55,6 +58,12 @@ namespace FpsGame.Ui
                 screens[screenName].Dispose();
                 screens.Remove(screenName);
             }
+        }
+
+        public void SetActiveScreen(string screenName)
+        {
+            ActiveScreen = screenName;
+            screens[screenName].SetActive(desktop);
         }
 
         protected virtual void Dispose(bool disposing)

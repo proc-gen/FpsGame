@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Myra.Graphics2D.UI;
 using System;
 
 namespace FpsGame.Ui
@@ -6,6 +7,8 @@ namespace FpsGame.Ui
     public abstract class Screen : IDisposable
     {
         private bool disposedValue;
+
+        public abstract void SetActive(Desktop desktop);
 
         public abstract void Update(GameTime gameTime);
 
