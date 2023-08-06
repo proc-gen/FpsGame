@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FpsGame.Common", "FpsGame.C
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FpsGame.Server", "FpsGame.Server\FpsGame.Server.csproj", "{6E86D923-AA4F-4AC7-9672-CAA28DB7E032}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FpsGame.Ui", "FpsGame.Ui\FpsGame.Ui.csproj", "{0FD9CF42-4FD6-4CD1-9B67-6523D511AA22}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{6E86D923-AA4F-4AC7-9672-CAA28DB7E032}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6E86D923-AA4F-4AC7-9672-CAA28DB7E032}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6E86D923-AA4F-4AC7-9672-CAA28DB7E032}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0FD9CF42-4FD6-4CD1-9B67-6523D511AA22}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0FD9CF42-4FD6-4CD1-9B67-6523D511AA22}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0FD9CF42-4FD6-4CD1-9B67-6523D511AA22}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0FD9CF42-4FD6-4CD1-9B67-6523D511AA22}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
