@@ -19,11 +19,7 @@ namespace FpsGame.Screens
             grid = new Grid();
             label = new Label("title", "Main Menu");
             grid.AddWidget(label);
-        }
-
-        public override void SetActive(Myra.Graphics2D.UI.Desktop desktop)
-        {
-            desktop.Root = grid.UiWidget;
+            RootWidget = grid.UiWidget;
         }
 
         public override void Update(GameTime gameTime)

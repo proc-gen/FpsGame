@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using FpsGame.Ui.Components;
+using Microsoft.Xna.Framework;
 using Myra.Graphics2D.UI;
 using System;
 
@@ -7,8 +8,12 @@ namespace FpsGame.Ui
     public abstract class Screen : IDisposable
     {
         private bool disposedValue;
+        protected Widget RootWidget;
 
-        public abstract void SetActive(Desktop desktop);
+        public void SetActive(Desktop desktop)
+        {
+            desktop.Root = RootWidget;
+        }
 
         public abstract void Update(GameTime gameTime);
 
