@@ -15,6 +15,7 @@ namespace FpsGame.Ui.Components
         private static Style baseStyle = new Style()
         {
             Margin = new Styles.Thickness(4),
+            Padding = new Styles.Thickness(4),
         };
 
         public string Text { get; set; }

@@ -11,18 +11,23 @@ namespace FpsGame.Screens
 {
     public class MainMenu : Screen
     {
-        Panel panel;
+        VerticalPanel panel;
         Label label;
-        Button button;
+        Button newGameButton;
+        Button exitButton;
 
         public MainMenu(Game game)
             : base(game)
         {
-            panel = new Panel("panel");
+            panel = new VerticalPanel("panel");
             label = new Label("title", "Main Menu");
-            button = new Button("exit", "Exit", ButtonClick);
+            newGameButton = new Button("new-game", "New Game", NewGameButtonClick);
+            exitButton = new Button("exit", "Exit", ExitButtonClick);
+            
             panel.AddWidget(label);
-            panel.AddWidget(button);
+            panel.AddWidget(newGameButton);
+            panel.AddWidget(exitButton);
+
             RootWidget = panel.UiWidget;
         }
 
@@ -36,7 +41,12 @@ namespace FpsGame.Screens
             // Nothing special
         }
 
-        protected void ButtonClick(object e, EventArgs eventArgs)
+        protected void NewGameButtonClick(object e, EventArgs eventArgs)
+        {
+            // Nothing for now
+        }
+
+        protected void ExitButtonClick(object e, EventArgs eventArgs)
         {
             Game.Exit();
         }
