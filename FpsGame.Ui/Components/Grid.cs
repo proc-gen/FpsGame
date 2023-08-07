@@ -10,10 +10,12 @@ namespace FpsGame.Ui.Components
 {
     public class Grid : Component<MyraGrid>
     {
-        public Grid() 
+        public Grid(string id)
+            : base(id)
         { 
             UiWidget = new MyraGrid()
             {
+                Id = id,
                 RowSpacing = 8,
                 ColumnSpacing = 8
             };

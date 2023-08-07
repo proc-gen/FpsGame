@@ -11,19 +11,19 @@ namespace FpsGame.Screens
 {
     public class MainMenu : Screen
     {
-        Grid grid;
+        Panel panel;
         Label label;
         Button button;
 
         public MainMenu(Game game)
             : base(game)
         {
-            grid = new Grid();
+            panel = new Panel("panel");
             label = new Label("title", "Main Menu");
             button = new Button("exit", "Exit", ButtonClick);
-            grid.AddWidget(label);
-            grid.AddWidget(button);
-            RootWidget = grid.UiWidget;
+            panel.AddWidget(label);
+            panel.AddWidget(button);
+            RootWidget = panel.UiWidget;
         }
 
         public override void Update(GameTime gameTime)
