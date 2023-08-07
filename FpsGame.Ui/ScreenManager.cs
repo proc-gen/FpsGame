@@ -12,7 +12,7 @@ namespace FpsGame.Ui
     public class ScreenManager : IDisposable
     {
         private bool disposedValue;
-        private Desktop desktop;
+        public Desktop Desktop;
 
         private Dictionary<string, Screen> screens;
 
@@ -22,7 +22,7 @@ namespace FpsGame.Ui
         {
             MyraEnvironment.Game = game;
             screens = new Dictionary<string, Screen>();
-            desktop = new Desktop();
+            Desktop = new Desktop();
         }
 
         public void Update(GameTime gameTime)
@@ -40,7 +40,7 @@ namespace FpsGame.Ui
                 screens[ActiveScreen].Draw(gameTime);
             }
 
-            desktop.Render();
+            Desktop.Render();
         }
 
         public void AddScreen(string screenName, Screen screen)
@@ -53,17 +53,22 @@ namespace FpsGame.Ui
 
         public void RemoveScreen(string screenName)
         {
-            if(screens.ContainsKey(screenName))
+            if(HasScreen(screenName))
             {
                 screens[screenName].Dispose();
                 screens.Remove(screenName);
             }
         }
 
+        public bool HasScreen(string screenName)
+        {
+            return screens.ContainsKey(screenName);
+        }
+
         public void SetActiveScreen(string screenName)
         {
             ActiveScreen = screenName;
-            screens[screenName].SetActive(desktop);
+            screens[screenName].SetActive();
         }
 
         protected virtual void Dispose(bool disposing)

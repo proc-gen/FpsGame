@@ -1,4 +1,5 @@
-﻿using FpsGame.Ui;
+﻿using FpsGame.Common.Constants;
+using FpsGame.Ui;
 using FpsGame.Ui.Components;
 using Microsoft.Xna.Framework;
 using System;
@@ -9,15 +10,15 @@ using System.Threading.Tasks;
 
 namespace FpsGame.Screens
 {
-    public class MainMenu : Screen
+    public class MainMenuScreen : Screen
     {
         VerticalPanel panel;
         Label label;
         Button newGameButton;
         Button exitButton;
 
-        public MainMenu(Game game)
-            : base(game)
+        public MainMenuScreen(Game game, ScreenManager screenManager)
+            : base(game, screenManager)
         {
             panel = new VerticalPanel("panel");
             label = new Label("title", "Main Menu");
@@ -31,9 +32,15 @@ namespace FpsGame.Screens
             RootWidget = panel.UiWidget;
         }
 
+        public override void SetActive()
+        {
+            ScreenManager.RemoveScreen(ScreenNames.Game);
+            base.SetActive();
+        }
+
         public override void Update(GameTime gameTime)
         {
-            // Nothing special
+            
         }
 
         public override void Draw(GameTime gameTime)
@@ -43,7 +50,8 @@ namespace FpsGame.Screens
 
         protected void NewGameButtonClick(object e, EventArgs eventArgs)
         {
-            // Nothing for now
+            ScreenManager.AddScreen(ScreenNames.Game, new GameScreen(Game, ScreenManager));
+            ScreenManager.SetActiveScreen(ScreenNames.Game);
         }
 
         protected void ExitButtonClick(object e, EventArgs eventArgs)

@@ -10,15 +10,17 @@ namespace FpsGame.Ui
         private bool disposedValue;
         protected Widget RootWidget;
         protected Game Game;
+        protected ScreenManager ScreenManager;
 
-        public Screen(Game game)
+        public Screen(Game game, ScreenManager screenManager)
         {
             Game = game;
+            ScreenManager = screenManager;
         }
 
-        public void SetActive(Desktop desktop)
+        public virtual void SetActive()
         {
-            desktop.Root = RootWidget;
+            ScreenManager.Desktop.Root = RootWidget;
         }
 
         public abstract void Update(GameTime gameTime);

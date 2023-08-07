@@ -23,7 +23,7 @@ namespace FpsGame
         protected override void Initialize()
         {
             screenManager = new ScreenManager(this);
-            screenManager.AddScreen(ScreenNames.MainMenu, new MainMenu(this));
+            screenManager.AddScreen(ScreenNames.MainMenu, new MainMenuScreen(this, screenManager));
             screenManager.SetActiveScreen(ScreenNames.MainMenu);
             base.Initialize();
         }
@@ -35,11 +35,7 @@ namespace FpsGame
 
         protected override void Update(GameTime gameTime)
         {
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
-                Exit();
-
             screenManager.Update(gameTime);
-
             base.Update(gameTime);
         }
 

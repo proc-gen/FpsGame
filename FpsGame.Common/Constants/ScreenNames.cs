@@ -9,5 +9,6 @@ namespace FpsGame.Common.Constants
     public static class ScreenNames
     {
         public const string MainMenu = "main-menu";
+        public const string Game = "game";
     }
 }
