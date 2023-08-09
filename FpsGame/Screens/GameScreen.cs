@@ -38,16 +38,18 @@ namespace FpsGame.Screens
 
         public override void Draw(GameTime gameTime)
         {
-            DrawModel(Vector3.Zero, Models["cube"]);
+            DrawModel(new Vector3(3, 0, 0), Models["cube"], gameTime);
+            DrawModel(new Vector3(-3, 0, 0), Models["cube"], gameTime);
         }
 
-        private void DrawModel(Vector3 position, Model model)
+        private void DrawModel(Vector3 position, Model model, GameTime gameTime)
         {
             foreach(var mesh in model.Meshes)
             {
                 foreach(BasicEffect effect in mesh.Effects)
                 {
-                    effect.World = world;
+                    effect.EnableDefaultLighting();
+                    effect.World = Matrix.CreateRotationX((float)gameTime.TotalGameTime.TotalMilliseconds / 500f) * Matrix.CreateRotationY((float)gameTime.TotalGameTime.TotalMilliseconds / 500f) * Matrix.CreateTranslation(position);
                     effect.View = view;
                     effect.Projection = projection;
                 }
