@@ -63,7 +63,7 @@ namespace FpsGame.Server
             {
                 if (disposing)
                 {
-                    Dispose();  
+                      
                 }
 
                 disposedValue = true;

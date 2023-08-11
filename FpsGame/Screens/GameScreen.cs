@@ -2,17 +2,22 @@
 using FpsGame.Common.Components;
 using FpsGame.Common.Constants;
 using FpsGame.Common.Ecs.Systems;
+using FpsGame.Server;
 using FpsGame.Systems;
 using FpsGame.Ui;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace FpsGame.Screens
 {
     public class GameScreen : Screen
     {
+        private bool disposedValue = false;
         private Matrix view = Matrix.CreateLookAt(new Vector3(0, 0, 10), new Vector3(0, 0, 0), Vector3.UnitY);
         private Matrix projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45), 800f / 480f, 0.1f, 100f);
 
@@ -21,6 +26,10 @@ namespace FpsGame.Screens
         Dictionary<QueryDescriptions, QueryDescription> queryDescriptions;
 
         Dictionary<string, Model> Models = new Dictionary<string, Model>();
+
+        Server.Server server;
+        Client client;
+        CancellationTokenSource token = new CancellationTokenSource();
 
         public GameScreen(Game game, ScreenManager screenManager)
             : base(game, screenManager)
@@ -44,6 +53,12 @@ namespace FpsGame.Screens
             {
                 new RenderModelSystem(world, queryDescriptions, Models),
             };
+
+            server = new Server.Server();
+            Task.Run(() => server.StartListening(token.Token));
+
+            client = new Client();
+            Task.Run(() => client.Join(token.Token));
         }
 
         public override void Update(GameTime gameTime)
@@ -61,6 +76,28 @@ namespace FpsGame.Screens
             {
                 system.Render(gameTime, view, projection);
             }   
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    server.Dispose();
+                    client.Dispose();
+                }
+
+                disposedValue = true;
+            }
+
+            base.Dispose(true);
+        }
+
+        public new void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }

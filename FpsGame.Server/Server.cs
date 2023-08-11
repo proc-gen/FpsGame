@@ -27,19 +27,24 @@ namespace FpsGame.Server
 
         public void StartListening(CancellationToken cancellationToken)
         {
-            AddNewClients(cancellationToken);
-            Task.Run(() => Run(cancellationToken));
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                Run(cancellationToken);
+            }
         }
 
         private async void AddNewClients(CancellationToken cancellationToken)
         {
-            while (!cancellationToken.IsCancellationRequested)
-            {
+            try { 
                 TcpClient tcpClient = await listener.AcceptTcpClientAsync(cancellationToken);
                 var client = new ServerSideClient(tcpClient);
                 client.BeginReceiving(cancellationToken);
                 client.Disconnected += ClientDisconnected;
                 newClients.Add(client);
+            }
+            catch (Exception ex)
+            {
+
             }
         }
 
@@ -47,7 +52,7 @@ namespace FpsGame.Server
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                // TODO: Do game loop things
+                AddNewClients(cancellationToken);
 
                 if(serverTick++ % (60 / SendRate) == 0)
                 {
