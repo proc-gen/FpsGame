@@ -37,7 +37,7 @@ namespace FpsGame.Ui
         {
             if (!string.IsNullOrEmpty(ActiveScreen))
             {
-                screens[ActiveScreen].Draw(gameTime);
+                screens[ActiveScreen].Render(gameTime);
             }
 
             Desktop.Render();

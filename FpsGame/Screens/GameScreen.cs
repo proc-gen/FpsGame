@@ -1,22 +1,24 @@
-﻿using FpsGame.Common.Constants;
+﻿using Arch.Core;
+using FpsGame.Common.Components;
+using FpsGame.Common.Constants;
+using FpsGame.Common.Ecs.Systems;
+using FpsGame.Systems;
 using FpsGame.Ui;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using Myra.Attributes;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FpsGame.Screens
 {
     public class GameScreen : Screen
     {
-        private Matrix world = Matrix.CreateTranslation(new Vector3(0, 0, 0));
         private Matrix view = Matrix.CreateLookAt(new Vector3(0, 0, 10), new Vector3(0, 0, 0), Vector3.UnitY);
         private Matrix projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45), 800f / 480f, 0.1f, 100f);
+
+        World world;
+        List<IRenderSystem> renderSystems;
+        Dictionary<QueryDescriptions, QueryDescription> queryDescriptions;
 
         Dictionary<string, Model> Models = new Dictionary<string, Model>();
 
@@ -24,6 +26,24 @@ namespace FpsGame.Screens
             : base(game, screenManager)
         {
             Models.Add("cube", game.Content.Load<Model>("cube"));
+
+            world = World.Create();
+
+            world.Create(new RenderModel() { Model = "cube" }, new Position() { X = 0, Y = 0, Z = 0 }, new Rotation(), new Scale(0.5f));
+            world.Create(new RenderModel() { Model = "cube" }, new Position() { X = 2, Y = 0, Z = 0 }, new Rotation(), new Scale(0.5f));
+            world.Create(new RenderModel() { Model = "cube" }, new Position() { X = -2, Y = 0, Z = 0 }, new Rotation(), new Scale(0.5f));
+            world.Create(new RenderModel() { Model = "cube" }, new Position() { X = 0, Y = 2, Z = 0 }, new Rotation(), new Scale(0.5f));
+            world.Create(new RenderModel() { Model = "cube" }, new Position() { X = 0, Y = -2, Z = 0 }, new Rotation(), new Scale(0.5f));
+
+            queryDescriptions = new Dictionary<QueryDescriptions, QueryDescription>()
+            {
+                { QueryDescriptions.RenderModel, new QueryDescription().WithAll<RenderModel, Position, Rotation, Scale>() },
+            };
+
+            renderSystems = new List<IRenderSystem>()
+            {
+                new RenderModelSystem(world, queryDescriptions, Models),
+            };
         }
 
         public override void Update(GameTime gameTime)
@@ -33,29 +53,14 @@ namespace FpsGame.Screens
             {
                 ScreenManager.SetActiveScreen(ScreenNames.MainMenu);
             }
-
         }
 
-        public override void Draw(GameTime gameTime)
+        public override void Render(GameTime gameTime)
         {
-            DrawModel(new Vector3(3, 0, 0), Models["cube"], gameTime);
-            DrawModel(new Vector3(-3, 0, 0), Models["cube"], gameTime);
-        }
-
-        private void DrawModel(Vector3 position, Model model, GameTime gameTime)
-        {
-            foreach(var mesh in model.Meshes)
+            foreach(var system in renderSystems)
             {
-                foreach(BasicEffect effect in mesh.Effects)
-                {
-                    effect.EnableDefaultLighting();
-                    effect.World = Matrix.CreateRotationX((float)gameTime.TotalGameTime.TotalMilliseconds / 500f) * Matrix.CreateRotationY((float)gameTime.TotalGameTime.TotalMilliseconds / 500f) * Matrix.CreateTranslation(position);
-                    effect.View = view;
-                    effect.Projection = projection;
-                }
-
-                mesh.Draw();
-            }
+                system.Render(gameTime, view, projection);
+            }   
         }
     }
 }

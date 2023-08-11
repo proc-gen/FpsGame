@@ -43,7 +43,7 @@ namespace FpsGame.Screens
             
         }
 
-        public override void Draw(GameTime gameTime)
+        public override void Render(GameTime gameTime)
         {
             // Nothing special
         }

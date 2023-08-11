@@ -25,7 +25,7 @@ namespace FpsGame.Ui
 
         public abstract void Update(GameTime gameTime);
 
-        public abstract void Draw(GameTime gameTime);
+        public abstract void Render(GameTime gameTime);
 
         protected virtual void Dispose(bool disposing)
         {
