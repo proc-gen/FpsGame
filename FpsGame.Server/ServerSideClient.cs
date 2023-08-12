@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
@@ -52,9 +53,28 @@ namespace FpsGame.Server
         private void Disconnect()
         {
             client?.Close();
-            networkStream?.Close();
-            networkStream?.Dispose();
             Disconnected?.Invoke(this, EventArgs.Empty);
+            networkStream?.Close();
+        }
+
+        public void Send(string data)
+        {
+            try
+            {
+                using (var ms = new MemoryStream())
+                {
+                    using (var bw = new BinaryWriter(ms))
+                    {
+                        bw.Write(data);
+                    }
+
+                    networkStream.Write(ms.ToArray());
+                }
+            }
+            catch(Exception ex)
+            {
+
+            }
         }
 
         protected virtual void Dispose(bool disposing)
@@ -63,7 +83,7 @@ namespace FpsGame.Server
             {
                 if (disposing)
                 {
-                      
+                    networkStream?.Dispose();
                 }
 
                 disposedValue = true;

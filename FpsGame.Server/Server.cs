@@ -1,4 +1,10 @@
-﻿using System;
+﻿using Arch.Core;
+using FpsGame.Common.Components;
+using FpsGame.Common.Constants;
+using FpsGame.Common.Serialization;
+using FpsGame.Common.Serialization.ComponentConverters;
+using FpsGame.Common.Serialization.Serializers;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -16,6 +22,12 @@ namespace FpsGame.Server
         private readonly List<ServerSideClient> newClients = new List<ServerSideClient>();
         private readonly TcpListener listener;
 
+        private readonly JsonNetSerializer serializer = new JsonNetSerializer();
+        private readonly Dictionary<Type, Converter> converters;
+
+        World world;
+        Dictionary<QueryDescriptions, QueryDescription> queryDescriptions;
+
         const int SendRate = 15;
         private int serverTick = 0;
 
@@ -23,6 +35,24 @@ namespace FpsGame.Server
         {
             listener = new TcpListener(IPAddress.Loopback, 1234);
             listener.Start();
+
+            world = World.Create();
+
+            world.Create(new RenderModel() { Model = "cube" }, new Position() { X = 0, Y = 0, Z = 0 }, new Rotation(), new Scale(0.5f));
+            world.Create(new RenderModel() { Model = "cube" }, new Position() { X = 2, Y = 0, Z = 0 }, new Rotation(), new Scale(0.5f));
+            world.Create(new RenderModel() { Model = "cube" }, new Position() { X = -2, Y = 0, Z = 0 }, new Rotation(), new Scale(0.5f));
+            world.Create(new RenderModel() { Model = "cube" }, new Position() { X = 0, Y = 2, Z = 0 }, new Rotation(), new Scale(0.5f));
+            world.Create(new RenderModel() { Model = "cube" }, new Position() { X = 0, Y = -2, Z = 0 }, new Rotation(), new Scale(0.5f));
+
+            queryDescriptions = new Dictionary<QueryDescriptions, QueryDescription>();
+
+            converters = new Dictionary<Type, Converter>()
+            {
+                {typeof(RenderModel), new RenderModelConverter()},
+                {typeof(Position), new PositionConverter()},
+                {typeof(Rotation), new RotationConverter()},
+                {typeof(Scale), new ScaleConverter()},
+            };
         }
 
         public void StartListening(CancellationToken cancellationToken)
@@ -73,18 +103,20 @@ namespace FpsGame.Server
         {
             if (clients.Any())
             {
-                foreach(var client in clients)
+                var data = serializer.Serialize(SerializableWorld.SerializeWorld(world, false));
+                foreach (var client in clients)
                 {
-                    // TODO: Send world data
+                    client.Send(data);
                 }
             }
 
             if (newClients.Any())
             {
+                var fullData = serializer.Serialize(SerializableWorld.SerializeWorld(world, true));
                 foreach(var client in newClients)
                 {
                     clients.Add(client);
-                    // TODO: Send full serialization data
+                    client.Send(fullData);
                 }
                 newClients.Clear();
             }
