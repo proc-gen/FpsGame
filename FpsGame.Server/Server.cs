@@ -1,9 +1,11 @@
 ﻿using Arch.Core;
 using FpsGame.Common.Components;
 using FpsGame.Common.Constants;
+using FpsGame.Common.Ecs.Systems;
 using FpsGame.Common.Serialization;
 using FpsGame.Common.Serialization.ComponentConverters;
 using FpsGame.Common.Serialization.Serializers;
+using FpsGame.Server.Systems;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,6 +29,7 @@ namespace FpsGame.Server
 
         World world;
         Dictionary<QueryDescriptions, QueryDescription> queryDescriptions;
+        List<IUpdateSystem> updateSystems = new List<IUpdateSystem>();
 
         const int SendRate = 15;
         private int serverTick = 0;
@@ -38,13 +41,16 @@ namespace FpsGame.Server
 
             world = World.Create();
 
-            world.Create(new RenderModel() { Model = "cube" }, new Position() { X = 0, Y = 0, Z = 0 }, new Rotation(), new Scale(0.5f));
+            world.Create(new RenderModel() { Model = "cube" }, new Position() { X = 0, Y = 0, Z = 0 }, new Rotation(), new Scale(0.5f), new ModelRotator() { XIncrement = 1/500f, YIncrement = 1/500f});
             world.Create(new RenderModel() { Model = "cube" }, new Position() { X = 2, Y = 0, Z = 0 }, new Rotation(), new Scale(0.5f));
             world.Create(new RenderModel() { Model = "cube" }, new Position() { X = -2, Y = 0, Z = 0 }, new Rotation(), new Scale(0.5f));
             world.Create(new RenderModel() { Model = "cube" }, new Position() { X = 0, Y = 2, Z = 0 }, new Rotation(), new Scale(0.5f));
             world.Create(new RenderModel() { Model = "cube" }, new Position() { X = 0, Y = -2, Z = 0 }, new Rotation(), new Scale(0.5f));
 
-            queryDescriptions = new Dictionary<QueryDescriptions, QueryDescription>();
+            queryDescriptions = new Dictionary<QueryDescriptions, QueryDescription>()
+            {
+                { QueryDescriptions.ModelRotator, new QueryDescription().WithAll<Rotation, ModelRotator>() },
+            };
 
             converters = new Dictionary<Type, Converter>()
             {
@@ -52,7 +58,10 @@ namespace FpsGame.Server
                 {typeof(Position), new PositionConverter()},
                 {typeof(Rotation), new RotationConverter()},
                 {typeof(Scale), new ScaleConverter()},
+                {typeof(ModelRotator), new ModelRotatorConverter()},
             };
+
+            updateSystems.Add(new ModelRotatorSystem(world, queryDescriptions));
         }
 
         public void StartListening(CancellationToken cancellationToken)
@@ -82,6 +91,11 @@ namespace FpsGame.Server
         {
             while (!cancellationToken.IsCancellationRequested)
             {
+                foreach (var system in updateSystems)
+                {
+                    system.Update();
+                }
+
                 AddNewClients(cancellationToken);
 
                 if(serverTick++ % (60 / SendRate) == 0)

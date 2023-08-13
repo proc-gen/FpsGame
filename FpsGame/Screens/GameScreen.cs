@@ -1,4 +1,5 @@
 ﻿using Arch.Core;
+using Arch.Core.Extensions;
 using FpsGame.Common.Components;
 using FpsGame.Common.Constants;
 using FpsGame.Common.Ecs;
@@ -63,6 +64,7 @@ namespace FpsGame.Screens
                 {typeof(Position), new PositionConverter()},
                 {typeof(Rotation), new RotationConverter()},
                 {typeof(Scale), new ScaleConverter()},
+                {typeof(ModelRotator), new ModelRotatorConverter()},
             };
 
             server = new Server.Server();
@@ -87,17 +89,24 @@ namespace FpsGame.Screens
 
                 foreach(var entity in serializableWorld.Entities.Where(a => a.Create))
                 {
-                    world.CreateFromArray(entity.GetDeserializedComponents(converters));
+                    Entity created = world.CreateFromArray(entity.GetDeserializedComponents(converters));
+                    entity.EntityReference = created.Reference();
+                    entity.DestinationId = created.Id;
+                    entity.DestinationVersionId = created.Version();
+                    entity.Create = false;
                 }
 
                 foreach(var entity in serializableWorld.Entities.Where(a => a.Update))
                 {
-
+                    world.SetFromArray(entity.EntityReference.Entity, entity.GetDeserializedComponents(converters));
+                    entity.Update = false;
                 }
 
                 foreach (var entity in serializableWorld.Entities.Where(a => a.Delete))
                 {
-
+                    world.Destroy(entity.EntityReference);
+                    entity.EntityReference = EntityReference.Null;
+                    entity.Delete = false;
                 }
             }
         }

@@ -1,4 +1,5 @@
-﻿using FpsGame.Common.Serialization.ComponentConverters;
+﻿using Arch.Core;
+using FpsGame.Common.Serialization.ComponentConverters;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +14,7 @@ namespace FpsGame.Common.Serialization
         public int SourceVersionId { get; set; }
         public int DestinationId { get; set; }
         public int DestinationVersionId { get; set; }
+        public EntityReference EntityReference { get; set; }
         public bool Update { get; set; }
         public bool Delete { get; set; }
         public bool Create { get; set; }

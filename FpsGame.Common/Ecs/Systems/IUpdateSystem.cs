@@ -9,6 +9,6 @@ namespace FpsGame.Common.Ecs.Systems
 {
     public interface IUpdateSystem
     {
-        void Update(GameTime gameTime, float totalElapsedTime, float scaleFactor);
+        void Update();
     }
 }
