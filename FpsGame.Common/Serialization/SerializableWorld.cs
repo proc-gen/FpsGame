@@ -11,15 +11,16 @@ namespace FpsGame.Common.Serialization
 {
     public class SerializableWorld
     {
-        public SerializableWorld() { }
+        public SerializableWorld() 
+        {
+            Entities = new List<SerializableEntity>();
+        }
 
         private readonly static QueryDescription allEntitiesQuery = new QueryDescription();
 
         public static SerializableWorld SerializeWorld(World world, bool full)
         {
             SerializableWorld serializableWorld = new SerializableWorld();
-
-            serializableWorld.Entities = new List<SerializableEntity>();
 
             world.Query(in allEntitiesQuery, (in Entity entity) =>
             {

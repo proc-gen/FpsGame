@@ -1,7 +1,11 @@
 ﻿using Arch.Core;
 using FpsGame.Common.Components;
 using FpsGame.Common.Constants;
+using FpsGame.Common.Ecs;
 using FpsGame.Common.Ecs.Systems;
+using FpsGame.Common.Serialization;
+using FpsGame.Common.Serialization.ComponentConverters;
+using FpsGame.Common.Serialization.Serializers;
 using FpsGame.Server;
 using FpsGame.Systems;
 using FpsGame.Ui;
@@ -10,6 +14,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -22,6 +27,7 @@ namespace FpsGame.Screens
         private Matrix projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45), 800f / 480f, 0.1f, 100f);
 
         World world;
+        SerializableWorld serializableWorld = new SerializableWorld();
         List<IRenderSystem> renderSystems;
         Dictionary<QueryDescriptions, QueryDescription> queryDescriptions;
 
@@ -30,6 +36,9 @@ namespace FpsGame.Screens
         Server.Server server;
         Client client;
         CancellationTokenSource token = new CancellationTokenSource();
+        Queue<string> ServerData = new Queue<string>();
+        private readonly JsonNetSerializer serializer = new JsonNetSerializer();
+        private readonly Dictionary<Type, Converter> converters;
 
         public GameScreen(Game game, ScreenManager screenManager)
             : base(game, screenManager)
@@ -37,12 +46,6 @@ namespace FpsGame.Screens
             Models.Add("cube", game.Content.Load<Model>("cube"));
 
             world = World.Create();
-
-            world.Create(new RenderModel() { Model = "cube" }, new Position() { X = 0, Y = 0, Z = 0 }, new Rotation(), new Scale(0.5f));
-            world.Create(new RenderModel() { Model = "cube" }, new Position() { X = 2, Y = 0, Z = 0 }, new Rotation(), new Scale(0.5f));
-            world.Create(new RenderModel() { Model = "cube" }, new Position() { X = -2, Y = 0, Z = 0 }, new Rotation(), new Scale(0.5f));
-            world.Create(new RenderModel() { Model = "cube" }, new Position() { X = 0, Y = 2, Z = 0 }, new Rotation(), new Scale(0.5f));
-            world.Create(new RenderModel() { Model = "cube" }, new Position() { X = 0, Y = -2, Z = 0 }, new Rotation(), new Scale(0.5f));
 
             queryDescriptions = new Dictionary<QueryDescriptions, QueryDescription>()
             {
@@ -54,10 +57,18 @@ namespace FpsGame.Screens
                 new RenderModelSystem(world, queryDescriptions, Models),
             };
 
+            converters = new Dictionary<Type, Converter>()
+            {
+                {typeof(RenderModel), new RenderModelConverter()},
+                {typeof(Position), new PositionConverter()},
+                {typeof(Rotation), new RotationConverter()},
+                {typeof(Scale), new ScaleConverter()},
+            };
+
             server = new Server.Server();
             Task.Run(() => server.StartListening(token.Token));
 
-            client = new Client();
+            client = new Client(AddDataToProcess);
             Task.Run(() => client.Join(token.Token));
         }
 
@@ -68,6 +79,27 @@ namespace FpsGame.Screens
             {
                 ScreenManager.SetActiveScreen(ScreenNames.MainMenu);
             }
+
+            if(ServerData.Count > 0)
+            {
+                var data = ServerData.Dequeue();
+                serializer.Deserialize(data, serializableWorld);
+
+                foreach(var entity in serializableWorld.Entities.Where(a => a.Create))
+                {
+                    world.CreateFromArray(entity.GetDeserializedComponents(converters));
+                }
+
+                foreach(var entity in serializableWorld.Entities.Where(a => a.Update))
+                {
+
+                }
+
+                foreach (var entity in serializableWorld.Entities.Where(a => a.Delete))
+                {
+
+                }
+            }
         }
 
         public override void Render(GameTime gameTime)
@@ -76,6 +108,12 @@ namespace FpsGame.Screens
             {
                 system.Render(gameTime, view, projection);
             }   
+        }
+
+        public bool AddDataToProcess(string worldData)
+        {
+            ServerData.Enqueue(worldData);
+            return true;
         }
 
         protected override void Dispose(bool disposing)

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,34 +15,40 @@ namespace FpsGame.Server
     {
         private bool disposedValue;
 
-        private readonly byte[] buffer = new byte[1024];
         private readonly TcpClient client;
         private NetworkStream stream;
+        private BinaryReader reader;
+        Func<string, bool> AddDataToProcess;
 
-        public Client()
+        public Client(Func<string, bool> addDataToProcess)
         {
             client = new TcpClient();
+            AddDataToProcess = addDataToProcess;
         }
 
         public async Task Join(CancellationToken cancellationToken)
         {
             await client.ConnectAsync(IPAddress.Loopback, 1234);
             stream = client.GetStream();
+            reader = new BinaryReader(stream);
             BeginReceiving(cancellationToken);
         }
 
         public async void BeginReceiving(CancellationToken cancellationToken)
         {
-            while(!cancellationToken.IsCancellationRequested)
+            try
             {
-                int length = await stream.ReadAsync(buffer, 0, buffer.Length);
-
-                if(length == 0)
+                while (!cancellationToken.IsCancellationRequested)
                 {
-                    return;
+                    if (stream.DataAvailable)
+                    {
+                        AddDataToProcess(reader.ReadString());
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
 
-                // TODO: Process incoming data
             }
         }
 
@@ -50,8 +58,9 @@ namespace FpsGame.Server
             {
                 if (disposing)
                 {
-                    client.Dispose();
-                    stream.Dispose();
+                    reader?.Dispose();
+                    stream?.Dispose();
+                    client?.Dispose();
                 }
 
                 disposedValue = true;

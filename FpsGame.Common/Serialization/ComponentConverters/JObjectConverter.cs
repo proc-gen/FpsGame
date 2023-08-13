@@ -14,7 +14,7 @@ namespace FpsGame.Common.Serialization.ComponentConverters
         protected T Convert<T>(JObject data)
             where T : new()
         {
-            T retVal = new T();
+            object retVal = Activator.CreateInstance<T>();
 
             if (DeserializedType == null)
             {
@@ -42,7 +42,7 @@ namespace FpsGame.Common.Serialization.ComponentConverters
                 }
             }
 
-            return retVal;
+            return (T)retVal;
         }
     }
 }
