@@ -52,6 +52,7 @@ namespace FpsGame.Screens
             queryDescriptions = new Dictionary<QueryDescriptions, QueryDescription>()
             {
                 { QueryDescriptions.RenderModel, new QueryDescription().WithAll<RenderModel, Position, Rotation, Scale>() },
+                { QueryDescriptions.PlayerInput, new QueryDescription().WithAll<Player, Position, Rotation>() },
             };
 
             renderSystems = new List<IRenderSystem>()
@@ -66,6 +67,7 @@ namespace FpsGame.Screens
                 {typeof(Rotation), new RotationConverter()},
                 {typeof(Scale), new ScaleConverter()},
                 {typeof(ModelRotator), new ModelRotatorConverter()},
+                {typeof(Player), new PlayerConverter() },
             };
 
             server = new Server.Server();
@@ -116,27 +118,28 @@ namespace FpsGame.Screens
             if(kState.GetPressedKeyCount() > 0)
             {
                 var keys = kState.GetPressedKeys();
-                if (keys.Contains(Keys.Up) || keys.Contains(Keys.Down) || keys.Contains(Keys.Left) || keys.Contains(Keys.Right))
+                
+                ClientInput clientInput = new ClientInput();
+
+                if (keys.Contains(Keys.Up) || keys.Contains(Keys.W))
                 {
-                    ClientInput clientInput = new ClientInput();
+                    clientInput.Direction -= Vector3.UnitZ;
+                }
+                if (keys.Contains(Keys.Down) || keys.Contains(Keys.S))
+                {
+                    clientInput.Direction += Vector3.UnitZ;
+                }
+                if (keys.Contains(Keys.Left) || keys.Contains(Keys.A))
+                {
+                    clientInput.Direction -= Vector3.UnitX;
+                }
+                if (keys.Contains(Keys.Right) || keys.Contains(Keys.D))
+                {
+                    clientInput.Direction += Vector3.UnitX;
+                }
 
-                    if (keys.Contains(Keys.Up))
-                    {
-                        clientInput.Direction += Vector3.UnitY;
-                    }
-                    if (keys.Contains(Keys.Down))
-                    {
-                        clientInput.Direction -= Vector3.UnitY;
-                    }
-                    if (keys.Contains(Keys.Left))
-                    {
-                        clientInput.Direction -= Vector3.UnitX;
-                    }
-                    if (keys.Contains(Keys.Right))
-                    {
-                        clientInput.Direction += Vector3.UnitX;
-                    }
-
+                if (clientInput.Direction != Vector3.Zero)
+                {
                     client.SendInputData(clientInput);
                 }
             }
@@ -146,7 +149,21 @@ namespace FpsGame.Screens
 
         public override void Render(GameTime gameTime)
         {
-            foreach(var system in renderSystems)
+            Entity player = Entity.Null;
+            Position playerPosition = new Position();
+            Rotation playerRotation = new Rotation();
+            var playerQuery = queryDescriptions[QueryDescriptions.PlayerInput];
+
+            world.Query(in playerQuery, (in Entity entity, ref Position position, ref Rotation rotation) =>
+            {
+                player = entity;
+                playerPosition = position;
+                playerRotation = rotation;
+            });
+
+            view = Matrix.CreateLookAt(new Vector3(playerPosition.X, playerPosition.Y, playerPosition.Z), new Vector3(playerPosition.X, playerPosition.Y, playerPosition.Z) + Vector3.Forward, Vector3.UnitY);
+
+            foreach (var system in renderSystems)
             {
                 system.Render(gameTime, view, projection);
             }   

@@ -36,7 +36,7 @@ namespace FpsGame.Server
         List<IUpdateSystem> updateSystems = new List<IUpdateSystem>();
         Queue<ClientData.ClientData> ClientMessages = new Queue<ClientData.ClientData>();
 
-        const int SendRate = 20;
+        const int SendRate = 60;
         private int serverTick = 0;
 
         public Server()
@@ -46,10 +46,23 @@ namespace FpsGame.Server
 
             world = World.Create();
 
+            Random random = new Random();
+
+            for(int i = 0; i < 100; i++)
+            {
+                world.Create(
+                    new RenderModel() { Model = "cube" }, 
+                    new Position() { X = (float)random.NextDouble() * 100f - 50f, Y = (float)random.NextDouble() * 100f - 50f, Z = (float)random.NextDouble() * 100f - 50f }, 
+                    new Rotation(), 
+                    new Scale(0.5f + (float)random.NextDouble()), 
+                    new ModelRotator() { XIncrement = (1 + (float)random.NextDouble()) / 500f, YIncrement = (1 + (float)random.NextDouble()) / 500f, ZIncrement = (1 + (float)random.NextDouble()) / 500f }
+                );
+            }
+
             queryDescriptions = new Dictionary<QueryDescriptions, QueryDescription>()
             {
                 { QueryDescriptions.ModelRotator, new QueryDescription().WithAll<Rotation, ModelRotator>() },
-                { QueryDescriptions.PlayerInput, new QueryDescription().WithAll<Position, ClientInput>() },
+                { QueryDescriptions.PlayerInput, new QueryDescription().WithAll<Player, Position, ClientInput>() },
             };
 
             updateSystems.Add(new PlayerInputSystem(world, queryDescriptions));
@@ -61,7 +74,7 @@ namespace FpsGame.Server
             try { 
                 TcpClient tcpClient = await listener.AcceptTcpClientAsync();
                 var client = new ServerSideClient(tcpClient, AddDataToProcess);
-                var entity = world.Create(new RenderModel() { Model = "cube" }, new Position() { X = 0, Y = 0, Z = 0 }, new Rotation(), new Scale(0.5f), new ModelRotator() { XIncrement = 1 / 500f, YIncrement = 1 / 500f }, new ClientInput());
+                var entity = world.Create(new Player() { Id = (uint)clients.Count }, new Position() { X = 0, Y = 0, Z = 0 }, new Rotation(), new ClientInput());
                 client.SetEntityReference(entity.Reference());
                 client.Disconnected += ClientDisconnected;
                 Task.Run(() => client.BeginReceiving());
@@ -76,10 +89,11 @@ namespace FpsGame.Server
         public void Run(GameTime gameTime)
         {
             
-                if(ClientMessages.Count > 0)
+            if(ClientMessages.Count > 0)
+            {
+                var message = ClientMessages.Dequeue();
+                if (message != null)
                 {
-                    var message = ClientMessages.Dequeue();
-
                     using (var sr = new StringReader(message.Data))
                     {
                         using (JsonReader reader = new JsonTextReader(sr))
@@ -92,18 +106,19 @@ namespace FpsGame.Server
                         }
                     }
                 }
+            }
 
-                foreach (var system in updateSystems)
-                {
-                    system.Update(gameTime);
-                }
+            foreach (var system in updateSystems)
+            {
+                system.Update(gameTime);
+            }
 
-                AddNewClients();
+            AddNewClients();
 
-                if(serverTick++ % (60 / SendRate) == 0)
-                {
-                    BroadcastWorld();
-                }
+            if(serverTick++ % (60 / SendRate) == 0)
+            {
+                BroadcastWorld();
+            }
             
         }
 

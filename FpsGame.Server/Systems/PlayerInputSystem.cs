@@ -28,6 +28,7 @@ namespace FpsGame.Server.Systems
                 {
                     position.X += clientInput.Direction.X / (float)gameTime.ElapsedGameTime.TotalMilliseconds;
                     position.Y += clientInput.Direction.Y / (float)gameTime.ElapsedGameTime.TotalMilliseconds;
+                    position.Z += clientInput.Direction.Z / (float)gameTime.ElapsedGameTime.TotalMilliseconds;
                     position.IsChanged = true;
 
                     clientInput.Direction = Vector3.Zero;
