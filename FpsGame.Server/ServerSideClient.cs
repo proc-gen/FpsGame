@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Arch.Core;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,33 +13,37 @@ namespace FpsGame.Server
     public class ServerSideClient : IDisposable
     {
         private bool disposedValue;
-        private readonly byte[] buffer = new byte[512];
         private readonly TcpClient client;
         private readonly NetworkStream networkStream;
+        private BinaryReader reader;
 
         public event EventHandler Disconnected;
+        Func<EntityReference, string, bool> AddDataToProcess;
+        private EntityReference entityReference;
 
-        public ServerSideClient(TcpClient client)
+        public ServerSideClient(TcpClient client, Func<EntityReference, string, bool> addDataToProcess)
         {
             this.client = client;
             networkStream = client.GetStream();
+            reader = new BinaryReader(networkStream);
+            AddDataToProcess = addDataToProcess;
         }
 
-        public async void BeginReceiving(CancellationToken cancellationToken)
+        public void SetEntityReference(EntityReference entityReference)
         {
-            while(!cancellationToken.IsCancellationRequested)
+            this.entityReference = entityReference;
+        }
+
+        public void BeginReceiving()
+        {
+            while(true)
             {
                 try
                 {
-                    int length = await networkStream.ReadAsync(buffer, 0, buffer.Length);
-
-                    if (length == 0)
+                    if (networkStream.DataAvailable)
                     {
-                        Disconnect();
-                        return;
+                        AddDataToProcess(entityReference, reader.ReadString());
                     }
-
-                    // TODO: Process incoming data
                 }
                 catch
                 {
@@ -46,14 +51,13 @@ namespace FpsGame.Server
                     return;
                 }
             }
-
-            Disconnect();
         }
 
         private void Disconnect()
         {
             client?.Close();
             Disconnected?.Invoke(this, EventArgs.Empty);
+            reader?.Close();
             networkStream?.Close();
         }
 
@@ -83,6 +87,7 @@ namespace FpsGame.Server
             {
                 if (disposing)
                 {
+                    reader?.Dispose();
                     networkStream?.Dispose();
                 }
 

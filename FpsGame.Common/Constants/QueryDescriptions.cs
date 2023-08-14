@@ -10,5 +10,6 @@ namespace FpsGame.Common.Constants
     {
         RenderModel,
         ModelRotator,
+        PlayerInput,
     }
 }

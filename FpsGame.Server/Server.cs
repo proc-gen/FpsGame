@@ -1,13 +1,18 @@
 ﻿using Arch.Core;
+using Arch.Core.Extensions;
 using FpsGame.Common.Components;
 using FpsGame.Common.Constants;
 using FpsGame.Common.Ecs.Systems;
 using FpsGame.Common.Serialization;
 using FpsGame.Common.Serialization.ComponentConverters;
 using FpsGame.Common.Serialization.Serializers;
+using FpsGame.Server.ClientData;
 using FpsGame.Server.Systems;
+using Microsoft.Xna.Framework;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -29,6 +34,7 @@ namespace FpsGame.Server
         World world;
         Dictionary<QueryDescriptions, QueryDescription> queryDescriptions;
         List<IUpdateSystem> updateSystems = new List<IUpdateSystem>();
+        Queue<ClientData.ClientData> ClientMessages = new Queue<ClientData.ClientData>();
 
         const int SendRate = 20;
         private int serverTick = 0;
@@ -40,35 +46,25 @@ namespace FpsGame.Server
 
             world = World.Create();
 
-            world.Create(new RenderModel() { Model = "cube" }, new Position() { X = 0, Y = 0, Z = 0 }, new Rotation(), new Scale(0.5f), new ModelRotator() { XIncrement = 1/500f, YIncrement = 1/500f});
-            world.Create(new RenderModel() { Model = "cube" }, new Position() { X = 2, Y = 0, Z = 0 }, new Rotation(), new Scale(0.5f));
-            world.Create(new RenderModel() { Model = "cube" }, new Position() { X = -2, Y = 0, Z = 0 }, new Rotation(), new Scale(0.5f));
-            world.Create(new RenderModel() { Model = "cube" }, new Position() { X = 0, Y = 2, Z = 0 }, new Rotation(), new Scale(0.5f));
-            world.Create(new RenderModel() { Model = "cube" }, new Position() { X = 0, Y = -2, Z = 0 }, new Rotation(), new Scale(0.5f));
-
             queryDescriptions = new Dictionary<QueryDescriptions, QueryDescription>()
             {
                 { QueryDescriptions.ModelRotator, new QueryDescription().WithAll<Rotation, ModelRotator>() },
+                { QueryDescriptions.PlayerInput, new QueryDescription().WithAll<Position, ClientInput>() },
             };
 
+            updateSystems.Add(new PlayerInputSystem(world, queryDescriptions));
             updateSystems.Add(new ModelRotatorSystem(world, queryDescriptions));
         }
 
-        public void StartListening(CancellationToken cancellationToken)
-        {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                Run(cancellationToken);
-            }
-        }
-
-        private async void AddNewClients(CancellationToken cancellationToken)
+        private async void AddNewClients()
         {
             try { 
-                TcpClient tcpClient = await listener.AcceptTcpClientAsync(cancellationToken);
-                var client = new ServerSideClient(tcpClient);
-                client.BeginReceiving(cancellationToken);
+                TcpClient tcpClient = await listener.AcceptTcpClientAsync();
+                var client = new ServerSideClient(tcpClient, AddDataToProcess);
+                var entity = world.Create(new RenderModel() { Model = "cube" }, new Position() { X = 0, Y = 0, Z = 0 }, new Rotation(), new Scale(0.5f), new ModelRotator() { XIncrement = 1 / 500f, YIncrement = 1 / 500f }, new ClientInput());
+                client.SetEntityReference(entity.Reference());
                 client.Disconnected += ClientDisconnected;
+                Task.Run(() => client.BeginReceiving());
                 newClients.Add(client);
             }
             catch (Exception ex)
@@ -77,22 +73,38 @@ namespace FpsGame.Server
             }
         }
 
-        private void Run(CancellationToken cancellationToken)
+        public void Run(GameTime gameTime)
         {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                foreach (var system in updateSystems)
+            
+                if(ClientMessages.Count > 0)
                 {
-                    system.Update();
+                    var message = ClientMessages.Dequeue();
+
+                    using (var sr = new StringReader(message.Data))
+                    {
+                        using (JsonReader reader = new JsonTextReader(sr))
+                        {
+                            JsonSerializer serializer = new JsonSerializer();
+
+                            var clientInput = serializer.Deserialize<ClientInput>(reader);
+
+                            message.EntityReference.Entity.Set(clientInput);
+                        }
+                    }
                 }
 
-                AddNewClients(cancellationToken);
+                foreach (var system in updateSystems)
+                {
+                    system.Update(gameTime);
+                }
+
+                AddNewClients();
 
                 if(serverTick++ % (60 / SendRate) == 0)
                 {
                     BroadcastWorld();
                 }
-            }
+            
         }
 
         private void ClientDisconnected(object sender, EventArgs e)
@@ -124,6 +136,12 @@ namespace FpsGame.Server
                 }
                 newClients.Clear();
             }
+        }
+
+        public bool AddDataToProcess(EntityReference entityReference, string data)
+        {
+            ClientMessages.Enqueue(new ClientData.ClientData() { EntityReference = entityReference, Data = data});
+            return true;
         }
 
         protected virtual void Dispose(bool disposing)

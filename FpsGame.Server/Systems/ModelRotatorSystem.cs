@@ -18,7 +18,7 @@ namespace FpsGame.Server.Systems
         {
         }
 
-        public void Update()
+        public void Update(GameTime gameTime)
         {
             var query = queryDescriptions[QueryDescriptions.ModelRotator];
             world.Query(in query, (ref Rotation rotation, ref ModelRotator modelRotator) =>

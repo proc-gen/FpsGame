@@ -8,6 +8,7 @@ using FpsGame.Common.Serialization;
 using FpsGame.Common.Serialization.ComponentConverters;
 using FpsGame.Common.Serialization.Serializers;
 using FpsGame.Server;
+using FpsGame.Server.ClientData;
 using FpsGame.Systems;
 using FpsGame.Ui;
 using Microsoft.Xna.Framework;
@@ -68,7 +69,6 @@ namespace FpsGame.Screens
             };
 
             server = new Server.Server();
-            Task.Run(() => server.StartListening(token.Token));
 
             client = new Client(AddDataToProcess);
             Task.Run(() => client.Join(token.Token));
@@ -76,8 +76,11 @@ namespace FpsGame.Screens
 
         public override void Update(GameTime gameTime)
         {
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed 
-                || Keyboard.GetState().IsKeyDown(Keys.Escape))
+            var gState = GamePad.GetState(PlayerIndex.One);
+            var kState = Keyboard.GetState();
+
+            if (gState.Buttons.Back == ButtonState.Pressed 
+                || kState.IsKeyDown(Keys.Escape))
             {
                 ScreenManager.SetActiveScreen(ScreenNames.MainMenu);
             }
@@ -109,6 +112,36 @@ namespace FpsGame.Screens
                     entity.Delete = false;
                 }
             }
+
+            if(kState.GetPressedKeyCount() > 0)
+            {
+                var keys = kState.GetPressedKeys();
+                if (keys.Contains(Keys.Up) || keys.Contains(Keys.Down) || keys.Contains(Keys.Left) || keys.Contains(Keys.Right))
+                {
+                    ClientInput clientInput = new ClientInput();
+
+                    if (keys.Contains(Keys.Up))
+                    {
+                        clientInput.Direction += Vector3.UnitY;
+                    }
+                    if (keys.Contains(Keys.Down))
+                    {
+                        clientInput.Direction -= Vector3.UnitY;
+                    }
+                    if (keys.Contains(Keys.Left))
+                    {
+                        clientInput.Direction -= Vector3.UnitX;
+                    }
+                    if (keys.Contains(Keys.Right))
+                    {
+                        clientInput.Direction += Vector3.UnitX;
+                    }
+
+                    client.SendInputData(clientInput);
+                }
+            }
+
+            server.Run(gameTime);
         }
 
         public override void Render(GameTime gameTime)

@@ -1,4 +1,7 @@
-﻿using System;
+﻿using FpsGame.Common.Serialization;
+using FpsGame.Server.ClientData;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -8,6 +11,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace FpsGame.Server
 {
@@ -50,6 +54,42 @@ namespace FpsGame.Server
             {
 
             }
+        }
+
+        public void SendInputData(ClientInput clientInput)
+        {
+            try
+            {
+                using (var ms = new MemoryStream())
+                {
+                    using (var bw = new BinaryWriter(ms))
+                    {
+                        bw.Write(Serialize(clientInput));
+                    }
+
+                    stream.Write(ms.ToArray());
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+
+        public string Serialize(ClientInput data)
+        {
+            string retVal;
+            using (var sw = new StringWriter())
+            {
+                using (JsonWriter writer = new JsonTextWriter(sw))
+                {
+                    JsonSerializer serializer = new JsonSerializer();
+                    serializer.Serialize(writer, data);
+                }
+
+                retVal = sw.ToString();
+            }
+            return retVal;
         }
 
         protected virtual void Dispose(bool disposing)
