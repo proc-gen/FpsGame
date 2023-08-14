@@ -25,13 +25,12 @@ namespace FpsGame.Server
         private readonly TcpListener listener;
 
         private readonly JsonNetSerializer serializer = new JsonNetSerializer();
-        private readonly Dictionary<Type, Converter> converters;
 
         World world;
         Dictionary<QueryDescriptions, QueryDescription> queryDescriptions;
         List<IUpdateSystem> updateSystems = new List<IUpdateSystem>();
 
-        const int SendRate = 15;
+        const int SendRate = 20;
         private int serverTick = 0;
 
         public Server()
@@ -50,15 +49,6 @@ namespace FpsGame.Server
             queryDescriptions = new Dictionary<QueryDescriptions, QueryDescription>()
             {
                 { QueryDescriptions.ModelRotator, new QueryDescription().WithAll<Rotation, ModelRotator>() },
-            };
-
-            converters = new Dictionary<Type, Converter>()
-            {
-                {typeof(RenderModel), new RenderModelConverter()},
-                {typeof(Position), new PositionConverter()},
-                {typeof(Rotation), new RotationConverter()},
-                {typeof(Scale), new ScaleConverter()},
-                {typeof(ModelRotator), new ModelRotatorConverter()},
             };
 
             updateSystems.Add(new ModelRotatorSystem(world, queryDescriptions));

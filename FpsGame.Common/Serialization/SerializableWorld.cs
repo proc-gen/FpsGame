@@ -42,6 +42,28 @@ namespace FpsGame.Common.Serialization
                 }
             });
 
+            if (!full)
+            {
+                world.Query(in allEntitiesQuery, (in Entity entity) =>
+                {
+                    var components = entity.GetAllComponents();
+                    if (components.Any(component => component is ISerializableComponent
+                            && ((ISerializableComponent)component).IsChanged))
+                    {
+                        foreach (var component in components)
+                        {
+                            if (component is ISerializableComponent
+                                && ((ISerializableComponent)component).IsChanged)
+                            {
+                                ((ISerializableComponent)component).IsChanged = false;
+                            }
+                        }
+
+                        entity.SetRange(components);
+                    }
+                });
+            }
+
             return serializableWorld;
         }
 
