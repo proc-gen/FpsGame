@@ -22,14 +22,12 @@ namespace FpsGame.Server.Systems
         public void Update(GameTime gameTime)
         {
             var query = queryDescriptions[QueryDescriptions.PlayerInput];
-            world.Query(in query, (ref Position position, ref ClientInput clientInput) =>
+            world.Query(in query, (ref Camera camera, ref ClientInput clientInput) =>
             {
                 if (clientInput.Direction != Vector3.Zero)
                 {
-                    position.X += clientInput.Direction.X / (float)gameTime.ElapsedGameTime.TotalMilliseconds;
-                    position.Y += clientInput.Direction.Y / (float)gameTime.ElapsedGameTime.TotalMilliseconds;
-                    position.Z += clientInput.Direction.Z / (float)gameTime.ElapsedGameTime.TotalMilliseconds;
-                    position.IsChanged = true;
+                    camera.Position += clientInput.Direction / (float)gameTime.ElapsedGameTime.TotalMilliseconds;
+                    camera.IsChanged = true;
 
                     clientInput.Direction = Vector3.Zero;
                 }

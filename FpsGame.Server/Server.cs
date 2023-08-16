@@ -66,7 +66,7 @@ namespace FpsGame.Server
             queryDescriptions = new Dictionary<QueryDescriptions, QueryDescription>()
             {
                 { QueryDescriptions.ModelRotator, new QueryDescription().WithAll<Rotation, ModelRotator>() },
-                { QueryDescriptions.PlayerInput, new QueryDescription().WithAll<Player, Position, ClientInput>() },
+                { QueryDescriptions.PlayerInput, new QueryDescription().WithAll<Player, Camera, ClientInput>() },
             };
 
             updateSystems.Add(new PlayerInputSystem(world, queryDescriptions));
@@ -78,7 +78,7 @@ namespace FpsGame.Server
             try {
                 TcpClient tcpClient = await listener.AcceptTcpClientAsync(cancellationToken);
                 var client = new ServerSideClient(tcpClient, AddDataToProcess);
-                var entity = world.Create(new Player() { Id = (uint)clients.Count }, new Position() { X = 0, Y = 0, Z = 0 }, new Rotation(), new ClientInput());
+                var entity = world.Create(new Player() { Id = (uint)clients.Count }, new Camera(), new ClientInput());
                 client.SetEntityReference(entity.Reference());
                 client.Disconnected += ClientDisconnected;
                 tasks.Add(Task.Run(() => client.BeginReceiving(cancellationToken), cancellationToken));

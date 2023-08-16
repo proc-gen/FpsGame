@@ -54,7 +54,7 @@ namespace FpsGame.Screens
             queryDescriptions = new Dictionary<QueryDescriptions, QueryDescription>()
             {
                 { QueryDescriptions.RenderModel, new QueryDescription().WithAll<RenderModel, Position, Rotation, Scale>() },
-                { QueryDescriptions.PlayerInput, new QueryDescription().WithAll<Player, Position, Rotation>() },
+                { QueryDescriptions.PlayerInput, new QueryDescription().WithAll<Player, Camera>() },
             };
 
             renderSystems = new List<IRenderSystem>()
@@ -70,6 +70,7 @@ namespace FpsGame.Screens
                 {typeof(Scale), new ScaleConverter()},
                 {typeof(ModelRotator), new ModelRotatorConverter()},
                 {typeof(Player), new PlayerConverter() },
+                {typeof(Camera), new CameraConverter() },
             };
 
             server = new Server.Server(token.Token);
@@ -152,18 +153,17 @@ namespace FpsGame.Screens
         public override void Render(GameTime gameTime)
         {
             Entity player = Entity.Null;
-            Position playerPosition = new Position();
-            Rotation playerRotation = new Rotation();
+            Camera playerCamera = new Camera();
             var playerQuery = queryDescriptions[QueryDescriptions.PlayerInput];
 
-            world.Query(in playerQuery, (in Entity entity, ref Position position, ref Rotation rotation) =>
+            world.Query(in playerQuery, (in Entity entity, ref Camera camera) =>
             {
                 player = entity;
-                playerPosition = position;
-                playerRotation = rotation;
+                playerCamera = camera;
             });
 
-            view = Matrix.CreateLookAt(new Vector3(playerPosition.X, playerPosition.Y, playerPosition.Z), new Vector3(playerPosition.X, playerPosition.Y, playerPosition.Z) + Vector3.Forward, Vector3.UnitY);
+            view = playerCamera.GetViewMatrix();
+            projection = playerCamera.GetProjectionMatrix();
 
             foreach (var system in renderSystems)
             {
