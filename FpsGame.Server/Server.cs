@@ -35,12 +35,16 @@ namespace FpsGame.Server
         Dictionary<QueryDescriptions, QueryDescription> queryDescriptions;
         List<IUpdateSystem> updateSystems = new List<IUpdateSystem>();
         Queue<ClientData.ClientData> ClientMessages = new Queue<ClientData.ClientData>();
+        
+        List<Task> tasks = new List<Task>();
+        CancellationToken cancellationToken;
 
         const int SendRate = 60;
         private int serverTick = 0;
 
-        public Server()
+        public Server(CancellationToken cancellationToken)
         {
+            this.cancellationToken = cancellationToken;
             listener = new TcpListener(IPAddress.Loopback, 1234);
             listener.Start();
 
@@ -71,55 +75,53 @@ namespace FpsGame.Server
 
         private async void AddNewClients()
         {
-            try { 
-                TcpClient tcpClient = await listener.AcceptTcpClientAsync();
+            try {
+                TcpClient tcpClient = await listener.AcceptTcpClientAsync(cancellationToken);
                 var client = new ServerSideClient(tcpClient, AddDataToProcess);
                 var entity = world.Create(new Player() { Id = (uint)clients.Count }, new Position() { X = 0, Y = 0, Z = 0 }, new Rotation(), new ClientInput());
                 client.SetEntityReference(entity.Reference());
                 client.Disconnected += ClientDisconnected;
-                Task.Run(() => client.BeginReceiving());
+                tasks.Add(Task.Run(() => client.BeginReceiving(cancellationToken), cancellationToken));
                 newClients.Add(client);
             }
-            catch (Exception ex)
-            {
-
-            }
+            catch { }
         }
 
         public void Run(GameTime gameTime)
         {
-            
-            if(ClientMessages.Count > 0)
+            if (!cancellationToken.IsCancellationRequested)
             {
-                var message = ClientMessages.Dequeue();
-                if (message != null)
+                if (ClientMessages.Count > 0)
                 {
-                    using (var sr = new StringReader(message.Data))
+                    var message = ClientMessages.Dequeue();
+                    if (message != null)
                     {
-                        using (JsonReader reader = new JsonTextReader(sr))
+                        using (var sr = new StringReader(message.Data))
                         {
-                            JsonSerializer serializer = new JsonSerializer();
+                            using (JsonReader reader = new JsonTextReader(sr))
+                            {
+                                JsonSerializer serializer = new JsonSerializer();
 
-                            var clientInput = serializer.Deserialize<ClientInput>(reader);
+                                var clientInput = serializer.Deserialize<ClientInput>(reader);
 
-                            message.EntityReference.Entity.Set(clientInput);
+                                message.EntityReference.Entity.Set(clientInput);
+                            }
                         }
                     }
                 }
-            }
 
-            foreach (var system in updateSystems)
-            {
-                system.Update(gameTime);
-            }
+                foreach (var system in updateSystems)
+                {
+                    system.Update(gameTime);
+                }
 
-            AddNewClients();
+                AddNewClients();
 
-            if(serverTick++ % (60 / SendRate) == 0)
-            {
-                BroadcastWorld();
+                if (serverTick++ % (60 / SendRate) == 0)
+                {
+                    BroadcastWorld();
+                }
             }
-            
         }
 
         private void ClientDisconnected(object sender, EventArgs e)

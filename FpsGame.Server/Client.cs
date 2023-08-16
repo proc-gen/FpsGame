@@ -40,39 +40,26 @@ namespace FpsGame.Server
 
         public async void BeginReceiving(CancellationToken cancellationToken)
         {
-            try
+            while (!cancellationToken.IsCancellationRequested)
             {
-                while (!cancellationToken.IsCancellationRequested)
+                if (stream.DataAvailable)
                 {
-                    if (stream.DataAvailable)
-                    {
-                        AddDataToProcess(reader.ReadString());
-                    }
+                    AddDataToProcess(reader.ReadString());
                 }
-            }
-            catch (Exception ex)
-            {
-
             }
         }
 
         public void SendInputData(ClientInput clientInput)
         {
-            try
+            
+            using (var ms = new MemoryStream())
             {
-                using (var ms = new MemoryStream())
+                using (var bw = new BinaryWriter(ms))
                 {
-                    using (var bw = new BinaryWriter(ms))
-                    {
-                        bw.Write(Serialize(clientInput));
-                    }
-
-                    stream.Write(ms.ToArray());
+                    bw.Write(Serialize(clientInput));
                 }
-            }
-            catch (Exception ex)
-            {
 
+                stream.Write(ms.ToArray());
             }
         }
 

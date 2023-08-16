@@ -42,6 +42,8 @@ namespace FpsGame.Screens
         private readonly JsonNetSerializer serializer = new JsonNetSerializer();
         private readonly Dictionary<Type, Converter> converters;
 
+        List<Task> tasks = new List<Task>();
+
         public GameScreen(Game game, ScreenManager screenManager)
             : base(game, screenManager)
         {
@@ -70,10 +72,10 @@ namespace FpsGame.Screens
                 {typeof(Player), new PlayerConverter() },
             };
 
-            server = new Server.Server();
+            server = new Server.Server(token.Token);
 
             client = new Client(AddDataToProcess);
-            Task.Run(() => client.Join(token.Token));
+            tasks.Add(Task.Run(() => client.Join(token.Token), token.Token));
         }
 
         public override void Update(GameTime gameTime)
@@ -181,6 +183,7 @@ namespace FpsGame.Screens
             {
                 if (disposing)
                 {
+                    token.Cancel();
                     server.Dispose();
                     client.Dispose();
                 }

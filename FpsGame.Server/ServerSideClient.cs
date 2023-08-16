@@ -34,9 +34,9 @@ namespace FpsGame.Server
             this.entityReference = entityReference;
         }
 
-        public void BeginReceiving()
+        public void BeginReceiving(CancellationToken cancellationToken)
         {
-            while(true)
+            while(!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
