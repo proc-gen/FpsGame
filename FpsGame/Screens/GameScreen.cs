@@ -41,6 +41,9 @@ namespace FpsGame.Screens
         Queue<string> ServerData = new Queue<string>();
         private readonly JsonNetSerializer serializer = new JsonNetSerializer();
         private readonly Dictionary<Type, Converter> converters;
+        
+        private Vector2 lastMousePosition;
+        private bool firstMove = true;
 
         List<Task> tasks = new List<Task>();
 
@@ -83,6 +86,7 @@ namespace FpsGame.Screens
         {
             var gState = GamePad.GetState(PlayerIndex.One);
             var kState = Keyboard.GetState();
+            var mState = Mouse.GetState();
 
             if (gState.Buttons.Back == ButtonState.Pressed 
                 || kState.IsKeyDown(Keys.Escape))
@@ -118,7 +122,7 @@ namespace FpsGame.Screens
                 }
             }
 
-            if(kState.GetPressedKeyCount() > 0)
+            if(kState.GetPressedKeyCount() > 0 || mState.RightButton == ButtonState.Pressed)
             {
                 var keys = kState.GetPressedKeys();
                 
@@ -141,10 +145,24 @@ namespace FpsGame.Screens
                     clientInput.Direction += Vector3.UnitX;
                 }
 
-                if (clientInput.Direction != Vector3.Zero)
+                if(mState.RightButton == ButtonState.Pressed)
+                {
+                    if (firstMove)
+                    {
+                        firstMove = false;
+                    }
+                    if (!firstMove)
+                    {
+                        clientInput.MouseDelta = mState.Position.ToVector2() - lastMousePosition;
+                    }
+                    lastMousePosition = mState.Position.ToVector2();
+                }
+
+                if (clientInput.MouseDelta != Vector2.Zero || clientInput.Direction != Vector3.Zero)
                 {
                     client.SendInputData(clientInput);
                 }
+                
             }
 
             server.Run(gameTime);

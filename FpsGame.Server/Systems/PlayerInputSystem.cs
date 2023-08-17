@@ -14,6 +14,7 @@ namespace FpsGame.Server.Systems
 {
     public class PlayerInputSystem : ArchSystem, IUpdateSystem
     {
+        float sensitivity = 0.02f;
         public PlayerInputSystem(World world, Dictionary<QueryDescriptions, QueryDescription> queryDescriptions) 
             : base(world, queryDescriptions)
         {
@@ -24,12 +25,13 @@ namespace FpsGame.Server.Systems
             var query = queryDescriptions[QueryDescriptions.PlayerInput];
             world.Query(in query, (ref Camera camera, ref ClientInput clientInput) =>
             {
-                if (clientInput.Direction != Vector3.Zero)
+                camera.IsChanged = clientInput.Direction != Vector3.Zero || clientInput.MouseDelta != Vector2.Zero;
+
+                if (camera.IsChanged)
                 {
                     camera.Position += clientInput.Direction / (float)gameTime.ElapsedGameTime.TotalMilliseconds;
-                    camera.IsChanged = true;
-
-                    clientInput.Direction = Vector3.Zero;
+                    camera.Yaw += clientInput.MouseDelta.X * sensitivity;
+                    camera.Pitch += -1f * clientInput.MouseDelta.Y * sensitivity;
                 }
             });
         }
