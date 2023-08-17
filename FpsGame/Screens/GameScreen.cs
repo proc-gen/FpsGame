@@ -122,47 +122,39 @@ namespace FpsGame.Screens
                 }
             }
 
-            if(kState.GetPressedKeyCount() > 0 || mState.RightButton == ButtonState.Pressed)
+            if (kState.GetPressedKeyCount() > 0 || mState.RightButton == ButtonState.Pressed)
             {
                 var keys = kState.GetPressedKeys();
-                
-                ClientInput clientInput = new ClientInput();
 
-                if (keys.Contains(Keys.Up) || keys.Contains(Keys.W))
+                ClientInput clientInput = new ClientInput()
                 {
-                    clientInput.Direction -= Vector3.UnitZ;
-                }
-                if (keys.Contains(Keys.Down) || keys.Contains(Keys.S))
-                {
-                    clientInput.Direction += Vector3.UnitZ;
-                }
-                if (keys.Contains(Keys.Left) || keys.Contains(Keys.A))
-                {
-                    clientInput.Direction -= Vector3.UnitX;
-                }
-                if (keys.Contains(Keys.Right) || keys.Contains(Keys.D))
-                {
-                    clientInput.Direction += Vector3.UnitX;
-                }
+                    Forward = keys.Contains(Keys.Up) || keys.Contains(Keys.W),
+                    Backward = keys.Contains(Keys.Down) || keys.Contains(Keys.S),
+                    Left = keys.Contains(Keys.Left) || keys.Contains(Keys.A),
+                    Right = keys.Contains(Keys.Right) || keys.Contains(Keys.D)
+                };
 
-                if(mState.RightButton == ButtonState.Pressed)
+                if (mState.RightButton == ButtonState.Pressed)
                 {
                     if (firstMove)
                     {
                         firstMove = false;
                     }
-                    if (!firstMove)
+                    else if (!firstMove)
                     {
                         clientInput.MouseDelta = mState.Position.ToVector2() - lastMousePosition;
                     }
                     lastMousePosition = mState.Position.ToVector2();
                 }
 
-                if (clientInput.MouseDelta != Vector2.Zero || clientInput.Direction != Vector3.Zero)
+                if (clientInput.Forward ||
+                    clientInput.Backward ||
+                    clientInput.Left ||
+                    clientInput.Right ||
+                    clientInput.MouseDelta != Vector2.Zero)
                 {
                     client.SendInputData(clientInput);
                 }
-                
             }
 
             server.Run(gameTime);

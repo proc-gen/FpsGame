@@ -56,7 +56,7 @@ namespace FpsGame.Server
             {
                 world.Create(
                     new RenderModel() { Model = "cube" }, 
-                    new Position() { X = (float)random.NextDouble() * 100f - 50f, Y = (float)random.NextDouble() * 100f - 50f, Z = (float)random.NextDouble() * 100f - 50f }, 
+                    new Position() { X = (float)random.NextDouble() * 100f - 50f, Y = -5f, Z = (float)random.NextDouble() * 100f - 50f }, 
                     new Rotation(), 
                     new Scale(0.5f + (float)random.NextDouble()), 
                     new ModelRotator() { XIncrement = (1 + (float)random.NextDouble()) / 500f, YIncrement = (1 + (float)random.NextDouble()) / 500f, ZIncrement = (1 + (float)random.NextDouble()) / 500f }

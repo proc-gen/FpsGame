@@ -6,7 +6,10 @@ namespace FpsGame.Server.ClientData
 {
     public struct ClientInput
     {
-        public Vector3 Direction { get; set; }
+        public bool Forward { get; set; }
+        public bool Backward { get; set; }
+        public bool Left { get; set; }
+        public bool Right { get; set; }
         public Vector2 MouseDelta { get; set; }
     }
 }
