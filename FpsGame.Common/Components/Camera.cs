@@ -63,7 +63,7 @@ namespace FpsGame.Common.Components
             );
 
             Front.Normalize();
-            Right = Vector3.Normalize(Vector3.Cross(Front, Up));
+            Right = Vector3.Normalize(Vector3.Cross(Front, Vector3.UnitY));
             Up = Vector3.Normalize(Vector3.Cross(Right, Front));
         }
     }
