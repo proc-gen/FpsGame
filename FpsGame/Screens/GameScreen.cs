@@ -146,7 +146,8 @@ namespace FpsGame.Screens
                         Right = keys.Contains(Keys.Right) || keys.Contains(Keys.D)
                     };
 
-                    if (mState.RightButton == ButtonState.Pressed)
+                    if (mState.RightButton == ButtonState.Pressed 
+                        && Game.Window.ClientBounds.Contains(mState.Position + Game.Window.Position))
                     {
                         if (firstMove)
                         {

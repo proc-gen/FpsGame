@@ -1,4 +1,6 @@
 ﻿using Arch.Core;
+using Arch.Core.Extensions;
+using FpsGame.Common.Components;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -32,6 +34,11 @@ namespace FpsGame.Server
         public void SetEntityReference(EntityReference entityReference)
         {
             this.entityReference = entityReference;
+        }
+
+        public uint GetPlayerId()
+        {
+            return entityReference.Entity.Get<Player>().Id;
         }
 
         public void BeginReceiving(CancellationToken cancellationToken)

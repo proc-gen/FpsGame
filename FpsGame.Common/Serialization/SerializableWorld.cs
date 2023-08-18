@@ -68,5 +68,7 @@ namespace FpsGame.Common.Serialization
         }
 
         public List<SerializableEntity> Entities;
+
+        public uint PlayerId { get; set; }
     }
 }
