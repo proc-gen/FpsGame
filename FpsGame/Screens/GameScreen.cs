@@ -2,6 +2,7 @@
 using Arch.Core.Extensions;
 using FpsGame.Common.Components;
 using FpsGame.Common.Constants;
+using FpsGame.Common.Containers;
 using FpsGame.Common.Ecs;
 using FpsGame.Common.Ecs.Systems;
 using FpsGame.Common.Serialization;
@@ -45,11 +46,14 @@ namespace FpsGame.Screens
         private Vector2 lastMousePosition;
         private bool firstMove = true;
 
+        private GameSettings gameSettings;
+
         List<Task> tasks = new List<Task>();
 
-        public GameScreen(Game game, ScreenManager screenManager)
+        public GameScreen(Game game, ScreenManager screenManager, GameSettings gameSettings)
             : base(game, screenManager)
         {
+            this.gameSettings = gameSettings;
             Models.Add("cube", game.Content.Load<Model>("cube"));
 
             world = World.Create();
@@ -76,10 +80,16 @@ namespace FpsGame.Screens
                 {typeof(Camera), new CameraConverter() },
             };
 
-            server = new Server.Server(token.Token);
+            if (gameSettings.GameMode != GameMode.MultiplayerJoin)
+            {
+                server = new Server.Server(token.Token, gameSettings);
+            }
 
-            client = new Client(AddDataToProcess);
-            tasks.Add(Task.Run(() => client.Join(token.Token), token.Token));
+            if (gameSettings.GameMode != GameMode.StandaloneServer)
+            {
+                client = new Client(AddDataToProcess);
+                tasks.Add(Task.Run(() => client.Join(token.Token), token.Token));
+            }
         }
 
         public override void Update(GameTime gameTime)
@@ -94,73 +104,89 @@ namespace FpsGame.Screens
                 ScreenManager.SetActiveScreen(ScreenNames.MainMenu);
             }
 
-            if(ServerData.Count > 0)
+            if (client != null)
             {
-                var data = ServerData.Dequeue();
-                serializer.Deserialize(data, serializableWorld);
-
-                foreach(var entity in serializableWorld.Entities.Where(a => a.Create))
+                if (ServerData.Count > 0)
                 {
-                    Entity created = world.CreateFromArray(entity.GetDeserializedComponents(converters));
-                    entity.EntityReference = created.Reference();
-                    entity.DestinationId = created.Id;
-                    entity.DestinationVersionId = created.Version();
-                    entity.Create = false;
+                    var data = ServerData.Dequeue();
+                    serializer.Deserialize(data, serializableWorld);
+
+                    foreach (var entity in serializableWorld.Entities.Where(a => a.Create))
+                    {
+                        Entity created = world.CreateFromArray(entity.GetDeserializedComponents(converters));
+                        entity.EntityReference = created.Reference();
+                        entity.DestinationId = created.Id;
+                        entity.DestinationVersionId = created.Version();
+                        entity.Create = false;
+                    }
+
+                    foreach (var entity in serializableWorld.Entities.Where(a => a.Update))
+                    {
+                        world.SetFromArray(entity.EntityReference.Entity, entity.GetDeserializedComponents(converters));
+                        entity.Update = false;
+                    }
+
+                    foreach (var entity in serializableWorld.Entities.Where(a => a.Delete))
+                    {
+                        world.Destroy(entity.EntityReference);
+                        entity.EntityReference = EntityReference.Null;
+                        entity.Delete = false;
+                    }
                 }
 
-                foreach(var entity in serializableWorld.Entities.Where(a => a.Update))
+                if (kState.GetPressedKeyCount() > 0 || mState.RightButton == ButtonState.Pressed)
                 {
-                    world.SetFromArray(entity.EntityReference.Entity, entity.GetDeserializedComponents(converters));
-                    entity.Update = false;
-                }
+                    var keys = kState.GetPressedKeys();
 
-                foreach (var entity in serializableWorld.Entities.Where(a => a.Delete))
-                {
-                    world.Destroy(entity.EntityReference);
-                    entity.EntityReference = EntityReference.Null;
-                    entity.Delete = false;
+                    ClientInput clientInput = new ClientInput()
+                    {
+                        Forward = keys.Contains(Keys.Up) || keys.Contains(Keys.W),
+                        Backward = keys.Contains(Keys.Down) || keys.Contains(Keys.S),
+                        Left = keys.Contains(Keys.Left) || keys.Contains(Keys.A),
+                        Right = keys.Contains(Keys.Right) || keys.Contains(Keys.D)
+                    };
+
+                    if (mState.RightButton == ButtonState.Pressed)
+                    {
+                        if (firstMove)
+                        {
+                            firstMove = false;
+                        }
+                        else if (!firstMove)
+                        {
+                            clientInput.MouseDelta = mState.Position.ToVector2() - lastMousePosition;
+                        }
+                        lastMousePosition = mState.Position.ToVector2();
+                    }
+
+                    if (clientInput.Forward ||
+                        clientInput.Backward ||
+                        clientInput.Left ||
+                        clientInput.Right ||
+                        clientInput.MouseDelta != Vector2.Zero)
+                    {
+                        client.SendInputData(clientInput);
+                    }
                 }
             }
 
-            if (kState.GetPressedKeyCount() > 0 || mState.RightButton == ButtonState.Pressed)
-            {
-                var keys = kState.GetPressedKeys();
-
-                ClientInput clientInput = new ClientInput()
-                {
-                    Forward = keys.Contains(Keys.Up) || keys.Contains(Keys.W),
-                    Backward = keys.Contains(Keys.Down) || keys.Contains(Keys.S),
-                    Left = keys.Contains(Keys.Left) || keys.Contains(Keys.A),
-                    Right = keys.Contains(Keys.Right) || keys.Contains(Keys.D)
-                };
-
-                if (mState.RightButton == ButtonState.Pressed)
-                {
-                    if (firstMove)
-                    {
-                        firstMove = false;
-                    }
-                    else if (!firstMove)
-                    {
-                        clientInput.MouseDelta = mState.Position.ToVector2() - lastMousePosition;
-                    }
-                    lastMousePosition = mState.Position.ToVector2();
-                }
-
-                if (clientInput.Forward ||
-                    clientInput.Backward ||
-                    clientInput.Left ||
-                    clientInput.Right ||
-                    clientInput.MouseDelta != Vector2.Zero)
-                {
-                    client.SendInputData(clientInput);
-                }
-            }
-
-            server.Run(gameTime);
+            
+            server?.Run(gameTime);
         }
 
         public override void Render(GameTime gameTime)
+        {
+            if(gameSettings.GameMode != GameMode.StandaloneServer)
+            {
+                renderGame(gameTime);
+            }
+            else
+            {
+                renderServer(gameTime);
+            }
+        }
+
+        private void renderGame(GameTime gameTime)
         {
             Entity player = Entity.Null;
             Camera playerCamera = new Camera();
@@ -178,7 +204,12 @@ namespace FpsGame.Screens
             foreach (var system in renderSystems)
             {
                 system.Render(gameTime, view, projection);
-            }   
+            }
+        }
+
+        private void renderServer(GameTime gameTime)
+        {
+
         }
 
         public bool AddDataToProcess(string worldData)
@@ -193,9 +224,9 @@ namespace FpsGame.Screens
             {
                 if (disposing)
                 {
-                    token.Cancel();
-                    server.Dispose();
-                    client.Dispose();
+                    token?.Cancel();
+                    server?.Dispose();
+                    client?.Dispose();
                 }
 
                 disposedValue = true;

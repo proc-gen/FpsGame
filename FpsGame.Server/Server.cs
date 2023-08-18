@@ -2,6 +2,7 @@
 using Arch.Core.Extensions;
 using FpsGame.Common.Components;
 using FpsGame.Common.Constants;
+using FpsGame.Common.Containers;
 using FpsGame.Common.Ecs.Systems;
 using FpsGame.Common.Serialization;
 using FpsGame.Common.Serialization.ComponentConverters;
@@ -39,12 +40,16 @@ namespace FpsGame.Server
         List<Task> tasks = new List<Task>();
         CancellationToken cancellationToken;
 
+        GameSettings gameSettings;
+
         const int SendRate = 60;
         private int serverTick = 0;
 
-        public Server(CancellationToken cancellationToken)
+        public Server(CancellationToken cancellationToken, GameSettings gameSettings)
         {
             this.cancellationToken = cancellationToken;
+            this.gameSettings = gameSettings;
+
             listener = new TcpListener(IPAddress.Loopback, 1234);
             listener.Start();
 
@@ -115,7 +120,10 @@ namespace FpsGame.Server
                     system.Update(gameTime);
                 }
 
-                AddNewClients();
+                if (gameSettings.GameMode != GameMode.SinglePlayer || !clients.Any())
+                {
+                    AddNewClients();
+                }
 
                 if (serverTick++ % (60 / SendRate) == 0)
                 {

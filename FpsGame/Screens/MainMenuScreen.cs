@@ -1,4 +1,5 @@
 ﻿using FpsGame.Common.Constants;
+using FpsGame.Common.Containers;
 using FpsGame.Ui;
 using FpsGame.Ui.Components;
 using Microsoft.Xna.Framework;
@@ -15,6 +16,9 @@ namespace FpsGame.Screens
         VerticalPanel panel;
         Label label;
         Button newGameButton;
+        Button multiPlayerHostButton;
+        Button multiplayerJoinButton;
+        Button standaloneServerButton;
         Button exitButton;
 
         public MainMenuScreen(Game game, ScreenManager screenManager)
@@ -22,11 +26,17 @@ namespace FpsGame.Screens
         {
             panel = new VerticalPanel("panel");
             label = new Label("title", "Main Menu");
-            newGameButton = new Button("new-game", "New Game", NewGameButtonClick);
+            newGameButton = new Button("new-game", "New Singleplayer Game", NewGameButtonClick);
+            multiPlayerHostButton = new Button("multiplayer-host", "Host Multiplayer Game", MultiplayerHostButtonClick);
+            multiplayerJoinButton = new Button("multiplayer-join", "Join Multiplayer Game", MultiplayerJoinButtonClick);
+            standaloneServerButton = new Button("standalone-server", "Standalone Server", StandaloneServerButtonClick);
             exitButton = new Button("exit", "Exit", ExitButtonClick);
             
             panel.AddWidget(label);
             panel.AddWidget(newGameButton);
+            panel.AddWidget(multiPlayerHostButton);
+            panel.AddWidget(multiplayerJoinButton);
+            panel.AddWidget(standaloneServerButton);
             panel.AddWidget(exitButton);
 
             RootWidget = panel.UiWidget;
@@ -50,7 +60,25 @@ namespace FpsGame.Screens
 
         protected void NewGameButtonClick(object e, EventArgs eventArgs)
         {
-            ScreenManager.AddScreen(ScreenNames.Game, new GameScreen(Game, ScreenManager));
+            ScreenManager.AddScreen(ScreenNames.Game, new GameScreen(Game, ScreenManager, new GameSettings() { GameMode = GameMode.SinglePlayer }));
+            ScreenManager.SetActiveScreen(ScreenNames.Game);
+        }
+
+        protected void MultiplayerHostButtonClick(object e, EventArgs eventArgs)
+        {
+            ScreenManager.AddScreen(ScreenNames.Game, new GameScreen(Game, ScreenManager, new GameSettings() { GameMode = GameMode.MultiplayerHost }));
+            ScreenManager.SetActiveScreen(ScreenNames.Game);
+        }
+
+        protected void MultiplayerJoinButtonClick(object e, EventArgs eventArgs)
+        {
+            ScreenManager.AddScreen(ScreenNames.Game, new GameScreen(Game, ScreenManager, new GameSettings() { GameMode = GameMode.MultiplayerJoin }));
+            ScreenManager.SetActiveScreen(ScreenNames.Game);
+        }
+
+        protected void StandaloneServerButtonClick(object e, EventArgs eventArgs)
+        {
+            ScreenManager.AddScreen(ScreenNames.Game, new GameScreen(Game, ScreenManager, new GameSettings() { GameMode = GameMode.StandaloneServer }));
             ScreenManager.SetActiveScreen(ScreenNames.Game);
         }
 
