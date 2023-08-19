@@ -12,12 +12,14 @@ using FpsGame.Server;
 using FpsGame.Server.ClientData;
 using FpsGame.Systems;
 using FpsGame.Ui;
+using Microsoft.VisualBasic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -30,7 +32,7 @@ namespace FpsGame.Screens
         private Matrix projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45), 800f / 480f, 0.1f, 100f);
 
         World world;
-        SerializableWorld serializableWorld = new SerializableWorld();
+        SerializableWorld serializableWorld = new SerializableWorld(false);
         List<IRenderSystem> renderSystems;
         Dictionary<QueryDescriptions, QueryDescription> queryDescriptions;
 
@@ -47,6 +49,8 @@ namespace FpsGame.Screens
         private bool firstMove = true;
 
         private GameSettings gameSettings;
+        private uint PlayerId;
+        private Player Player;
 
         List<Task> tasks = new List<Task>();
 
@@ -110,6 +114,10 @@ namespace FpsGame.Screens
                 {
                     var data = ServerData.Dequeue();
                     serializer.Deserialize(data, serializableWorld);
+                    if(serializableWorld.MessageType == MessageType.WorldFull)
+                    {
+                        PlayerId = serializableWorld.PlayerId;
+                    }
 
                     foreach (var entity in serializableWorld.Entities.Where(a => a.Create))
                     {
@@ -193,10 +201,13 @@ namespace FpsGame.Screens
             Camera playerCamera = new Camera();
             var playerQuery = queryDescriptions[QueryDescriptions.PlayerInput];
 
-            world.Query(in playerQuery, (in Entity entity, ref Camera camera) =>
+            world.Query(in playerQuery, (in Entity entity, ref Player player1, ref Camera camera) =>
             {
-                player = entity;
-                playerCamera = camera;
+                if (player1.Id == PlayerId)
+                {
+                    player = entity;
+                    playerCamera = camera;
+                }
             });
 
             view = playerCamera.GetViewMatrix();

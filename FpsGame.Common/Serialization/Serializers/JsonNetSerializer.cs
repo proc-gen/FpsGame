@@ -21,7 +21,7 @@ namespace FpsGame.Common.Serialization.Serializers
         {
             if (data.Length > 0)
             {
-                SerializableWorld newSerializableWorld = new SerializableWorld();
+                SerializableWorld newSerializableWorld = null;
                 List<SerializableEntity> newEntities = new List<SerializableEntity>();
 
                 using (var sr = new StringReader(data))
@@ -33,6 +33,9 @@ namespace FpsGame.Common.Serialization.Serializers
                         newSerializableWorld = serializer.Deserialize<SerializableWorld>(reader);
                     }
                 }
+                
+                serializableWorld.PlayerId = newSerializableWorld.PlayerId;
+                serializableWorld.MessageType = newSerializableWorld.MessageType;
 
                 foreach (var entity in newSerializableWorld.Entities)
                 {

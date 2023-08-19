@@ -9,10 +9,11 @@ using System.Threading.Tasks;
 
 namespace FpsGame.Common.Serialization
 {
-    public class SerializableWorld
+    public class SerializableWorld : SerializableMessage
     {
-        public SerializableWorld() 
+        public SerializableWorld(bool full) 
         {
+            MessageType = full ? Constants.MessageType.WorldFull : Constants.MessageType.WorldUpdate;
             Entities = new List<SerializableEntity>();
         }
 
@@ -20,7 +21,7 @@ namespace FpsGame.Common.Serialization
 
         public static SerializableWorld SerializeWorld(World world, bool full)
         {
-            SerializableWorld serializableWorld = new SerializableWorld();
+            SerializableWorld serializableWorld = new SerializableWorld(full);
 
             world.Query(in allEntitiesQuery, (in Entity entity) =>
             {
