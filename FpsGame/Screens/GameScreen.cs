@@ -12,14 +12,12 @@ using FpsGame.Server;
 using FpsGame.Server.ClientData;
 using FpsGame.Systems;
 using FpsGame.Ui;
-using Microsoft.VisualBasic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -50,7 +48,7 @@ namespace FpsGame.Screens
 
         private GameSettings gameSettings;
         private uint PlayerId;
-        private Player Player;
+        private EntityReference Player = EntityReference.Null;
 
         List<Task> tasks = new List<Task>();
 
@@ -110,77 +108,96 @@ namespace FpsGame.Screens
 
             if (client != null)
             {
-                if (ServerData.Count > 0)
-                {
-                    var data = ServerData.Dequeue();
-                    serializer.Deserialize(data, serializableWorld);
-                    if(serializableWorld.MessageType == MessageType.WorldFull)
-                    {
-                        PlayerId = serializableWorld.PlayerId;
-                    }
-
-                    foreach (var entity in serializableWorld.Entities.Where(a => a.Create))
-                    {
-                        Entity created = world.CreateFromArray(entity.GetDeserializedComponents(converters));
-                        entity.EntityReference = created.Reference();
-                        entity.DestinationId = created.Id;
-                        entity.DestinationVersionId = created.Version();
-                        entity.Create = false;
-                    }
-
-                    foreach (var entity in serializableWorld.Entities.Where(a => a.Update))
-                    {
-                        world.SetFromArray(entity.EntityReference.Entity, entity.GetDeserializedComponents(converters));
-                        entity.Update = false;
-                    }
-
-                    foreach (var entity in serializableWorld.Entities.Where(a => a.Delete))
-                    {
-                        world.Destroy(entity.EntityReference);
-                        entity.EntityReference = EntityReference.Null;
-                        entity.Delete = false;
-                    }
-                }
-
-                if (kState.GetPressedKeyCount() > 0 || mState.RightButton == ButtonState.Pressed)
-                {
-                    var keys = kState.GetPressedKeys();
-
-                    ClientInput clientInput = new ClientInput()
-                    {
-                        Forward = keys.Contains(Keys.Up) || keys.Contains(Keys.W),
-                        Backward = keys.Contains(Keys.Down) || keys.Contains(Keys.S),
-                        Left = keys.Contains(Keys.Left) || keys.Contains(Keys.A),
-                        Right = keys.Contains(Keys.Right) || keys.Contains(Keys.D)
-                    };
-
-                    if (mState.RightButton == ButtonState.Pressed 
-                        && Game.Window.ClientBounds.Contains(mState.Position + Game.Window.Position))
-                    {
-                        if (firstMove)
-                        {
-                            firstMove = false;
-                        }
-                        else if (!firstMove)
-                        {
-                            clientInput.MouseDelta = mState.Position.ToVector2() - lastMousePosition;
-                        }
-                        lastMousePosition = mState.Position.ToVector2();
-                    }
-
-                    if (clientInput.Forward ||
-                        clientInput.Backward ||
-                        clientInput.Left ||
-                        clientInput.Right ||
-                        clientInput.MouseDelta != Vector2.Zero)
-                    {
-                        client.SendInputData(clientInput);
-                    }
-                }
+                processServerData();
+                processInputData(kState, mState, gState);
             }
 
-            
             server?.Run(gameTime);
+        }
+
+        private void processServerData()
+        {
+            if (ServerData.Count > 0)
+            {
+                var data = ServerData.Dequeue();
+                serializer.Deserialize(data, serializableWorld);
+
+                foreach (var entity in serializableWorld.Entities.Where(a => a.Create))
+                {
+                    Entity created = world.CreateFromArray(entity.GetDeserializedComponents(converters));
+                    entity.EntityReference = created.Reference();
+                    entity.DestinationId = created.Id;
+                    entity.DestinationVersionId = created.Version();
+                    entity.Create = false;
+                }
+
+                foreach (var entity in serializableWorld.Entities.Where(a => a.Update))
+                {
+                    world.SetFromArray(entity.EntityReference.Entity, entity.GetDeserializedComponents(converters));
+                    entity.Update = false;
+                }
+
+                foreach (var entity in serializableWorld.Entities.Where(a => a.Delete))
+                {
+                    world.Destroy(entity.EntityReference);
+                    entity.EntityReference = EntityReference.Null;
+                    entity.Delete = false;
+                }
+
+                if (serializableWorld.MessageType == MessageType.WorldFull)
+                {
+                    PlayerId = serializableWorld.PlayerId;
+
+                    var playerQuery = queryDescriptions[QueryDescriptions.PlayerInput];
+
+                    world.Query(in playerQuery, (in Entity entity, ref Player player) =>
+                    {
+                        if (player.Id == PlayerId)
+                        {
+                            Player = entity.Reference();
+                        }
+                    });
+                }
+            }
+        }
+
+        private void processInputData(KeyboardState kState, MouseState mState, GamePadState gState)
+        {
+            if (kState.GetPressedKeyCount() > 0 || mState.RightButton == ButtonState.Pressed)
+            {
+                var keys = kState.GetPressedKeys();
+
+                ClientInput clientInput = new ClientInput()
+                {
+                    Forward = keys.Contains(Keys.Up) || keys.Contains(Keys.W),
+                    Backward = keys.Contains(Keys.Down) || keys.Contains(Keys.S),
+                    Left = keys.Contains(Keys.Left) || keys.Contains(Keys.A),
+                    Right = keys.Contains(Keys.Right) || keys.Contains(Keys.D)
+                };
+
+                if (mState.RightButton == ButtonState.Pressed
+                    && Game.IsActive)
+                {
+                    if (firstMove)
+                    {
+                        firstMove = false;
+                    }
+                    else if (!firstMove)
+                    {
+                        clientInput.MouseDelta = mState.Position.ToVector2() - lastMousePosition;
+                    }
+                    lastMousePosition = mState.Position.ToVector2();
+                }
+
+                if (clientInput.Forward ||
+                    clientInput.Backward ||
+                    clientInput.Left ||
+                    clientInput.Right ||
+                    clientInput.MouseDelta != Vector2.Zero)
+                {
+                    client.SendInputData(clientInput);
+                }
+            }
         }
 
         public override void Render(GameTime gameTime)
@@ -197,25 +214,18 @@ namespace FpsGame.Screens
 
         private void renderGame(GameTime gameTime)
         {
-            Entity player = Entity.Null;
-            Camera playerCamera = new Camera();
-            var playerQuery = queryDescriptions[QueryDescriptions.PlayerInput];
-
-            world.Query(in playerQuery, (in Entity entity, ref Player player1, ref Camera camera) =>
+            if (Player != EntityReference.Null)
             {
-                if (player1.Id == PlayerId)
+                Entity player = Player.Entity;
+                Camera playerCamera = player.Get<Camera>();
+
+                view = playerCamera.GetViewMatrix();
+                projection = playerCamera.GetProjectionMatrix();
+
+                foreach (var system in renderSystems)
                 {
-                    player = entity;
-                    playerCamera = camera;
+                    system.Render(gameTime, view, projection);
                 }
-            });
-
-            view = playerCamera.GetViewMatrix();
-            projection = playerCamera.GetProjectionMatrix();
-
-            foreach (var system in renderSystems)
-            {
-                system.Render(gameTime, view, projection);
             }
         }
 
