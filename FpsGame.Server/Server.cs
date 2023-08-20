@@ -83,7 +83,7 @@ namespace FpsGame.Server
             try {
                 TcpClient tcpClient = await listener.AcceptTcpClientAsync(cancellationToken);
                 var client = new ServerSideClient(tcpClient, AddDataToProcess);
-                var entity = world.Create(new Player() { Id = ((uint)clients.Count + 1) }, new Camera(), new ClientInput());
+                var entity = world.Create(new Player() { Id = (uint)clients.Count + 1 }, new Camera(), new ClientInput(), new RenderModel() { Model = "sphere" });
                 client.SetEntityReference(entity.Reference());
                 client.Disconnected += ClientDisconnected;
                 tasks.Add(Task.Run(() => client.BeginReceiving(cancellationToken), cancellationToken));
@@ -144,7 +144,7 @@ namespace FpsGame.Server
         {
             if (clients.Any())
             {
-                var data = serializer.Serialize(SerializableWorld.SerializeWorld(world, false));
+                var data = serializer.Serialize(SerializableWorld.SerializeWorld(world, true));
                 foreach (var client in clients)
                 {
                     client.Send(data);

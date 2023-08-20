@@ -15,6 +15,8 @@ namespace FpsGame.Screens
         Label titleLabel;
         Label gameNameLabel;
         TextBox gameNameTextBox;
+        Label playerNameLabel;
+        TextBox playerNameTextBox;
         Button continueButton;
         Button backButton;
 
@@ -25,14 +27,28 @@ namespace FpsGame.Screens
 
             panel = new VerticalPanel("panel");
             titleLabel = new Label("title", "Game Setup");
-            gameNameLabel = new Label("game-name-label", "Game Name: ");
-            gameNameTextBox = new TextBox("game-name");
+            
             continueButton = new Button("continue", "Start Game", ContinueButtonClick);
             backButton = new Button("back", "Back to Main Menu", BackButtonClick);
             
             panel.AddWidget(titleLabel);
-            panel.AddWidget(gameNameLabel);
-            panel.AddWidget(gameNameTextBox);
+            
+            if(gameSettings.GameMode != GameMode.MultiplayerJoin)
+            {
+                gameNameLabel = new Label("game-name-label", "Game Name: ");
+                gameNameTextBox = new TextBox("game-name");
+                panel.AddWidget(gameNameLabel);
+                panel.AddWidget(gameNameTextBox);
+            }
+
+            if(gameSettings.GameMode != GameMode.StandaloneServer)
+            {
+                playerNameLabel = new Label("player-name-label", "Player Name: ");
+                playerNameTextBox = new TextBox("player-name");
+                panel.AddWidget(playerNameLabel);
+                panel.AddWidget(playerNameTextBox);
+            }
+            
             panel.AddWidget(continueButton);
             panel.AddWidget(backButton);
 
@@ -46,14 +62,37 @@ namespace FpsGame.Screens
 
         public override void Update(GameTime gameTime)
         {
-            continueButton.UiWidget.Enabled = !string.IsNullOrWhiteSpace(gameNameTextBox.Text);
+            continueButton.UiWidget.Enabled = 
+                (gameSettings.GameMode == GameMode.MultiplayerJoin 
+                || !string.IsNullOrWhiteSpace(gameNameTextBox.Text))
+                && (gameSettings.GameMode == GameMode.StandaloneServer
+                || !string.IsNullOrWhiteSpace(playerNameTextBox.Text));
         }
 
         protected void ContinueButtonClick(object e, EventArgs eventArgs)
         {
-            gameSettings.GameName = gameNameTextBox.Text;
-            ScreenManager.AddScreen(ScreenNames.Game, new GameScreen(Game, ScreenManager, gameSettings));
-            ScreenManager.SetActiveScreen(ScreenNames.Game);
+            if (continueButton.UiWidget.Enabled)
+            {
+                if (gameSettings.GameMode != GameMode.MultiplayerJoin)
+                {
+                    gameSettings.GameName = gameNameTextBox.Text;
+                }
+
+                PlayerSettings? playerSettings = null;
+
+                if(gameSettings.GameMode != GameMode.StandaloneServer)
+                {
+                    Random random = new Random();
+                    playerSettings = new PlayerSettings()
+                    {
+                        Name = playerNameTextBox.Text,
+                        Color = new Vector3((float)random.NextDouble(), (float)random.NextDouble(), (float)random.NextDouble()),
+                    };
+                }
+
+                ScreenManager.AddScreen(ScreenNames.Game, new GameScreen(Game, ScreenManager, gameSettings, playerSettings));
+                ScreenManager.SetActiveScreen(ScreenNames.Game);
+            }
         }
 
         protected void BackButtonClick(object e, EventArgs eventArgs)

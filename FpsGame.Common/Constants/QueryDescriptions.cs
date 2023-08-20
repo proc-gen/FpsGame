@@ -9,6 +9,7 @@ namespace FpsGame.Common.Constants
     public enum QueryDescriptions
     {
         RenderModel,
+        RenderPlayer,
         ModelRotator,
         PlayerInput,
     }

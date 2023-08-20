@@ -52,11 +52,12 @@ namespace FpsGame.Screens
 
         List<Task> tasks = new List<Task>();
 
-        public GameScreen(Game game, ScreenManager screenManager, GameSettings gameSettings)
+        public GameScreen(Game game, ScreenManager screenManager, GameSettings gameSettings, PlayerSettings? playerSettings)
             : base(game, screenManager)
         {
             this.gameSettings = gameSettings;
             Models.Add("cube", game.Content.Load<Model>("cube"));
+            Models.Add("sphere", game.Content.Load<Model>("sphere"));
 
             world = World.Create();
 
@@ -64,11 +65,13 @@ namespace FpsGame.Screens
             {
                 { QueryDescriptions.RenderModel, new QueryDescription().WithAll<RenderModel, Position, Rotation, Scale>() },
                 { QueryDescriptions.PlayerInput, new QueryDescription().WithAll<Player, Camera>() },
+                { QueryDescriptions.RenderPlayer, new QueryDescription().WithAll<RenderModel, Camera>() }
             };
 
             renderSystems = new List<IRenderSystem>()
             {
                 new RenderModelSystem(world, queryDescriptions, Models),
+                new RenderPlayerSystem(world, queryDescriptions, Models),
             };
 
             converters = new Dictionary<Type, Converter>()
