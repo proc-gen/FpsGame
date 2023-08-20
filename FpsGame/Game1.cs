@@ -12,6 +12,7 @@ namespace FpsGame
         private GraphicsDeviceManager graphics;
         private SpriteBatch spriteBatch;
         private ScreenManager screenManager;
+        private DepthStencilState depthStencil;
 
         public Game1()
         {
@@ -31,6 +32,7 @@ namespace FpsGame
         protected override void LoadContent()
         {
             spriteBatch = new SpriteBatch(GraphicsDevice);
+            depthStencil = new DepthStencilState() { DepthBufferEnable = true, DepthBufferFunction = CompareFunction.Less };
         }
 
         protected override void Update(GameTime gameTime)
@@ -42,6 +44,7 @@ namespace FpsGame
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.Black);
+            GraphicsDevice.DepthStencilState = depthStencil;
 
             screenManager.Draw(gameTime);
 
