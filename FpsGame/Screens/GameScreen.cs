@@ -163,20 +163,21 @@ namespace FpsGame.Screens
 
         private void processInputData(KeyboardState kState, MouseState mState, GamePadState gState)
         {
-            if (kState.GetPressedKeyCount() > 0 || mState.RightButton == ButtonState.Pressed)
+            if (Game.IsActive)
             {
                 var keys = kState.GetPressedKeys();
 
                 ClientInput clientInput = new ClientInput()
                 {
-                    Forward = keys.Contains(Keys.Up) || keys.Contains(Keys.W),
-                    Backward = keys.Contains(Keys.Down) || keys.Contains(Keys.S),
-                    Left = keys.Contains(Keys.Left) || keys.Contains(Keys.A),
-                    Right = keys.Contains(Keys.Right) || keys.Contains(Keys.D)
+                    Forward = keys.Contains(Keys.Up) || keys.Contains(Keys.W) || gState.DPad.Up == ButtonState.Pressed,
+                    Backward = keys.Contains(Keys.Down) || keys.Contains(Keys.S) || gState.DPad.Down == ButtonState.Pressed,
+                    Left = keys.Contains(Keys.Left) || keys.Contains(Keys.A) || gState.DPad.Left == ButtonState.Pressed,
+                    Right = keys.Contains(Keys.Right) || keys.Contains(Keys.D) || gState.DPad.Right == ButtonState.Pressed,
+                    LeftStick = gState.ThumbSticks.Left,
+                    RightStick = gState.ThumbSticks.Right,
                 };
 
-                if (mState.RightButton == ButtonState.Pressed
-                    && Game.IsActive)
+                if (mState.RightButton == ButtonState.Pressed)
                 {
                     if (firstMove)
                     {
@@ -193,7 +194,9 @@ namespace FpsGame.Screens
                     clientInput.Backward ||
                     clientInput.Left ||
                     clientInput.Right ||
-                    clientInput.MouseDelta != Vector2.Zero)
+                    clientInput.MouseDelta != Vector2.Zero ||
+                    clientInput.LeftStick != Vector2.Zero ||
+                    clientInput.RightStick != Vector2.Zero)
                 {
                     client.SendInputData(clientInput);
                 }

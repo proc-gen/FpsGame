@@ -11,5 +11,7 @@ namespace FpsGame.Server.ClientData
         public bool Left { get; set; }
         public bool Right { get; set; }
         public Vector2 MouseDelta { get; set; }
+        public Vector2 LeftStick { get; set; }
+        public Vector2 RightStick { get; set;}
     }
 }
