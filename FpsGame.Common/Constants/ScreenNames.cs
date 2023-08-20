@@ -10,5 +10,6 @@ namespace FpsGame.Common.Constants
     {
         public const string MainMenu = "main-menu";
         public const string Game = "game";
+        public const string GameSetup = "game-setup";
     }
 }

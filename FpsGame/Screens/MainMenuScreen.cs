@@ -44,7 +44,7 @@ namespace FpsGame.Screens
 
         public override void SetActive()
         {
-            ScreenManager.RemoveScreen(ScreenNames.Game);
+            ScreenManager.RemoveAllExcept(ScreenNames.MainMenu);
             base.SetActive();
         }
 
@@ -55,31 +55,31 @@ namespace FpsGame.Screens
 
         public override void Render(GameTime gameTime)
         {
-            // Nothing special
+            
         }
 
         protected void NewGameButtonClick(object e, EventArgs eventArgs)
         {
-            ScreenManager.AddScreen(ScreenNames.Game, new GameScreen(Game, ScreenManager, new GameSettings() { GameMode = GameMode.SinglePlayer }));
-            ScreenManager.SetActiveScreen(ScreenNames.Game);
+            ScreenManager.AddScreen(ScreenNames.GameSetup, new GameSetupScreen(Game, ScreenManager, new GameSettings() { GameMode = GameMode.SinglePlayer }));
+            ScreenManager.SetActiveScreen(ScreenNames.GameSetup);
         }
 
         protected void MultiplayerHostButtonClick(object e, EventArgs eventArgs)
         {
-            ScreenManager.AddScreen(ScreenNames.Game, new GameScreen(Game, ScreenManager, new GameSettings() { GameMode = GameMode.MultiplayerHost }));
-            ScreenManager.SetActiveScreen(ScreenNames.Game);
+            ScreenManager.AddScreen(ScreenNames.GameSetup, new GameSetupScreen(Game, ScreenManager, new GameSettings() { GameMode = GameMode.MultiplayerHost }));
+            ScreenManager.SetActiveScreen(ScreenNames.GameSetup);
         }
 
         protected void MultiplayerJoinButtonClick(object e, EventArgs eventArgs)
         {
-            ScreenManager.AddScreen(ScreenNames.Game, new GameScreen(Game, ScreenManager, new GameSettings() { GameMode = GameMode.MultiplayerJoin }));
-            ScreenManager.SetActiveScreen(ScreenNames.Game);
+            ScreenManager.AddScreen(ScreenNames.GameSetup, new GameSetupScreen(Game, ScreenManager, new GameSettings() { GameMode = GameMode.MultiplayerJoin }));
+            ScreenManager.SetActiveScreen(ScreenNames.GameSetup);
         }
 
         protected void StandaloneServerButtonClick(object e, EventArgs eventArgs)
         {
-            ScreenManager.AddScreen(ScreenNames.Game, new GameScreen(Game, ScreenManager, new GameSettings() { GameMode = GameMode.StandaloneServer }));
-            ScreenManager.SetActiveScreen(ScreenNames.Game);
+            ScreenManager.AddScreen(ScreenNames.GameSetup, new GameSetupScreen(Game, ScreenManager, new GameSettings() { GameMode = GameMode.StandaloneServer }));
+            ScreenManager.SetActiveScreen(ScreenNames.GameSetup);
         }
 
         protected void ExitButtonClick(object e, EventArgs eventArgs)

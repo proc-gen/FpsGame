@@ -27,7 +27,7 @@ namespace FpsGame.Ui
 
         public void Update(GameTime gameTime)
         {
-            if(!string.IsNullOrEmpty(ActiveScreen))
+            if(!string.IsNullOrEmpty(ActiveScreen) && screens.ContainsKey(ActiveScreen))
             {
                 screens[ActiveScreen].Update(gameTime);
             }
@@ -35,7 +35,7 @@ namespace FpsGame.Ui
 
         public void Draw(GameTime gameTime)
         {
-            if (!string.IsNullOrEmpty(ActiveScreen))
+            if (!string.IsNullOrEmpty(ActiveScreen) && screens.ContainsKey(ActiveScreen))
             {
                 screens[ActiveScreen].Render(gameTime);
             }
@@ -57,6 +57,18 @@ namespace FpsGame.Ui
             {
                 screens[screenName].Dispose();
                 screens.Remove(screenName);
+            }
+        }
+
+        public void RemoveAllExcept(string screenName)
+        {
+            foreach(var screen in screens)
+            {
+                if(screen.Key != screenName)
+                {
+                    screens[screen.Key].Dispose();
+                    screens.Remove(screen.Key);
+                }
             }
         }
 
