@@ -65,7 +65,7 @@ namespace FpsGame.Screens
             {
                 { QueryDescriptions.RenderModel, new QueryDescription().WithAll<RenderModel, Position, Rotation, Scale>() },
                 { QueryDescriptions.PlayerInput, new QueryDescription().WithAll<Player, Camera>() },
-                { QueryDescriptions.RenderPlayer, new QueryDescription().WithAll<RenderModel, Camera>() }
+                { QueryDescriptions.RenderPlayer, new QueryDescription().WithAll<Player, RenderModel, Camera>() }
             };
 
             renderSystems = new List<IRenderSystem>()
@@ -178,6 +178,7 @@ namespace FpsGame.Screens
                     Right = keys.Contains(Keys.Right) || keys.Contains(Keys.D) || gState.DPad.Right == ButtonState.Pressed,
                     LeftStick = gState.ThumbSticks.Left,
                     RightStick = gState.ThumbSticks.Right,
+                    
                 };
 
                 if (mState.RightButton == ButtonState.Pressed)

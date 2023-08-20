@@ -144,7 +144,15 @@ namespace FpsGame.Server
         {
             if (clients.Any())
             {
-                var data = serializer.Serialize(SerializableWorld.SerializeWorld(world, true));
+                var dataToSerialize = SerializableWorld.SerializeWorld(world, false);
+                if (newClients.Any())
+                {
+                    foreach(var client in newClients)
+                    {
+                        dataToSerialize.Entities.Add(SerializableEntity.SerializeEntity(client.entityReference.Entity, client.entityReference.Entity.GetAllComponents(), true));
+                    }
+                }
+                var data = serializer.Serialize(dataToSerialize);
                 foreach (var client in clients)
                 {
                     client.Send(data);

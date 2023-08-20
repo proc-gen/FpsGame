@@ -21,7 +21,7 @@ namespace FpsGame.Server
 
         public event EventHandler Disconnected;
         Func<EntityReference, string, bool> AddDataToProcess;
-        private EntityReference entityReference;
+        public EntityReference entityReference { get; private set; }
 
         public ServerSideClient(TcpClient client, Func<EntityReference, string, bool> addDataToProcess)
         {

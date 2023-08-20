@@ -23,23 +23,14 @@ namespace FpsGame.Common.Serialization
         {
             SerializableWorld serializableWorld = new SerializableWorld(full);
 
+
             world.Query(in allEntitiesQuery, (in Entity entity) =>
             {
                 var components = entity.GetAllComponents();
                 if (components.Any(component => component is ISerializableComponent
                         && (full || ((ISerializableComponent)component).IsChanged)))
                 {
-                    var ec = new SerializableEntity(entity.Id, entity.Version());
-                    foreach (var component in components)
-                    {
-                        if (component is ISerializableComponent
-                            && (full || ((ISerializableComponent)component).IsChanged))
-                        {
-                            ec.Components.Add(component.GetType(), component);
-                        }
-                    }
-
-                    serializableWorld.Entities.Add(ec);
+                    serializableWorld.Entities.Add(SerializableEntity.SerializeEntity(entity, components, full));
                 }
             });
 

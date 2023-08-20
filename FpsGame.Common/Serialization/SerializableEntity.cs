@@ -1,4 +1,5 @@
 ﻿using Arch.Core;
+using Arch.Core.Extensions;
 using FpsGame.Common.Serialization.ComponentConverters;
 using System;
 using System.Collections.Generic;
@@ -32,6 +33,21 @@ namespace FpsGame.Common.Serialization
             SourceId = id;
             SourceVersionId = versionId;
             Components = components;
+        }
+
+        public static SerializableEntity SerializeEntity(Entity entity, object[] components, bool full)
+        {
+            var ec = new SerializableEntity(entity.Id, entity.Version());
+            foreach (var component in components)
+            {
+                if (component is ISerializableComponent
+                    && (full || ((ISerializableComponent)component).IsChanged))
+                {
+                    ec.Components.Add(component.GetType(), component);
+                }
+            }
+
+            return ec;
         }
 
         public object[] GetDeserializedComponents(Dictionary<Type, Converter> converters)
