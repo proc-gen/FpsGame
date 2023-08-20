@@ -12,7 +12,6 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace FpsGame.Server
 {
@@ -24,18 +23,20 @@ namespace FpsGame.Server
         private NetworkStream stream;
         private BinaryReader reader;
         Func<string, bool> AddDataToProcess;
+        GameSettings gameSettings;
         PlayerSettings playerSettings;
 
-        public Client(Func<string, bool> addDataToProcess, PlayerSettings playerSettings)
+        public Client(Func<string, bool> addDataToProcess, GameSettings gameSettings, PlayerSettings playerSettings)
         {
             client = new TcpClient();
             AddDataToProcess = addDataToProcess;
+            this.gameSettings = gameSettings;
             this.playerSettings = playerSettings;
         }
 
         public async Task Join(CancellationToken cancellationToken)
         {
-            await client.ConnectAsync(IPAddress.Loopback, 1234);
+            await client.ConnectAsync(gameSettings.GameIPAddress, gameSettings.GamePort);
             stream = client.GetStream();
             reader = new BinaryReader(stream);
             SendInputData(playerSettings);
@@ -55,7 +56,6 @@ namespace FpsGame.Server
 
         public void SendInputData(object clientInput)
         {
-            
             using (var ms = new MemoryStream())
             {
                 using (var bw = new BinaryWriter(ms))

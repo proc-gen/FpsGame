@@ -4,6 +4,7 @@ using FpsGame.Ui;
 using FpsGame.Ui.Components;
 using Microsoft.Xna.Framework;
 using System;
+using System.Net;
 
 namespace FpsGame.Screens
 {
@@ -17,6 +18,8 @@ namespace FpsGame.Screens
         TextBox gameNameTextBox;
         Label playerNameLabel;
         TextBox playerNameTextBox;
+        Label ipAddressLabel;
+        TextBox ipAddressTextBox;
         Button continueButton;
         Button backButton;
 
@@ -40,6 +43,13 @@ namespace FpsGame.Screens
                 panel.AddWidget(gameNameLabel);
                 panel.AddWidget(gameNameTextBox);
             }
+            else
+            {
+                ipAddressLabel = new Label("ip-address-label", "Host IP Address: ");
+                ipAddressTextBox = new TextBox("ip-address");
+                panel.AddWidget(ipAddressLabel);
+                panel.AddWidget(ipAddressTextBox);
+            }
 
             if(gameSettings.GameMode != GameMode.StandaloneServer)
             {
@@ -62,9 +72,15 @@ namespace FpsGame.Screens
 
         public override void Update(GameTime gameTime)
         {
+            IPAddress dummy = null;
+            int dummyPort;
             continueButton.UiWidget.Enabled = 
                 (gameSettings.GameMode == GameMode.MultiplayerJoin 
                 || !string.IsNullOrWhiteSpace(gameNameTextBox.Text))
+                && (gameSettings.GameMode != GameMode.MultiplayerJoin
+                || (ipAddressTextBox.Text.Contains(':')
+                    && IPAddress.TryParse(ipAddressTextBox.Text.Split(':')[0], out dummy)
+                    && int.TryParse(ipAddressTextBox.Text.Split(':')[1], out dummyPort)))
                 && (gameSettings.GameMode == GameMode.StandaloneServer
                 || !string.IsNullOrWhiteSpace(playerNameTextBox.Text));
         }
@@ -76,6 +92,14 @@ namespace FpsGame.Screens
                 if (gameSettings.GameMode != GameMode.MultiplayerJoin)
                 {
                     gameSettings.GameName = gameNameTextBox.Text;
+                    gameSettings.GameIPAddress = IPAddress.Loopback;
+                    gameSettings.GamePort = 1234;
+                }
+                else
+                {
+                    string[] ipAddress = ipAddressTextBox.Text.Split(':');
+                    gameSettings.GameIPAddress = IPAddress.Parse(ipAddress[0]);
+                    gameSettings.GamePort = int.Parse(ipAddress[1]);
                 }
 
                 PlayerSettings? playerSettings = null;
