@@ -1,4 +1,5 @@
-﻿using FpsGame.Common.Serialization;
+﻿using FpsGame.Common.Containers;
+using FpsGame.Common.Serialization;
 using FpsGame.Server.ClientData;
 using Newtonsoft.Json;
 using System;
@@ -23,11 +24,13 @@ namespace FpsGame.Server
         private NetworkStream stream;
         private BinaryReader reader;
         Func<string, bool> AddDataToProcess;
+        PlayerSettings playerSettings;
 
-        public Client(Func<string, bool> addDataToProcess)
+        public Client(Func<string, bool> addDataToProcess, PlayerSettings playerSettings)
         {
             client = new TcpClient();
             AddDataToProcess = addDataToProcess;
+            this.playerSettings = playerSettings;
         }
 
         public async Task Join(CancellationToken cancellationToken)
@@ -35,6 +38,7 @@ namespace FpsGame.Server
             await client.ConnectAsync(IPAddress.Loopback, 1234);
             stream = client.GetStream();
             reader = new BinaryReader(stream);
+            SendInputData(playerSettings);
             BeginReceiving(cancellationToken);
         }
 
@@ -49,7 +53,7 @@ namespace FpsGame.Server
             }
         }
 
-        public void SendInputData(ClientInput clientInput)
+        public void SendInputData(object clientInput)
         {
             
             using (var ms = new MemoryStream())
@@ -63,7 +67,7 @@ namespace FpsGame.Server
             }
         }
 
-        public string Serialize(ClientInput data)
+        public string Serialize(object data)
         {
             string retVal;
             using (var sw = new StringWriter())

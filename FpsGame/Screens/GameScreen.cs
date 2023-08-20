@@ -92,7 +92,7 @@ namespace FpsGame.Screens
 
             if (gameSettings.GameMode != GameMode.StandaloneServer)
             {
-                client = new Client(AddDataToProcess);
+                client = new Client(AddDataToProcess, playerSettings.Value);
                 tasks.Add(Task.Run(() => client.Join(token.Token), token.Token));
             }
         }

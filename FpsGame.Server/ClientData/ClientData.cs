@@ -9,6 +9,7 @@ namespace FpsGame.Server.ClientData
 {
     public class ClientData
     {
+        public ServerSideClient Client { get; set; }
         public EntityReference EntityReference { get; set; }
         public string Data { get; set; }
     }

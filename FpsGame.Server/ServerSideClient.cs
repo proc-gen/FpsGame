@@ -20,10 +20,11 @@ namespace FpsGame.Server
         private BinaryReader reader;
 
         public event EventHandler Disconnected;
-        Func<EntityReference, string, bool> AddDataToProcess;
+        Func<ServerSideClient, string, bool> AddDataToProcess;
         public EntityReference entityReference { get; private set; }
+        public bool Joined { get; private set; }
 
-        public ServerSideClient(TcpClient client, Func<EntityReference, string, bool> addDataToProcess)
+        public ServerSideClient(TcpClient client, Func<ServerSideClient, string, bool> addDataToProcess)
         {
             this.client = client;
             networkStream = client.GetStream();
@@ -34,6 +35,7 @@ namespace FpsGame.Server
         public void SetEntityReference(EntityReference entityReference)
         {
             this.entityReference = entityReference;
+            Joined = true;
         }
 
         public uint GetPlayerId()
@@ -49,7 +51,7 @@ namespace FpsGame.Server
                 {
                     if (networkStream.DataAvailable)
                     {
-                        AddDataToProcess(entityReference, reader.ReadString());
+                        AddDataToProcess(this, reader.ReadString());
                     }
                 }
                 catch

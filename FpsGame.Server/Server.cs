@@ -11,6 +11,7 @@ using FpsGame.Server.ClientData;
 using FpsGame.Server.Systems;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -83,8 +84,7 @@ namespace FpsGame.Server
             try {
                 TcpClient tcpClient = await listener.AcceptTcpClientAsync(cancellationToken);
                 var client = new ServerSideClient(tcpClient, AddDataToProcess);
-                var entity = world.Create(new Player() { Id = (uint)clients.Count + 1 }, new Camera(), new ClientInput(), new RenderModel() { Model = "sphere" });
-                client.SetEntityReference(entity.Reference());
+                
                 client.Disconnected += ClientDisconnected;
                 tasks.Add(Task.Run(() => client.BeginReceiving(cancellationToken), cancellationToken));
                 newClients.Add(client);
@@ -107,9 +107,19 @@ namespace FpsGame.Server
                             {
                                 JsonSerializer serializer = new JsonSerializer();
 
-                                var clientInput = serializer.Deserialize<ClientInput>(reader);
+                                JObject clientInput = serializer.Deserialize<JObject>(reader);
 
-                                message.EntityReference.Entity.Set(clientInput);
+                                if (clientInput.ContainsKey("Name"))
+                                {
+                                    var playerSettings = clientInput.ToObject<PlayerSettings>();
+
+                                    var entity = world.Create(new Player() { Id = (uint)clients.Count + 1, Name = playerSettings.Name, Color = playerSettings.Color }, new Camera(), new ClientInput(), new RenderModel() { Model = "sphere" });
+                                    message.Client.SetEntityReference(entity.Reference());
+                                }
+                                else if (clientInput.ContainsKey("Forward"))
+                                {
+                                    message.EntityReference.Entity.Set(clientInput.ToObject<ClientInput>());
+                                }
                             }
                         }
                     }
@@ -145,9 +155,9 @@ namespace FpsGame.Server
             if (clients.Any())
             {
                 var dataToSerialize = SerializableWorld.SerializeWorld(world, false);
-                if (newClients.Any())
+                if (newClients.Where(a => a.Joined).Any())
                 {
-                    foreach(var client in newClients)
+                    foreach(var client in newClients.Where(a => a.Joined))
                     {
                         dataToSerialize.Entities.Add(SerializableEntity.SerializeEntity(client.entityReference.Entity, client.entityReference.Entity.GetAllComponents(), true));
                     }
@@ -159,22 +169,22 @@ namespace FpsGame.Server
                 }
             }
 
-            if (newClients.Any())
+            if (newClients.Where(a => a.Joined).Any())
             {
-                foreach(var client in newClients)
+                foreach(var client in newClients.Where(a => a.Joined))
                 {
                     var serializedWorld = SerializableWorld.SerializeWorld(world, true);
                     serializedWorld.PlayerId = client.GetPlayerId();
                     clients.Add(client);
                     client.Send(serializer.Serialize(serializedWorld));
                 }
-                newClients.Clear();
+                newClients.RemoveAll(a => a.Joined);
             }
         }
 
-        public bool AddDataToProcess(EntityReference entityReference, string data)
+        public bool AddDataToProcess(ServerSideClient client, string data)
         {
-            ClientMessages.Enqueue(new ClientData.ClientData() { EntityReference = entityReference, Data = data});
+            ClientMessages.Enqueue(new ClientData.ClientData() { Client = client, EntityReference = client.entityReference, Data = data});
             return true;
         }
 
