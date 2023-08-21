@@ -26,16 +26,16 @@ namespace FpsGame.Server.Systems
             var query = queryDescriptions[QueryDescriptions.PlayerInput];
             world.Query(in query, (ref Camera camera, ref ClientInput clientInput) =>
             {
-                camera.IsChanged =
-                    clientInput.Forward ||
+                camera.ComponentState =
+                    (clientInput.Forward ||
                     clientInput.Backward ||
                     clientInput.Left ||
                     clientInput.Right || 
                     clientInput.MouseDelta != Vector2.Zero ||
                     clientInput.LeftStick != Vector2.Zero ||
-                    clientInput.RightStick != Vector2.Zero;
+                    clientInput.RightStick != Vector2.Zero) ? SerializableObjectState.Update : SerializableObjectState.NoChange;
 
-                if (camera.IsChanged)
+                if (camera.ComponentState == SerializableObjectState.Update)
                 {
                     if(clientInput.Forward ||
                     clientInput.Backward ||

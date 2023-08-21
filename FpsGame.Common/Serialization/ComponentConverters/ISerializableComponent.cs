@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FpsGame.Common.Constants;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +9,6 @@ namespace FpsGame.Common.Serialization.ComponentConverters
 {
     internal interface ISerializableComponent
     {
-        public bool IsChanged { get; set; }
+        public SerializableObjectState ComponentState { get; set; }
     }
 }

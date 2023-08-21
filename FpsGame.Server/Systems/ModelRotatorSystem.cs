@@ -26,7 +26,7 @@ namespace FpsGame.Server.Systems
                 rotation.X += modelRotator.XIncrement;
                 rotation.Y += modelRotator.YIncrement;
                 rotation.Z += modelRotator.ZIncrement;
-                rotation.IsChanged = true;
+                rotation.ComponentState = SerializableObjectState.Update;
             });
         }
     }

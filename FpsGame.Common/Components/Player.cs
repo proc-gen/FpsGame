@@ -1,4 +1,5 @@
-﻿using FpsGame.Common.Serialization.ComponentConverters;
+﻿using FpsGame.Common.Constants;
+using FpsGame.Common.Serialization.ComponentConverters;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -10,7 +11,7 @@ namespace FpsGame.Common.Components
 {
     public struct Player : ISerializableComponent
     {
-        public bool IsChanged { get; set; }
+        public SerializableObjectState ComponentState { get; set; }
         public uint Id { get; set; }
         public string Name { get; set; }
         public Vector3 Color { get; set; }

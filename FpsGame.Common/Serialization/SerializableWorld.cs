@@ -1,5 +1,7 @@
 ﻿using Arch.Core;
 using Arch.Core.Extensions;
+using Arch.Core.Utils;
+using FpsGame.Common.Constants;
 using FpsGame.Common.Serialization.ComponentConverters;
 using System;
 using System.Collections.Generic;
@@ -28,7 +30,7 @@ namespace FpsGame.Common.Serialization
             {
                 var components = entity.GetAllComponents();
                 if (components.Any(component => component is ISerializableComponent
-                        && (full || ((ISerializableComponent)component).IsChanged)))
+                        && (full || ((ISerializableComponent)component).ComponentState != SerializableObjectState.NoChange)))
                 {
                     serializableWorld.Entities.Add(SerializableEntity.SerializeEntity(entity, components, full));
                 }
@@ -40,18 +42,44 @@ namespace FpsGame.Common.Serialization
                 {
                     var components = entity.GetAllComponents();
                     if (components.Any(component => component is ISerializableComponent
-                            && ((ISerializableComponent)component).IsChanged))
+                            && ((ISerializableComponent)component).ComponentState == SerializableObjectState.Update))
                     {
                         foreach (var component in components)
                         {
                             if (component is ISerializableComponent
-                                && ((ISerializableComponent)component).IsChanged)
+                                && ((ISerializableComponent)component).ComponentState == SerializableObjectState.Update)
                             {
-                                ((ISerializableComponent)component).IsChanged = false;
+                                ((ISerializableComponent)component).ComponentState = SerializableObjectState.NoChange;
                             }
                         }
 
                         entity.SetRange(components);
+                    }
+                });
+
+                world.Query(in allEntitiesQuery, (in Entity entity) =>
+                {
+                    var components = entity.GetAllComponents();
+                    if (components.Any(component => component is ISerializableComponent
+                            && ((ISerializableComponent)component).ComponentState == SerializableObjectState.Remove))
+                    {
+                        List<ComponentType> componentsToRemove = new List<ComponentType>();
+
+                        foreach (var component in components)
+                        {
+                            if (component is ISerializableComponent
+                                && ((ISerializableComponent)component).ComponentState == SerializableObjectState.Remove)
+                            {
+                                ComponentType type;
+                                if (!ComponentRegistry.TryGet(component.GetType(), out type))
+                                {
+                                    type = ComponentRegistry.Add(component.GetType());
+                                }
+                                componentsToRemove.Add(type);
+                            }
+                        }
+
+                        world.RemoveRange(entity, componentsToRemove.ToArray());
                     }
                 });
             }

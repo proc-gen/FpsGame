@@ -94,7 +94,7 @@ namespace FpsGame.Screens
                 if(gameSettings.GameMode == GameMode.SinglePlayer)
                 {
                     gameSettings.GameName = gameNameTextBox.Text;
-                    gameSettings.GameIPAddress.Add(IPAddress.Loopback);
+                    gameSettings.GameIPAddress = new List<IPAddress>() { IPAddress.Loopback };
                     gameSettings.GamePort = 12345;
                 }
                 else if (gameSettings.GameMode != GameMode.MultiplayerJoin)

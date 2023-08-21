@@ -1,4 +1,5 @@
-﻿using FpsGame.Common.Serialization.ComponentConverters;
+﻿using FpsGame.Common.Constants;
+using FpsGame.Common.Serialization.ComponentConverters;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -24,7 +25,7 @@ namespace FpsGame.Common.Components
             Position = position;
         }
 
-        public bool IsChanged { get; set; }
+        public SerializableObjectState ComponentState { get; set; }
 
         public Vector3 position { get; set; }
         [IgnoreDataMember] 
@@ -55,7 +56,7 @@ namespace FpsGame.Common.Components
 
         private void UpdateVectors()
         {
-            IsChanged = true;
+            ComponentState = SerializableObjectState.Update;
             Front = new Vector3(
                 MathF.Cos(Pitch) * MathF.Cos(Yaw),
                 MathF.Sin(Pitch),

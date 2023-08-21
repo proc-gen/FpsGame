@@ -1,5 +1,6 @@
 ﻿using Arch.Core;
 using Arch.Core.Extensions;
+using FpsGame.Common.Constants;
 using FpsGame.Common.Serialization.ComponentConverters;
 using System;
 using System.Collections.Generic;
@@ -16,6 +17,7 @@ namespace FpsGame.Common.Serialization
         public int DestinationId { get; set; }
         public int DestinationVersionId { get; set; }
         public EntityReference EntityReference { get; set; }
+        public SerializableObjectState EntityState { get; set; }
         public bool Update { get; set; }
         public bool Delete { get; set; }
         public bool Create { get; set; }
@@ -41,7 +43,7 @@ namespace FpsGame.Common.Serialization
             foreach (var component in components)
             {
                 if (component is ISerializableComponent
-                    && (full || ((ISerializableComponent)component).IsChanged))
+                    && (full || ((ISerializableComponent)component).ComponentState != SerializableObjectState.NoChange))
                 {
                     ec.Components.Add(component.GetType(), component);
                 }
