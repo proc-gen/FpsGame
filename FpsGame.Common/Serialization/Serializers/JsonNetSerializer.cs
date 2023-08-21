@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using FpsGame.Common.Serialization.ComponentConverters;
+using FpsGame.Common.Constants;
 
 namespace FpsGame.Common.Serialization.Serializers
 {
@@ -42,20 +43,25 @@ namespace FpsGame.Common.Serialization.Serializers
                     var origEntity = serializableWorld.Entities.Where(a => a.SourceId == entity.SourceId).FirstOrDefault();
                     if (origEntity != null)
                     {
+                        if(entity.EntityState == SerializableObjectState.Remove)
+                        {
+                            origEntity.EntityState = SerializableObjectState.Remove;
+                            serializableWorld.EntitiesToRemove.Add(origEntity);
+                        }
                         if(entity.SourceVersionId != origEntity.SourceVersionId)
                         {
-                            origEntity.Delete = true;
+                            origEntity.EntityState = SerializableObjectState.Remove;
                             newEntities.Add(entity);
                         }
                         else
                         {
-                            origEntity.Update = true;
+                            origEntity.EntityState = SerializableObjectState.Update;
                             origEntity.Components = entity.Components;
                         }
                     }
                     else
                     {
-                        entity.Create = true;
+                        entity.EntityState = SerializableObjectState.Add;
                         newEntities.Add(entity);
                     }
                 }

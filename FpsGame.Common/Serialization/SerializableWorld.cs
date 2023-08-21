@@ -15,8 +15,9 @@ namespace FpsGame.Common.Serialization
     {
         public SerializableWorld(bool full) 
         {
-            MessageType = full ? Constants.MessageType.WorldFull : Constants.MessageType.WorldUpdate;
+            MessageType = full ? MessageType.WorldFull : MessageType.WorldUpdate;
             Entities = new List<SerializableEntity>();
+            EntitiesToRemove = new List<SerializableEntity>();
         }
 
         private readonly static QueryDescription allEntitiesQuery = new QueryDescription();
@@ -87,7 +88,8 @@ namespace FpsGame.Common.Serialization
             return serializableWorld;
         }
 
-        public List<SerializableEntity> Entities;
+        public List<SerializableEntity> Entities { get; set; }
+        public List<SerializableEntity> EntitiesToRemove { get; set; }
 
         public uint PlayerId { get; set; }
     }

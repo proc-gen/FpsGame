@@ -18,9 +18,6 @@ namespace FpsGame.Common.Serialization
         public int DestinationVersionId { get; set; }
         public EntityReference EntityReference { get; set; }
         public SerializableObjectState EntityState { get; set; }
-        public bool Update { get; set; }
-        public bool Delete { get; set; }
-        public bool Create { get; set; }
         public Dictionary<Type, object> Components { get; set; }
 
         public SerializableEntity() { }
@@ -46,6 +43,10 @@ namespace FpsGame.Common.Serialization
                     && (full || ((ISerializableComponent)component).ComponentState != SerializableObjectState.NoChange))
                 {
                     ec.Components.Add(component.GetType(), component);
+                }
+                else if (component is SerializableObjectState)
+                {
+                    ec.EntityState = (SerializableObjectState)component;
                 }
             }
 

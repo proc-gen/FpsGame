@@ -51,12 +51,12 @@ namespace FpsGame.Server
             this.cancellationToken = cancellationToken;
             this.gameSettings = gameSettings;
 
-            foreach(var ip in gameSettings.GameIPAddress)
-            {
+            var ip = gameSettings.GameIPAddress.First();
+            
                 var listener = new TcpListener(ip, gameSettings.GamePort);
                 listener.Start();
                 listeners.Add(listener);
-            }
+            
 
             world = World.Create();
 
@@ -153,6 +153,7 @@ namespace FpsGame.Server
         {
             if (sender is ServerSideClient serverSideClient)
             {
+                serverSideClient.entityReference.Entity.Add(SerializableObjectState.Remove);
                 clients.Remove(serverSideClient);
             }
         }
