@@ -36,7 +36,7 @@ namespace FpsGame.Server
 
         public async Task Join(CancellationToken cancellationToken)
         {
-            await client.ConnectAsync(gameSettings.GameIPAddress, gameSettings.GamePort);
+            await client.ConnectAsync(gameSettings.GameIPAddress.First(), gameSettings.GamePort);
             stream = client.GetStream();
             reader = new BinaryReader(stream);
             SendInputData(playerSettings);

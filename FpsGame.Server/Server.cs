@@ -29,7 +29,7 @@ namespace FpsGame.Server
         private bool disposedValue;
         private readonly List<ServerSideClient> clients = new List<ServerSideClient>();
         private readonly List<ServerSideClient> newClients = new List<ServerSideClient>();
-        private readonly TcpListener listener;
+        private readonly List<TcpListener> listeners = new List<TcpListener>();
 
         private readonly JsonNetSerializer serializer = new JsonNetSerializer();
 
@@ -51,8 +51,12 @@ namespace FpsGame.Server
             this.cancellationToken = cancellationToken;
             this.gameSettings = gameSettings;
 
-            listener = new TcpListener(IPAddress.Loopback, 1234);
-            listener.Start();
+            foreach(var ip in gameSettings.GameIPAddress)
+            {
+                var listener = new TcpListener(ip, gameSettings.GamePort);
+                listener.Start();
+                listeners.Add(listener);
+            }
 
             world = World.Create();
 
@@ -82,12 +86,15 @@ namespace FpsGame.Server
         private async void AddNewClients()
         {
             try {
-                TcpClient tcpClient = await listener.AcceptTcpClientAsync(cancellationToken);
-                var client = new ServerSideClient(tcpClient, AddDataToProcess);
-                
-                client.Disconnected += ClientDisconnected;
-                tasks.Add(Task.Run(() => client.BeginReceiving(cancellationToken), cancellationToken));
-                newClients.Add(client);
+                foreach (var listener in listeners)
+                {
+                    TcpClient tcpClient = await listener.AcceptTcpClientAsync(cancellationToken);
+                    var client = new ServerSideClient(tcpClient, AddDataToProcess);
+
+                    client.Disconnected += ClientDisconnected;
+                    tasks.Add(Task.Run(() => client.BeginReceiving(cancellationToken), cancellationToken));
+                    newClients.Add(client);
+                }
             }
             catch { }
         }
@@ -194,8 +201,14 @@ namespace FpsGame.Server
             {
                 if (disposing)
                 {
-                    listener.Stop();
-
+                    if (listeners.Any())
+                    {
+                        foreach(var listener in listeners)
+                        {
+                            listener.Stop();
+                        }
+                    }
+                    
                     if (newClients.Any())
                     {
                         foreach (var client in newClients)

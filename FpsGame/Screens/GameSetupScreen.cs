@@ -1,9 +1,11 @@
 ﻿using FpsGame.Common.Constants;
 using FpsGame.Common.Containers;
+using FpsGame.Server.Utils;
 using FpsGame.Ui;
 using FpsGame.Ui.Components;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 using System.Net;
 
 namespace FpsGame.Screens
@@ -76,29 +78,38 @@ namespace FpsGame.Screens
             int dummyPort;
             continueButton.UiWidget.Enabled = 
                 (gameSettings.GameMode == GameMode.MultiplayerJoin 
-                || !string.IsNullOrWhiteSpace(gameNameTextBox.Text))
+                    || !string.IsNullOrWhiteSpace(gameNameTextBox.Text))
                 && (gameSettings.GameMode != GameMode.MultiplayerJoin
-                || (ipAddressTextBox.Text.Contains(':')
-                    && IPAddress.TryParse(ipAddressTextBox.Text.Split(':')[0], out dummy)
-                    && int.TryParse(ipAddressTextBox.Text.Split(':')[1], out dummyPort)))
+                    || (ipAddressTextBox.Text.Contains(':')
+                        && IPAddress.TryParse(ipAddressTextBox.Text.Split(':')[0], out dummy)
+                        && int.TryParse(ipAddressTextBox.Text.Split(':')[1], out dummyPort)))
                 && (gameSettings.GameMode == GameMode.StandaloneServer
-                || !string.IsNullOrWhiteSpace(playerNameTextBox.Text));
+                    || !string.IsNullOrWhiteSpace(playerNameTextBox.Text));
         }
 
         protected void ContinueButtonClick(object e, EventArgs eventArgs)
         {
             if (continueButton.UiWidget.Enabled)
             {
-                if (gameSettings.GameMode != GameMode.MultiplayerJoin)
+                if(gameSettings.GameMode == GameMode.SinglePlayer)
                 {
                     gameSettings.GameName = gameNameTextBox.Text;
-                    gameSettings.GameIPAddress = IPAddress.Loopback;
-                    gameSettings.GamePort = 1234;
+                    gameSettings.GameIPAddress.Add(IPAddress.Loopback);
+                    gameSettings.GamePort = 12345;
+                }
+                else if (gameSettings.GameMode != GameMode.MultiplayerJoin)
+                {
+                    gameSettings.GameName = gameNameTextBox.Text;
+                    gameSettings.GameIPAddress = IPAddressUtils.GetAllLocalIPv4();
+#if DEBUG
+                    gameSettings.GameIPAddress.Add(IPAddress.Loopback);
+#endif
+                    gameSettings.GamePort = 12345;
                 }
                 else
                 {
                     string[] ipAddress = ipAddressTextBox.Text.Split(':');
-                    gameSettings.GameIPAddress = IPAddress.Parse(ipAddress[0]);
+                    gameSettings.GameIPAddress = new List<IPAddress>() { IPAddress.Parse(ipAddress[0]) };
                     gameSettings.GamePort = int.Parse(ipAddress[1]);
                 }
 

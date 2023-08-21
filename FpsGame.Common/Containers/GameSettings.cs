@@ -12,7 +12,7 @@ namespace FpsGame.Common.Containers
     {
         public GameMode GameMode { get; set; }
         public string GameName { get; set; }
-        public IPAddress GameIPAddress { get; set; }
+        public List<IPAddress> GameIPAddress { get; set; }
         public int GamePort { get; set; }
     }
 }
