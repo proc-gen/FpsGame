@@ -21,6 +21,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace FpsGame.Server
 {
@@ -28,7 +29,6 @@ namespace FpsGame.Server
     {
         private bool disposedValue;
         private readonly List<ServerSideClient> clients = new List<ServerSideClient>();
-        private readonly List<ServerSideClient> newClients = new List<ServerSideClient>();
         private readonly List<TcpListener> listeners = new List<TcpListener>();
 
         private readonly JsonNetSerializer serializer = new JsonNetSerializer();
@@ -89,14 +89,27 @@ namespace FpsGame.Server
                 foreach (var listener in listeners)
                 {
                     TcpClient tcpClient = await listener.AcceptTcpClientAsync(cancellationToken);
-                    var client = new ServerSideClient(tcpClient, AddDataToProcess);
+                    var client = AddNewClient(tcpClient);
 
-                    client.Disconnected += ClientDisconnected;
                     tasks.Add(Task.Run(() => client.BeginReceiving(cancellationToken), cancellationToken));
-                    newClients.Add(client);
+                    clients.Add(client);
                 }
             }
             catch { }
+        }
+
+        private ServerSideClient AddNewClient(TcpClient tcpClient)
+        {
+            ServerSideClient client = clients.Where(a => a.Status == ServerSideClientStatus.Removed).FirstOrDefault();
+            if(client == null)
+            {
+                client = new ServerSideClient(tcpClient, AddDataToProcess);
+            }
+            else
+            {
+                client.Reset(tcpClient);
+            }
+            return client;
         }
 
         public void Run(GameTime gameTime)
@@ -153,40 +166,57 @@ namespace FpsGame.Server
         {
             if (sender is ServerSideClient serverSideClient)
             {
-                serverSideClient.entityReference.Entity.Add(SerializableObjectState.Remove);
+                
                 clients.Remove(serverSideClient);
             }
         }
     
         private void BroadcastWorld()
         {
-            if (clients.Any())
+            if (clients.Where(a => a.Status == ServerSideClientStatus.Disconnected).Any())
+            {
+                foreach (var client in clients.Where(a => a.Status == ServerSideClientStatus.Disconnected))
+                {
+                    client.entityReference.Entity.Add(SerializableObjectState.Remove);
+                }
+            }
+
+            if (clients.Where(a => a.Status == ServerSideClientStatus.InGame).Any())
             {
                 var dataToSerialize = SerializableWorld.SerializeWorld(world, false);
-                if (newClients.Where(a => a.Joined).Any())
+                if (clients.Where(a => a.Status == ServerSideClientStatus.JoinedGame).Any())
                 {
-                    foreach(var client in newClients.Where(a => a.Joined))
+                    foreach(var client in clients.Where(a => a.Status == ServerSideClientStatus.JoinedGame))
                     {
                         dataToSerialize.Entities.Add(SerializableEntity.SerializeEntity(client.entityReference.Entity, client.entityReference.Entity.GetAllComponents(), true));
                     }
                 }
                 var data = serializer.Serialize(dataToSerialize);
-                foreach (var client in clients)
+                foreach (var client in clients.Where(a => a.Status == ServerSideClientStatus.InGame))
                 {
                     client.Send(data);
                 }
             }
 
-            if (newClients.Where(a => a.Joined).Any())
+            if (clients.Where(a => a.Status == ServerSideClientStatus.JoinedGame).Any())
             {
-                foreach(var client in newClients.Where(a => a.Joined))
+                foreach(var client in clients.Where(a => a.Status == ServerSideClientStatus.JoinedGame))
                 {
                     var serializedWorld = SerializableWorld.SerializeWorld(world, true);
                     serializedWorld.PlayerId = client.GetPlayerId();
-                    clients.Add(client);
                     client.Send(serializer.Serialize(serializedWorld));
+                    client.Status = ServerSideClientStatus.InGame;
                 }
-                newClients.RemoveAll(a => a.Joined);
+            }
+
+            if (clients.Where(a => a.Status == ServerSideClientStatus.Disconnected).Any())
+            {
+                foreach (var client in clients.Where(a => a.Status == ServerSideClientStatus.Disconnected))
+                {
+                    world.Destroy(client.entityReference.Entity);
+                    client.SetEntityReference(EntityReference.Null);
+                    client.Status = ServerSideClientStatus.Removed;
+                }
             }
         }
 
@@ -209,16 +239,8 @@ namespace FpsGame.Server
                             listener.Stop();
                         }
                     }
-                    
-                    if (newClients.Any())
-                    {
-                        foreach (var client in newClients)
-                        {
-                            client.Dispose();
-                        }
-                    }
 
-                    if (clients.Any() )
+                    if (clients.Any())
                     {
                         foreach(var client in clients)
                         {

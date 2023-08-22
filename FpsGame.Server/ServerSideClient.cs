@@ -12,17 +12,25 @@ using System.Threading.Tasks;
 
 namespace FpsGame.Server
 {
+    public enum ServerSideClientStatus
+    {
+        Connected,
+        JoinedGame,
+        InGame,
+        Disconnected,
+        Removed,
+    }
+
     public class ServerSideClient : IDisposable
     {
         private bool disposedValue;
-        private readonly TcpClient client;
-        private readonly NetworkStream networkStream;
+        private TcpClient client;
+        private NetworkStream networkStream;
         private BinaryReader reader;
 
-        public event EventHandler Disconnected;
         Func<ServerSideClient, string, bool> AddDataToProcess;
         public EntityReference entityReference { get; private set; }
-        public bool Joined { get; private set; }
+        public ServerSideClientStatus Status { get; set; }
 
         public ServerSideClient(TcpClient client, Func<ServerSideClient, string, bool> addDataToProcess)
         {
@@ -30,12 +38,24 @@ namespace FpsGame.Server
             networkStream = client.GetStream();
             reader = new BinaryReader(networkStream);
             AddDataToProcess = addDataToProcess;
+            Status = ServerSideClientStatus.Connected;
+        }
+
+        public void Reset(TcpClient client)
+        {
+            this.client = client;
+            networkStream = client.GetStream();
+            reader = new BinaryReader(networkStream);
+            Status = ServerSideClientStatus.Connected;
         }
 
         public void SetEntityReference(EntityReference entityReference)
         {
-            this.entityReference = entityReference;
-            Joined = true;
+            if(Status == ServerSideClientStatus.Connected)
+            {
+                this.entityReference = entityReference;
+                Status = ServerSideClientStatus.JoinedGame;
+            }
         }
 
         public uint GetPlayerId()
@@ -64,8 +84,8 @@ namespace FpsGame.Server
 
         private void Disconnect()
         {
+            Status = ServerSideClientStatus.Disconnected;
             client?.Close();
-            Disconnected?.Invoke(this, EventArgs.Empty);
             reader?.Close();
             networkStream?.Close();
         }
