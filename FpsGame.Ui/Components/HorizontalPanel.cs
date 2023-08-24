@@ -23,8 +23,8 @@ namespace FpsGame.Ui.Components
             {
                 Id = id,
                 Spacing = 4,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = Myra.Graphics2D.UI.HorizontalAlignment.Center,
+                VerticalAlignment = Myra.Graphics2D.UI.VerticalAlignment.Center,
             };
 
             UpdateStyle(baseStyle);
@@ -37,8 +37,8 @@ namespace FpsGame.Ui.Components
             {
                 Id = id,
                 Spacing = 4,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = Myra.Graphics2D.UI.HorizontalAlignment.Center,
+                VerticalAlignment = Myra.Graphics2D.UI.VerticalAlignment.Center,
             };
 
             UpdateStyle(style);

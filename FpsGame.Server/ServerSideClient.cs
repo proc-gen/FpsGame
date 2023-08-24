@@ -82,7 +82,7 @@ namespace FpsGame.Server
             }
         }
 
-        private void Disconnect()
+        public void Disconnect()
         {
             Status = ServerSideClientStatus.Disconnected;
             client?.Close();

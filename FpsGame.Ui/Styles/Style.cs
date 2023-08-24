@@ -12,5 +12,7 @@ namespace FpsGame.Ui.Styles
         public int? Height;
         public Thickness? Padding;
         public Thickness? Margin;
+        public HorizontalAlignment? HorizontalAlignment;
+        public VerticalAlignment? VerticalAlignment;
     }
 }

@@ -14,20 +14,33 @@ namespace FpsGame.Ui.Components
         private static Style baseStyle = new Style()
         {
             Margin = new Thickness(4),
+            HorizontalAlignment = Styles.HorizontalAlignment.Center,
+            VerticalAlignment = Styles.VerticalAlignment.Center,
         };
 
         public VerticalPanel(string id)
             : base(id)
-        { 
+        {
+            Init(baseStyle);
+        }
+
+        public VerticalPanel(string id, Style style)
+            : base(id)
+        {
+            Init(style);
+        }
+
+        private void Init(Style style)
+        {
             UiWidget = new MyraPanel()
             {
-                Id = id,
+                Id = Id,
                 Spacing = 4,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = style.HorizontalAlignment.HasValue ? style.HorizontalAlignment.Value.GetMyraHorizontalAlignment() : baseStyle.HorizontalAlignment.Value.GetMyraHorizontalAlignment(),
+                VerticalAlignment = style.VerticalAlignment.HasValue ? style.VerticalAlignment.Value.GetMyraVerticalAlignment() : baseStyle.VerticalAlignment.Value.GetMyraVerticalAlignment(),
             };
 
-            UpdateStyle(baseStyle);
+            UpdateStyle(style);
         }
 
         public void AddWidget<T>(Component<T> component)

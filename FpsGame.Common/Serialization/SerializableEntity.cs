@@ -44,7 +44,7 @@ namespace FpsGame.Common.Serialization
                 {
                     ec.Components.Add(component.GetType(), component);
                 }
-                else if (component is SerializableObjectState)
+                else if (component.GetType() == typeof(SerializableObjectState))
                 {
                     ec.EntityState = (SerializableObjectState)component;
                 }

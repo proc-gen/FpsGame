@@ -12,6 +12,8 @@ using FpsGame.Server;
 using FpsGame.Server.ClientData;
 using FpsGame.Systems;
 using FpsGame.Ui;
+using FpsGame.Ui.Components;
+using FpsGame.Ui.Styles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -49,6 +51,10 @@ namespace FpsGame.Screens
         private GameSettings gameSettings;
         private uint PlayerId;
         private EntityReference Player = EntityReference.Null;
+
+        Label hostLocationLabel;
+        Label gameNameLabel;
+        VerticalPanel gameInfoPanel;
 
         List<Task> tasks = new List<Task>();
 
@@ -94,6 +100,19 @@ namespace FpsGame.Screens
             {
                 client = new Client(AddDataToProcess, gameSettings, playerSettings.Value);
                 tasks.Add(Task.Run(() => client.Join(token.Token), token.Token));
+
+                hostLocationLabel = new Label("host-location", gameSettings.GameIPAddress.First().ToString() + ":" + gameSettings.GamePort);
+                gameNameLabel = new Label("game-name", gameSettings.GameName);
+                gameInfoPanel = new VerticalPanel("game-info", new Style()
+                {
+                    Margin = new Thickness(4),
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Top,
+                });
+                gameInfoPanel.AddWidget(gameNameLabel);
+                gameInfoPanel.AddWidget(hostLocationLabel);
+
+                RootWidget = gameInfoPanel.UiWidget;
             }
         }
 
