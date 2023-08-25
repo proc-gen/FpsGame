@@ -1,6 +1,7 @@
 ﻿using Arch.Core;
 using Arch.Core.Extensions;
 using Arch.Core.Utils;
+using FpsGame.Common.Components;
 using FpsGame.Common.Constants;
 using FpsGame.Common.Serialization.ComponentConverters;
 using System;
@@ -31,7 +32,7 @@ namespace FpsGame.Common.Serialization
             {
                 var components = entity.GetAllComponents();
                 if (components.Any(component => component is ISerializableComponent
-                        && (full || ((ISerializableComponent)component).ComponentState != SerializableObjectState.NoChange)))
+                        && (full || (component is Remove) || ((ISerializableComponent)component).ComponentState != SerializableObjectState.NoChange)))
                 {
                     serializableWorld.Entities.Add(SerializableEntity.SerializeEntity(entity, components, full));
                 }

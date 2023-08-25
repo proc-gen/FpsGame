@@ -2,7 +2,7 @@
 using FpsGame.Common.Components;
 using FpsGame.Common.Constants;
 using FpsGame.Common.Ecs.Systems;
-using FpsGame.Server.ClientData;
+using FpsGame.Common.ClientData;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;

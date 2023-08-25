@@ -1,6 +1,6 @@
 ﻿using FpsGame.Common.Containers;
 using FpsGame.Common.Serialization;
-using FpsGame.Server.ClientData;
+using FpsGame.Common.ClientData;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;

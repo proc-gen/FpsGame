@@ -7,7 +7,7 @@ using FpsGame.Common.Ecs.Systems;
 using FpsGame.Common.Serialization;
 using FpsGame.Common.Serialization.ComponentConverters;
 using FpsGame.Common.Serialization.Serializers;
-using FpsGame.Server.ClientData;
+using FpsGame.Common.ClientData;
 using FpsGame.Server.Systems;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
@@ -16,12 +16,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using Arch.Core.Events;
 
 namespace FpsGame.Server
 {
@@ -29,6 +27,7 @@ namespace FpsGame.Server
     {
         private bool disposedValue;
         private readonly List<ServerSideClient> clients = new List<ServerSideClient>();
+        private readonly List<ServerSideClient> newClients = new List<ServerSideClient>();
         private readonly List<TcpListener> listeners = new List<TcpListener>();
 
         private readonly JsonNetSerializer serializer = new JsonNetSerializer();
@@ -89,27 +88,28 @@ namespace FpsGame.Server
                 foreach (var listener in listeners)
                 {
                     TcpClient tcpClient = await listener.AcceptTcpClientAsync(cancellationToken);
-                    var client = AddNewClient(tcpClient);
+                    
+                    ServerSideClient client = clients.Where(a => a.Status == ServerSideClientStatus.Removed).FirstOrDefault();
+                    bool createNewServerClient = true;
+                    if (client == null)
+                    {
+                        client = new ServerSideClient(tcpClient, AddDataToProcess);
+                    }
+                    else
+                    {
+                        createNewServerClient = false;
+                        client.Reset(tcpClient);
+                    }
 
                     tasks.Add(Task.Run(() => client.BeginReceiving(cancellationToken), cancellationToken));
-                    clients.Add(client);
+                    
+                    if(createNewServerClient)
+                    {
+                        newClients.Add(client);
+                    }
                 }
             }
             catch { }
-        }
-
-        private ServerSideClient AddNewClient(TcpClient tcpClient)
-        {
-            ServerSideClient client = clients.Where(a => a.Status == ServerSideClientStatus.Removed).FirstOrDefault();
-            if(client == null)
-            {
-                client = new ServerSideClient(tcpClient, AddDataToProcess);
-            }
-            else
-            {
-                client.Reset(tcpClient);
-            }
-            return client;
         }
 
         public void Run(GameTime gameTime)
@@ -129,16 +129,20 @@ namespace FpsGame.Server
 
                                 JObject clientInput = serializer.Deserialize<JObject>(reader);
 
-                                if (clientInput.ContainsKey("Name"))
+                                switch (clientInput["Type"].ToString())
                                 {
-                                    var playerSettings = clientInput.ToObject<PlayerSettings>();
+                                    case "PlayerSettings":
+                                        var playerSettings = clientInput.ToObject<PlayerSettings>();
 
-                                    var entity = world.Create(new Player() { Id = (uint)clients.Count + 1, Name = playerSettings.Name, Color = playerSettings.Color }, new Camera(), new ClientInput(), new RenderModel() { Model = "sphere" });
-                                    message.Client.SetEntityReference(entity.Reference());
-                                }
-                                else if (clientInput.ContainsKey("Forward"))
-                                {
-                                    message.EntityReference.Entity.Set(clientInput.ToObject<ClientInput>());
+                                        var entity = world.Create(new Player() { Id = (uint)clients.Count + 1, Name = playerSettings.Name, Color = playerSettings.Color }, new Camera(), new ClientInput(), new RenderModel() { Model = "sphere" });
+                                        message.Client.SetEntityReference(entity.Reference());
+                                        break;
+                                    case "ClientInput":
+                                        message.EntityReference.Entity.Set(clientInput.ToObject<ClientInput>());
+                                        break;
+                                    case "ClientDisconnect":
+                                        message.Client.Disconnect();
+                                        break;
                                 }
                             }
                         }
@@ -177,7 +181,7 @@ namespace FpsGame.Server
             {
                 foreach (var client in clients.Where(a => a.Status == ServerSideClientStatus.Disconnected))
                 {
-                    client.entityReference.Entity.Add(SerializableObjectState.Remove);
+                    client.entityReference.Entity.Add(new Remove());
                 }
             }
 
@@ -187,6 +191,13 @@ namespace FpsGame.Server
                 if (clients.Where(a => a.Status == ServerSideClientStatus.JoinedGame).Any())
                 {
                     foreach(var client in clients.Where(a => a.Status == ServerSideClientStatus.JoinedGame))
+                    {
+                        dataToSerialize.Entities.Add(SerializableEntity.SerializeEntity(client.entityReference.Entity, client.entityReference.Entity.GetAllComponents(), true));
+                    }
+                }
+                if (newClients.Where(a => a.Status == ServerSideClientStatus.JoinedGame).Any())
+                {
+                    foreach (var client in newClients.Where(a => a.Status == ServerSideClientStatus.JoinedGame))
                     {
                         dataToSerialize.Entities.Add(SerializableEntity.SerializeEntity(client.entityReference.Entity, client.entityReference.Entity.GetAllComponents(), true));
                     }
@@ -207,6 +218,20 @@ namespace FpsGame.Server
                     client.Send(serializer.Serialize(serializedWorld));
                     client.Status = ServerSideClientStatus.InGame;
                 }
+            }
+
+            if (newClients.Where(a => a.Status == ServerSideClientStatus.JoinedGame).Any())
+            {
+                foreach (var client in newClients.Where(a => a.Status == ServerSideClientStatus.JoinedGame))
+                {
+                    var serializedWorld = SerializableWorld.SerializeWorld(world, true);
+                    serializedWorld.PlayerId = client.GetPlayerId();
+                    client.Send(serializer.Serialize(serializedWorld));
+                    client.Status = ServerSideClientStatus.InGame;
+
+                    clients.Add(client);
+                }
+                newClients.RemoveAll(a => a.Status == ServerSideClientStatus.JoinedGame);
             }
 
             if (clients.Where(a => a.Status == ServerSideClientStatus.Disconnected).Any())

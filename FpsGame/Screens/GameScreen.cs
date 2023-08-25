@@ -8,6 +8,7 @@ using FpsGame.Common.Ecs.Systems;
 using FpsGame.Common.Serialization;
 using FpsGame.Common.Serialization.ComponentConverters;
 using FpsGame.Common.Serialization.Serializers;
+using FpsGame.Common.ClientData;
 using FpsGame.Server;
 using FpsGame.Server.ClientData;
 using FpsGame.Systems;
@@ -125,6 +126,7 @@ namespace FpsGame.Screens
             if (gState.Buttons.Back == ButtonState.Pressed 
                 || kState.IsKeyDown(Keys.Escape))
             {
+                client.SendInputData(new ClientDisconnect());
                 ScreenManager.SetActiveScreen(ScreenNames.MainMenu);
             }
 
