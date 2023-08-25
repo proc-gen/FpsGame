@@ -89,24 +89,10 @@ namespace FpsGame.Server
                 {
                     TcpClient tcpClient = await listener.AcceptTcpClientAsync(cancellationToken);
                     
-                    ServerSideClient client = clients.Where(a => a.Status == ServerSideClientStatus.Removed).FirstOrDefault();
-                    bool createNewServerClient = true;
-                    if (client == null)
-                    {
-                        client = new ServerSideClient(tcpClient, AddDataToProcess);
-                    }
-                    else
-                    {
-                        createNewServerClient = false;
-                        client.Reset(tcpClient);
-                    }
+                    var client = new ServerSideClient(tcpClient, AddDataToProcess);
 
-                    tasks.Add(Task.Run(() => client.BeginReceiving(cancellationToken), cancellationToken));
-                    
-                    if(createNewServerClient)
-                    {
-                        newClients.Add(client);
-                    }
+                    tasks.Add(Task.Run(() => client.BeginReceiving(cancellationToken), cancellationToken));                    
+                    newClients.Add(client);
                 }
             }
             catch { }
@@ -188,13 +174,6 @@ namespace FpsGame.Server
             if (clients.Where(a => a.Status == ServerSideClientStatus.InGame).Any())
             {
                 var dataToSerialize = SerializableWorld.SerializeWorld(world, false);
-                if (clients.Where(a => a.Status == ServerSideClientStatus.JoinedGame).Any())
-                {
-                    foreach(var client in clients.Where(a => a.Status == ServerSideClientStatus.JoinedGame))
-                    {
-                        dataToSerialize.Entities.Add(SerializableEntity.SerializeEntity(client.entityReference.Entity, client.entityReference.Entity.GetAllComponents(), true));
-                    }
-                }
                 if (newClients.Where(a => a.Status == ServerSideClientStatus.JoinedGame).Any())
                 {
                     foreach (var client in newClients.Where(a => a.Status == ServerSideClientStatus.JoinedGame))
@@ -206,17 +185,6 @@ namespace FpsGame.Server
                 foreach (var client in clients.Where(a => a.Status == ServerSideClientStatus.InGame))
                 {
                     client.Send(data);
-                }
-            }
-
-            if (clients.Where(a => a.Status == ServerSideClientStatus.JoinedGame).Any())
-            {
-                foreach(var client in clients.Where(a => a.Status == ServerSideClientStatus.JoinedGame))
-                {
-                    var serializedWorld = SerializableWorld.SerializeWorld(world, true);
-                    serializedWorld.PlayerId = client.GetPlayerId();
-                    client.Send(serializer.Serialize(serializedWorld));
-                    client.Status = ServerSideClientStatus.InGame;
                 }
             }
 

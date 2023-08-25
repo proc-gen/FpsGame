@@ -182,6 +182,7 @@ namespace FpsGame.Screens
                 {
                     foreach (var entity in serializableWorld.EntitiesToRemove)
                     {
+                        serializableWorld.Entities.RemoveAll(a => a.EntityReference == entity.EntityReference);
                         world.Destroy(entity.EntityReference);
                         entity.EntityReference = EntityReference.Null;
                     }
