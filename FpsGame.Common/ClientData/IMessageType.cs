@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace FpsGame.Common.ClientData
 {
-    public interface IClientDataType
+    public interface IMessageType
     {
-        string ClientDataType();
+        string MessageType();
     }
 }

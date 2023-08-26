@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FpsGame.Common.ClientData
 {
-    public struct ClientDisconnect : IClientDataType
+    public struct ClientDisconnect : IMessageType
     {
         public ClientDisconnect()
         {
@@ -15,7 +15,7 @@ namespace FpsGame.Common.ClientData
 
         public string Type { get; set; }
 
-        public string ClientDataType()
+        public string MessageType()
         {
             return Type;
         }

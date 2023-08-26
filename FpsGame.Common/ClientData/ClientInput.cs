@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace FpsGame.Common.ClientData
 {
-    public struct ClientInput : IClientDataType
+    public struct ClientInput : IMessageType
     {
         public ClientInput() 
         { 
@@ -21,7 +21,7 @@ namespace FpsGame.Common.ClientData
         public Vector2 LeftStick { get; set; }
         public Vector2 RightStick { get; set;}
 
-        public string ClientDataType()
+        public string MessageType()
         {
             return Type;
         }

@@ -10,7 +10,6 @@ using FpsGame.Common.Serialization.ComponentConverters;
 using FpsGame.Common.Serialization.Serializers;
 using FpsGame.Common.ClientData;
 using FpsGame.Server;
-using FpsGame.Server.ClientData;
 using FpsGame.Systems;
 using FpsGame.Ui;
 using FpsGame.Ui.Components;
@@ -23,6 +22,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 
 namespace FpsGame.Screens
 {
@@ -42,8 +42,8 @@ namespace FpsGame.Screens
         Server.Server server;
         Client client;
         CancellationTokenSource token = new CancellationTokenSource();
-        Queue<string> ServerData = new Queue<string>();
-        private readonly JsonNetSerializer serializer = new JsonNetSerializer();
+        Queue<JObject> ServerData = new Queue<JObject>();
+        private readonly JsonNetArchSerializer serializer = new JsonNetArchSerializer();
         private readonly Dictionary<Type, Converter> converters;
         
         private Vector2 lastMousePosition;
@@ -56,6 +56,11 @@ namespace FpsGame.Screens
         Label hostLocationLabel;
         Label gameNameLabel;
         VerticalPanel gameInfoPanel;
+
+        VerticalPanel messagesPanel;
+        Label messagesLabel;
+
+        Panel hudPanel;
 
         List<Task> tasks = new List<Task>();
 
@@ -106,14 +111,26 @@ namespace FpsGame.Screens
                 gameNameLabel = new Label("game-name", gameSettings.GameName);
                 gameInfoPanel = new VerticalPanel("game-info", new Style()
                 {
-                    Margin = new Thickness(4),
+                    Margin = new Thickness(0),
                     HorizontalAlignment = HorizontalAlignment.Left,
                     VerticalAlignment = VerticalAlignment.Top,
                 });
                 gameInfoPanel.AddWidget(gameNameLabel);
                 gameInfoPanel.AddWidget(hostLocationLabel);
 
-                RootWidget = gameInfoPanel.UiWidget;
+                messagesLabel = new Label("messages-label", string.Empty);
+                messagesPanel = new VerticalPanel("messages-panel", new Style()
+                {
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Bottom,
+                });
+                messagesPanel.AddWidget(messagesLabel);
+
+                hudPanel = new Panel("hud-panel");
+                hudPanel.AddWidget(gameInfoPanel);
+                hudPanel.AddWidget(messagesPanel);
+
+                RootWidget = hudPanel.UiWidget;
             }
         }
 
@@ -190,7 +207,7 @@ namespace FpsGame.Screens
                     serializableWorld.EntitiesToRemove.Clear();
                 }
 
-                if (serializableWorld.MessageType == MessageType.WorldFull)
+                if (serializableWorld.FullLoad)
                 {
                     PlayerId = serializableWorld.PlayerId;
 
@@ -284,9 +301,9 @@ namespace FpsGame.Screens
 
         }
 
-        public bool AddDataToProcess(string worldData)
+        public bool AddDataToProcess(JObject data)
         {
-            ServerData.Enqueue(worldData);
+            ServerData.Enqueue(data);
             return true;
         }
 

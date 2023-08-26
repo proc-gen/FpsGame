@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace FpsGame.Common.ClientData
 {
-    public struct PlayerSettings : IClientDataType
+    public struct PlayerSettings : IMessageType
     {
         public PlayerSettings()
         {
@@ -18,7 +18,7 @@ namespace FpsGame.Common.ClientData
         public string Name { get; set; }
         public Vector3 Color { get; set; }
 
-        public string ClientDataType()
+        public string MessageType()
         {
             return Type;
         }

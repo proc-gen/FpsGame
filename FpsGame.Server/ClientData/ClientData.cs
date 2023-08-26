@@ -1,4 +1,5 @@
 ﻿using Arch.Core;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +12,6 @@ namespace FpsGame.Server.ClientData
     {
         public ServerSideClient Client { get; set; }
         public EntityReference EntityReference { get; set; }
-        public string Data { get; set; }
+        public JObject Data { get; set; }
     }
 }

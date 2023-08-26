@@ -1,6 +1,9 @@
 ﻿using Arch.Core;
 using Arch.Core.Extensions;
 using FpsGame.Common.Components;
+using FpsGame.Common.Serialization.Serializers;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -28,14 +31,17 @@ namespace FpsGame.Server
         private NetworkStream networkStream;
         private BinaryReader reader;
 
-        Func<ServerSideClient, string, bool> AddDataToProcess;
+        MessageSerializer messageSerializer;
+
+        Func<ServerSideClient, JObject, bool> AddDataToProcess;
         public EntityReference entityReference { get; private set; }
         public ServerSideClientStatus Status { get; set; }
 
-        public ServerSideClient(TcpClient client, Func<ServerSideClient, string, bool> addDataToProcess)
+        public ServerSideClient(TcpClient client, Func<ServerSideClient, JObject, bool> addDataToProcess)
         {
             this.client = client;
             networkStream = client.GetStream();
+            messageSerializer = new MessageSerializer(networkStream);
             reader = new BinaryReader(networkStream);
             AddDataToProcess = addDataToProcess;
             Status = ServerSideClientStatus.Connected;
@@ -71,7 +77,19 @@ namespace FpsGame.Server
                 {
                     if (networkStream.DataAvailable)
                     {
-                        AddDataToProcess(this, reader.ReadString());
+                        string message = reader.ReadString();
+                        if (!string.IsNullOrEmpty(message))
+                        {
+                            using (var sr = new StringReader(message))
+                            {
+                                using (JsonReader reader = new JsonTextReader(sr))
+                                {
+                                    JsonSerializer serializer = new JsonSerializer();
+
+                                    AddDataToProcess(this, serializer.Deserialize<JObject>(reader));
+                                }
+                            }
+                        }
                     }
                 }
                 catch
@@ -92,22 +110,7 @@ namespace FpsGame.Server
 
         public void Send(string data)
         {
-            try
-            {
-                using (var ms = new MemoryStream())
-                {
-                    using (var bw = new BinaryWriter(ms))
-                    {
-                        bw.Write(data);
-                    }
-
-                    networkStream.Write(ms.ToArray());
-                }
-            }
-            catch(Exception ex)
-            {
-
-            }
+            messageSerializer.Send(data);
         }
 
         protected virtual void Dispose(bool disposing)

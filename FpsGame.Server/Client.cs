@@ -12,6 +12,8 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using FpsGame.Common.Serialization.Serializers;
+using Newtonsoft.Json.Linq;
 
 namespace FpsGame.Server
 {
@@ -22,11 +24,13 @@ namespace FpsGame.Server
         private readonly TcpClient client;
         private NetworkStream stream;
         private BinaryReader reader;
-        Func<string, bool> AddDataToProcess;
+        Func<JObject, bool> AddDataToProcess;
         GameSettings gameSettings;
         PlayerSettings playerSettings;
 
-        public Client(Func<string, bool> addDataToProcess, GameSettings gameSettings, PlayerSettings playerSettings)
+        MessageSerializer messageSerializer;
+
+        public Client(Func<JObject, bool> addDataToProcess, GameSettings gameSettings, PlayerSettings playerSettings)
         {
             client = new TcpClient();
             AddDataToProcess = addDataToProcess;
@@ -38,6 +42,8 @@ namespace FpsGame.Server
         {
             await client.ConnectAsync(gameSettings.GameIPAddress.First(), gameSettings.GamePort);
             stream = client.GetStream();
+            messageSerializer = new MessageSerializer(stream);
+
             reader = new BinaryReader(stream);
             SendInputData(playerSettings);
             BeginReceiving(cancellationToken);
@@ -49,22 +55,26 @@ namespace FpsGame.Server
             {
                 if (stream.DataAvailable)
                 {
-                    AddDataToProcess(reader.ReadString());
+                    string message = reader.ReadString();
+                    if (!string.IsNullOrEmpty(message))
+                    {
+                        using (var sr = new StringReader(message))
+                        {
+                            using (JsonReader reader = new JsonTextReader(sr))
+                            {
+                                JsonSerializer serializer = new JsonSerializer();
+
+                                AddDataToProcess(serializer.Deserialize<JObject>(reader));
+                            }
+                        }
+                    }
                 }
             }
         }
 
         public void SendInputData(object clientInput)
         {
-            using (var ms = new MemoryStream())
-            {
-                using (var bw = new BinaryWriter(ms))
-                {
-                    bw.Write(Serialize(clientInput));
-                }
-
-                stream.Write(ms.ToArray());
-            }
+            messageSerializer.Send(Serialize(clientInput));
         }
 
         public string Serialize(object data)

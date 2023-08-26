@@ -1,6 +1,7 @@
 ﻿using Arch.Core;
 using Arch.Core.Extensions;
 using Arch.Core.Utils;
+using FpsGame.Common.ClientData;
 using FpsGame.Common.Components;
 using FpsGame.Common.Constants;
 using FpsGame.Common.Serialization.ComponentConverters;
@@ -12,11 +13,18 @@ using System.Threading.Tasks;
 
 namespace FpsGame.Common.Serialization
 {
-    public class SerializableWorld : SerializableMessage
+    public class SerializableWorld : IMessageType
     {
+        public List<SerializableEntity> Entities { get; set; }
+        public List<SerializableEntity> EntitiesToRemove { get; set; }
+        public uint PlayerId { get; set; }
+        public string Type { get; set; }
+        public bool FullLoad { get; set; }
+
         public SerializableWorld(bool full) 
         {
-            MessageType = full ? MessageType.WorldFull : MessageType.WorldUpdate;
+            Type = GetType().Name;
+            FullLoad = full;
             Entities = new List<SerializableEntity>();
             EntitiesToRemove = new List<SerializableEntity>();
         }
@@ -89,9 +97,11 @@ namespace FpsGame.Common.Serialization
             return serializableWorld;
         }
 
-        public List<SerializableEntity> Entities { get; set; }
-        public List<SerializableEntity> EntitiesToRemove { get; set; }
+        public string MessageType()
+        {
+            return Type;
+        }
 
-        public uint PlayerId { get; set; }
+        
     }
 }

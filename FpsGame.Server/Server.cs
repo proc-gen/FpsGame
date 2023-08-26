@@ -30,7 +30,7 @@ namespace FpsGame.Server
         private readonly List<ServerSideClient> newClients = new List<ServerSideClient>();
         private readonly List<TcpListener> listeners = new List<TcpListener>();
 
-        private readonly JsonNetSerializer serializer = new JsonNetSerializer();
+        private readonly JsonNetArchSerializer serializer = new JsonNetArchSerializer();
 
         World world;
         Dictionary<QueryDescriptions, QueryDescription> queryDescriptions;
@@ -52,9 +52,9 @@ namespace FpsGame.Server
 
             var ip = gameSettings.GameIPAddress.First();
             
-                var listener = new TcpListener(ip, gameSettings.GamePort);
-                listener.Start();
-                listeners.Add(listener);
+            var listener = new TcpListener(ip, gameSettings.GamePort);
+            listener.Start();
+            listeners.Add(listener);
             
 
             world = World.Create();
@@ -107,30 +107,20 @@ namespace FpsGame.Server
                     var message = ClientMessages.Dequeue();
                     if (message != null)
                     {
-                        using (var sr = new StringReader(message.Data))
+                        switch (message.Data["Type"].ToString())
                         {
-                            using (JsonReader reader = new JsonTextReader(sr))
-                            {
-                                JsonSerializer serializer = new JsonSerializer();
+                            case "PlayerSettings":
+                                var playerSettings = message.Data.ToObject<PlayerSettings>();
 
-                                JObject clientInput = serializer.Deserialize<JObject>(reader);
-
-                                switch (clientInput["Type"].ToString())
-                                {
-                                    case "PlayerSettings":
-                                        var playerSettings = clientInput.ToObject<PlayerSettings>();
-
-                                        var entity = world.Create(new Player() { Id = (uint)clients.Count + 1, Name = playerSettings.Name, Color = playerSettings.Color }, new Camera(), new ClientInput(), new RenderModel() { Model = "sphere" });
-                                        message.Client.SetEntityReference(entity.Reference());
-                                        break;
-                                    case "ClientInput":
-                                        message.EntityReference.Entity.Set(clientInput.ToObject<ClientInput>());
-                                        break;
-                                    case "ClientDisconnect":
-                                        message.Client.Disconnect();
-                                        break;
-                                }
-                            }
+                                var entity = world.Create(new Player() { Id = (uint)clients.Count + 1, Name = playerSettings.Name, Color = playerSettings.Color }, new Camera(), new ClientInput(), new RenderModel() { Model = "sphere" });
+                                message.Client.SetEntityReference(entity.Reference());
+                                break;
+                            case "ClientInput":
+                                message.EntityReference.Entity.Set(message.Data.ToObject<ClientInput>());
+                                break;
+                            case "ClientDisconnect":
+                                message.Client.Disconnect();
+                                break;
                         }
                     }
                 }
@@ -213,7 +203,7 @@ namespace FpsGame.Server
             }
         }
 
-        public bool AddDataToProcess(ServerSideClient client, string data)
+        public bool AddDataToProcess(ServerSideClient client, JObject data)
         {
             ClientMessages.Enqueue(new ClientData.ClientData() { Client = client, EntityReference = client.entityReference, Data = data});
             return true;

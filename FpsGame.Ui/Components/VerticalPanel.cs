@@ -5,26 +5,24 @@ using System.Text;
 using System.Threading.Tasks;
 using FpsGame.Ui.Styles;
 using Myra.Graphics2D.UI;
-using MyraPanel = Myra.Graphics2D.UI.VerticalStackPanel;
+using MyraPanel = Myra.Graphics2D.UI.Panel;
 
 namespace FpsGame.Ui.Components
 {
-    public class VerticalPanel : Component<MyraPanel>
+    public class Panel : Component<MyraPanel>
     {
         private static Style baseStyle = new Style()
         {
-            Margin = new Thickness(4),
-            HorizontalAlignment = Styles.HorizontalAlignment.Center,
-            VerticalAlignment = Styles.VerticalAlignment.Center,
+
         };
 
-        public VerticalPanel(string id)
+        public Panel(string id)
             : base(id)
         {
             Init(baseStyle);
         }
 
-        public VerticalPanel(string id, Style style)
+        public Panel(string id, Style style)
             : base(id)
         {
             Init(style);
@@ -35,9 +33,6 @@ namespace FpsGame.Ui.Components
             UiWidget = new MyraPanel()
             {
                 Id = Id,
-                Spacing = 4,
-                HorizontalAlignment = style.HorizontalAlignment.HasValue ? style.HorizontalAlignment.Value.GetMyraHorizontalAlignment() : baseStyle.HorizontalAlignment.Value.GetMyraHorizontalAlignment(),
-                VerticalAlignment = style.VerticalAlignment.HasValue ? style.VerticalAlignment.Value.GetMyraVerticalAlignment() : baseStyle.VerticalAlignment.Value.GetMyraVerticalAlignment(),
             };
 
             UpdateStyle(style);
