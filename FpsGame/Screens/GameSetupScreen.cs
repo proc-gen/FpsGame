@@ -1,5 +1,4 @@
 ﻿using FpsGame.Common.Constants;
-using FpsGame.Common.Containers;
 using FpsGame.Common.ClientData;
 using FpsGame.Server.Utils;
 using FpsGame.Ui;

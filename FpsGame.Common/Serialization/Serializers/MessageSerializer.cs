@@ -37,6 +37,12 @@ namespace FpsGame.Common.Serialization.Serializers
                 stream.Write(ms.ToArray());
             }
         }
+
+        public void Send(object data)
+        {
+            Send(Serialize(data));
+        }
+
         public void Receive() 
         {
             if (stream.DataAvailable)
@@ -56,6 +62,23 @@ namespace FpsGame.Common.Serialization.Serializers
                 }
             }
         }
+
+        public string Serialize(object data)
+        {
+            string retVal;
+            using (var sw = new StringWriter())
+            {
+                using (JsonWriter writer = new JsonTextWriter(sw))
+                {
+                    JsonSerializer serializer = new JsonSerializer();
+                    serializer.Serialize(writer, data);
+                }
+
+                retVal = sw.ToString();
+            }
+            return retVal;
+        }
+
         protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue)

@@ -1,5 +1,5 @@
-﻿using FpsGame.Common.Constants;
-using FpsGame.Common.Containers;
+﻿using FpsGame.Common.ClientData;
+using FpsGame.Common.Constants;
 using FpsGame.Ui;
 using FpsGame.Ui.Components;
 using Microsoft.Xna.Framework;

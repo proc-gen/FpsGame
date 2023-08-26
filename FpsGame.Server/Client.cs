@@ -1,15 +1,10 @@
-﻿using FpsGame.Common.Containers;
-using FpsGame.Common.Serialization;
+﻿using FpsGame.Common.Serialization;
 using FpsGame.Common.ClientData;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Sockets;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using FpsGame.Common.Serialization.Serializers;
@@ -55,23 +50,7 @@ namespace FpsGame.Server
 
         public void SendInputData(object clientInput)
         {
-            messageSerializer.Send(Serialize(clientInput));
-        }
-
-        public string Serialize(object data)
-        {
-            string retVal;
-            using (var sw = new StringWriter())
-            {
-                using (JsonWriter writer = new JsonTextWriter(sw))
-                {
-                    JsonSerializer serializer = new JsonSerializer();
-                    serializer.Serialize(writer, data);
-                }
-
-                retVal = sw.ToString();
-            }
-            return retVal;
+            messageSerializer.Send(clientInput);
         }
 
         protected virtual void Dispose(bool disposing)

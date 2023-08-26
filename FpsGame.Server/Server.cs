@@ -2,7 +2,6 @@
 using Arch.Core.Extensions;
 using FpsGame.Common.Components;
 using FpsGame.Common.Constants;
-using FpsGame.Common.Containers;
 using FpsGame.Common.Ecs.Systems;
 using FpsGame.Common.Serialization;
 using FpsGame.Common.Serialization.ComponentConverters;
@@ -104,25 +103,28 @@ namespace FpsGame.Server
             {
                 if (ClientMessages.Count > 0)
                 {
-                    var message = ClientMessages.Dequeue();
-                    if (message != null)
+                    do
                     {
-                        switch (message.Data["Type"].ToString())
+                        var message = ClientMessages.Dequeue();
+                        if (message != null)
                         {
-                            case "PlayerSettings":
-                                var playerSettings = message.Data.ToObject<PlayerSettings>();
+                            switch (message.Data["Type"].ToString())
+                            {
+                                case "PlayerSettings":
+                                    var playerSettings = message.Data.ToObject<PlayerSettings>();
 
-                                var entity = world.Create(new Player() { Id = (uint)clients.Count + 1, Name = playerSettings.Name, Color = playerSettings.Color }, new Camera(), new ClientInput(), new RenderModel() { Model = "sphere" });
-                                message.Client.SetEntityReference(entity.Reference());
-                                break;
-                            case "ClientInput":
-                                message.EntityReference.Entity.Set(message.Data.ToObject<ClientInput>());
-                                break;
-                            case "ClientDisconnect":
-                                message.Client.Disconnect();
-                                break;
+                                    var entity = world.Create(new Player() { Id = (uint)clients.Count + 1, Name = playerSettings.Name, Color = playerSettings.Color }, new Camera(), new ClientInput(), new RenderModel() { Model = "sphere" });
+                                    message.Client.SetEntityReference(entity.Reference());
+                                    break;
+                                case "ClientInput":
+                                    message.EntityReference.Entity.Set(message.Data.ToObject<ClientInput>());
+                                    break;
+                                case "ClientDisconnect":
+                                    message.Client.Disconnect();
+                                    break;
+                            }
                         }
-                    }
+                    } while (ClientMessages.Count > 0);
                 }
 
                 foreach (var system in updateSystems)
@@ -184,6 +186,7 @@ namespace FpsGame.Server
                 {
                     var serializedWorld = SerializableWorld.SerializeWorld(world, true);
                     serializedWorld.PlayerId = client.GetPlayerId();
+                    client.Send(new GameSettings() { GameName = gameSettings.GameName });
                     client.Send(serializer.Serialize(serializedWorld));
                     client.Status = ServerSideClientStatus.InGame;
 

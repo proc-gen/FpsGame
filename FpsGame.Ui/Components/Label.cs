@@ -16,7 +16,7 @@ namespace FpsGame.Ui.Components
             Margin = new Styles.Thickness(4),
         };
 
-        public string Text { get; set; }
+        public string Text { get; private set; }
 
         public Label(string id, string text)
             : base(id)
@@ -41,6 +41,12 @@ namespace FpsGame.Ui.Components
             };
 
             UpdateStyle(style);
+        }
+
+        public void UpdateText(string text)
+        {
+            Text = text;
+            UiWidget.Text = text;
         }
     }
 }

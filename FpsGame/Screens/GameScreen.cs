@@ -2,7 +2,6 @@
 using Arch.Core.Extensions;
 using FpsGame.Common.Components;
 using FpsGame.Common.Constants;
-using FpsGame.Common.Containers;
 using FpsGame.Common.Ecs;
 using FpsGame.Common.Ecs.Systems;
 using FpsGame.Common.Serialization;
@@ -23,6 +22,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace FpsGame.Screens
 {
@@ -160,67 +160,85 @@ namespace FpsGame.Screens
         {
             if (ServerData.Count > 0)
             {
-                var data = ServerData.Dequeue();
-                serializer.Deserialize(data, serializableWorld);
-
-                if (serializableWorld.Entities.Where(a => a.EntityState == SerializableObjectState.Add).Any())
+                do
                 {
-                    foreach (var entity in serializableWorld.Entities.Where(a => a.EntityState == SerializableObjectState.Add))
+                    var data = ServerData.Dequeue();
+
+                    switch (data["Type"].ToString())
                     {
-                        Entity created = world.CreateFromArray(entity.GetDeserializedComponents(converters));
-                        entity.EntityReference = created.Reference();
-                        entity.DestinationId = created.Id;
-                        entity.DestinationVersionId = created.Version();
-                        entity.EntityState = SerializableObjectState.NoChange;
+                        case "SerializableWorld":
+                            processSerializedWorldData(data);
+                            break;
+                        case "GameSettings":
+                            gameSettings.GameName = data["GameName"].ToString();
+                            gameNameLabel.UpdateText(gameSettings.GameName);
+                            break;
                     }
+                } while(ServerData.Count > 0);
+            }
+        }
+
+        private void processSerializedWorldData(JObject data)
+        {
+            serializer.Deserialize(data, serializableWorld);
+
+            if (serializableWorld.Entities.Where(a => a.EntityState == SerializableObjectState.Add).Any())
+            {
+                foreach (var entity in serializableWorld.Entities.Where(a => a.EntityState == SerializableObjectState.Add))
+                {
+                    Entity created = world.CreateFromArray(entity.GetDeserializedComponents(converters));
+                    entity.EntityReference = created.Reference();
+                    entity.DestinationId = created.Id;
+                    entity.DestinationVersionId = created.Version();
+                    entity.EntityState = SerializableObjectState.NoChange;
+                }
+            }
+
+            if (serializableWorld.Entities.Where(a => a.EntityState == SerializableObjectState.Update).Any())
+            {
+                foreach (var entity in serializableWorld.Entities.Where(a => a.EntityState == SerializableObjectState.Update))
+                {
+                    world.SetFromArray(entity.EntityReference.Entity, entity.GetDeserializedComponents(converters));
+                    entity.EntityState = SerializableObjectState.NoChange;
+                }
+            }
+
+            if (serializableWorld.Entities.Where(a => a.EntityState == SerializableObjectState.Remove).Any())
+            {
+                foreach (var entity in serializableWorld.Entities.Where(a => a.EntityState == SerializableObjectState.Remove))
+                {
+                    world.Destroy(entity.EntityReference);
+                    entity.EntityReference = EntityReference.Null;
                 }
 
-                if (serializableWorld.Entities.Where(a => a.EntityState == SerializableObjectState.Update).Any())
+                serializableWorld.Entities.RemoveAll(a => a.EntityState == SerializableObjectState.Remove);
+            }
+
+            if (serializableWorld.EntitiesToRemove.Any())
+            {
+                foreach (var entity in serializableWorld.EntitiesToRemove)
                 {
-                    foreach (var entity in serializableWorld.Entities.Where(a => a.EntityState == SerializableObjectState.Update))
+                    serializableWorld.Entities.RemoveAll(a => a.EntityReference == entity.EntityReference);
+                    world.Destroy(entity.EntityReference);
+                    entity.EntityReference = EntityReference.Null;
+                }
+
+                serializableWorld.EntitiesToRemove.Clear();
+            }
+
+            if (serializableWorld.FullLoad)
+            {
+                PlayerId = serializableWorld.PlayerId;
+
+                var playerQuery = queryDescriptions[QueryDescriptions.PlayerInput];
+
+                world.Query(in playerQuery, (in Entity entity, ref Player player) =>
+                {
+                    if (player.Id == PlayerId)
                     {
-                        world.SetFromArray(entity.EntityReference.Entity, entity.GetDeserializedComponents(converters));
-                        entity.EntityState = SerializableObjectState.NoChange;
+                        Player = entity.Reference();
                     }
-                }
-
-                if (serializableWorld.Entities.Where(a => a.EntityState == SerializableObjectState.Remove).Any())
-                {
-                    foreach (var entity in serializableWorld.Entities.Where(a => a.EntityState == SerializableObjectState.Remove))
-                    {
-                        world.Destroy(entity.EntityReference);
-                        entity.EntityReference = EntityReference.Null;
-                    }
-
-                    serializableWorld.Entities.RemoveAll(a => a.EntityState == SerializableObjectState.Remove);
-                }
-
-                if (serializableWorld.EntitiesToRemove.Any())
-                {
-                    foreach (var entity in serializableWorld.EntitiesToRemove)
-                    {
-                        serializableWorld.Entities.RemoveAll(a => a.EntityReference == entity.EntityReference);
-                        world.Destroy(entity.EntityReference);
-                        entity.EntityReference = EntityReference.Null;
-                    }
-
-                    serializableWorld.EntitiesToRemove.Clear();
-                }
-
-                if (serializableWorld.FullLoad)
-                {
-                    PlayerId = serializableWorld.PlayerId;
-
-                    var playerQuery = queryDescriptions[QueryDescriptions.PlayerInput];
-
-                    world.Query(in playerQuery, (in Entity entity, ref Player player) =>
-                    {
-                        if (player.Id == PlayerId)
-                        {
-                            Player = entity.Reference();
-                        }
-                    });
-                }
+                });
             }
         }
 
