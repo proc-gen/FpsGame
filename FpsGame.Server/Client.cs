@@ -48,7 +48,7 @@ namespace FpsGame.Server
             }
         }
 
-        public void SendInputData(object clientInput)
+        public void SendInputData(IMessageType clientInput)
         {
             messageSerializer.Send(clientInput);
         }

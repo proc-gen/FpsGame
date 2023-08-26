@@ -23,6 +23,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using FpsGame.UiComponents;
 
 namespace FpsGame.Screens
 {
@@ -58,11 +59,12 @@ namespace FpsGame.Screens
         VerticalPanel gameInfoPanel;
 
         VerticalPanel messagesPanel;
-        Label messagesLabel;
+        ChatBox chatBox;
 
         Panel hudPanel;
 
         List<Task> tasks = new List<Task>();
+        List<ChatMessage> chatMessages = new List<ChatMessage>();
 
         public GameScreen(Game game, ScreenManager screenManager, GameSettings gameSettings, PlayerSettings? playerSettings)
             : base(game, screenManager)
@@ -118,13 +120,13 @@ namespace FpsGame.Screens
                 gameInfoPanel.AddWidget(gameNameLabel);
                 gameInfoPanel.AddWidget(hostLocationLabel);
 
-                messagesLabel = new Label("messages-label", string.Empty);
+                chatBox = new ChatBox();
                 messagesPanel = new VerticalPanel("messages-panel", new Style()
                 {
                     HorizontalAlignment = HorizontalAlignment.Left,
                     VerticalAlignment = VerticalAlignment.Bottom,
                 });
-                messagesPanel.AddWidget(messagesLabel);
+                messagesPanel.AddWidget(chatBox.MessagesLabel);
 
                 hudPanel = new Panel("hud-panel");
                 hudPanel.AddWidget(gameInfoPanel);
@@ -172,6 +174,11 @@ namespace FpsGame.Screens
                         case "GameSettings":
                             gameSettings.GameName = data["GameName"].ToString();
                             gameNameLabel.UpdateText(gameSettings.GameName);
+                            break;
+                        case "ChatMessage":
+                            var message = data.ToObject<ChatMessage>();
+                            chatMessages.Add(message);
+                            chatBox.AddMessage(message);
                             break;
                     }
                 } while(ServerData.Count > 0);

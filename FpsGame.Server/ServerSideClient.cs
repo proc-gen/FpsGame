@@ -1,5 +1,6 @@
 ﻿using Arch.Core;
 using Arch.Core.Extensions;
+using FpsGame.Common.ClientData;
 using FpsGame.Common.Components;
 using FpsGame.Common.Serialization.Serializers;
 using Newtonsoft.Json.Linq;
@@ -60,15 +61,7 @@ namespace FpsGame.Server
         {
             while(!cancellationToken.IsCancellationRequested)
             {
-                try
-                {
-                    messageSerializer.Receive();
-                }
-                catch
-                {
-                    Disconnect();
-                    return;
-                }
+                messageSerializer.Receive();
             }
         }
 
@@ -83,7 +76,7 @@ namespace FpsGame.Server
             messageSerializer.Send(data);
         }
 
-        public void Send(object data)
+        public void Send(IMessageType data)
         {
             messageSerializer.Send(data);
         }

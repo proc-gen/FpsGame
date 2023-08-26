@@ -41,6 +41,8 @@ namespace FpsGame.Server
 
         GameSettings gameSettings;
 
+        List<ChatMessage> messagesToSend = new List<ChatMessage>();
+
         const int SendRate = 60;
         private int serverTick = 0;
 
@@ -115,6 +117,12 @@ namespace FpsGame.Server
 
                                     var entity = world.Create(new Player() { Id = (uint)clients.Count + 1, Name = playerSettings.Name, Color = playerSettings.Color }, new Camera(), new ClientInput(), new RenderModel() { Model = "sphere" });
                                     message.Client.SetEntityReference(entity.Reference());
+                                    messagesToSend.Add(new ChatMessage()
+                                    {
+                                        SenderName = "Server",
+                                        Message = string.Format("{0} has connected", playerSettings.Name),
+                                        Time = DateTime.Now,
+                                    });
                                     break;
                                 case "ClientInput":
                                     message.EntityReference.Entity.Set(message.Data.ToObject<ClientInput>());
@@ -137,19 +145,16 @@ namespace FpsGame.Server
                     AddNewClients();
                 }
 
-                if (serverTick++ % (60 / SendRate) == 0)
+                serverTick++;
+
+                if (serverTick % (60 / SendRate) == 0)
                 {
                     BroadcastWorld();
                 }
-            }
-        }
-
-        private void ClientDisconnected(object sender, EventArgs e)
-        {
-            if (sender is ServerSideClient serverSideClient)
-            {
-                
-                clients.Remove(serverSideClient);
+                if(serverTick % 60 == 0)
+                {
+                    BroadcastMessages();
+                }
             }
         }
     
@@ -199,10 +204,33 @@ namespace FpsGame.Server
             {
                 foreach (var client in clients.Where(a => a.Status == ServerSideClientStatus.Disconnected))
                 {
+                    var playerInfo = client.entityReference.Entity.Get<Player>();
+                    messagesToSend.Add(new ChatMessage()
+                    {
+                        SenderName = "Server",
+                        Message = string.Format("{0} has disconnected", playerInfo.Name),
+                        Time = DateTime.Now,
+                    });
                     world.Destroy(client.entityReference.Entity);
                     client.SetEntityReference(EntityReference.Null);
                     client.Status = ServerSideClientStatus.Removed;
                 }
+            }
+        }
+
+        private void BroadcastMessages()
+        {
+            if(messagesToSend.Count > 0)
+            {
+                foreach(var client in clients.Where(a => a.Status == ServerSideClientStatus.InGame))
+                {
+                    foreach(var message in messagesToSend)
+                    {
+                        client.Send(message);
+                    }
+                }
+
+                messagesToSend.Clear();
             }
         }
 

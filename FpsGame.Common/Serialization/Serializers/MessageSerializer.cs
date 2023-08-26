@@ -8,6 +8,7 @@ using System.Net.Sockets;
 using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Threading.Tasks;
+using FpsGame.Common.ClientData;
 
 namespace FpsGame.Common.Serialization.Serializers
 {
@@ -27,25 +28,28 @@ namespace FpsGame.Common.Serialization.Serializers
 
         public void Send(string data)
         {
-            using (var ms = new MemoryStream())
+            if (stream.CanWrite)
             {
-                using (var bw = new BinaryWriter(ms))
+                using (var ms = new MemoryStream())
                 {
-                    bw.Write(data);
-                }
+                    using (var bw = new BinaryWriter(ms))
+                    {
+                        bw.Write(data);
+                    }
 
-                stream.Write(ms.ToArray());
+                    stream.Write(ms.ToArray());
+                }
             }
         }
 
-        public void Send(object data)
+        public void Send(IMessageType data)
         {
             Send(Serialize(data));
         }
 
         public void Receive() 
         {
-            if (stream.DataAvailable)
+            if (stream.CanRead && stream.DataAvailable)
             {
                 string message = reader.ReadString();
                 if (!string.IsNullOrEmpty(message))
@@ -63,7 +67,7 @@ namespace FpsGame.Common.Serialization.Serializers
             }
         }
 
-        public string Serialize(object data)
+        public string Serialize(IMessageType data)
         {
             string retVal;
             using (var sw = new StringWriter())
