@@ -22,8 +22,6 @@ namespace FpsGame.Server
         private bool disposedValue;
 
         private readonly TcpClient client;
-        private NetworkStream stream;
-        private BinaryReader reader;
         Func<JObject, bool> AddDataToProcess;
         GameSettings gameSettings;
         PlayerSettings playerSettings;
@@ -41,10 +39,8 @@ namespace FpsGame.Server
         public async Task Join(CancellationToken cancellationToken)
         {
             await client.ConnectAsync(gameSettings.GameIPAddress.First(), gameSettings.GamePort);
-            stream = client.GetStream();
-            messageSerializer = new MessageSerializer(stream);
+            messageSerializer = new MessageSerializer(client.GetStream(), AddDataToProcess);
 
-            reader = new BinaryReader(stream);
             SendInputData(playerSettings);
             BeginReceiving(cancellationToken);
         }
@@ -53,22 +49,7 @@ namespace FpsGame.Server
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                if (stream.DataAvailable)
-                {
-                    string message = reader.ReadString();
-                    if (!string.IsNullOrEmpty(message))
-                    {
-                        using (var sr = new StringReader(message))
-                        {
-                            using (JsonReader reader = new JsonTextReader(sr))
-                            {
-                                JsonSerializer serializer = new JsonSerializer();
-
-                                AddDataToProcess(serializer.Deserialize<JObject>(reader));
-                            }
-                        }
-                    }
-                }
+                messageSerializer.Receive();
             }
         }
 
@@ -99,8 +80,7 @@ namespace FpsGame.Server
             {
                 if (disposing)
                 {
-                    reader?.Dispose();
-                    stream?.Dispose();
+                    messageSerializer?.Dispose();
                     client?.Dispose();
                 }
 

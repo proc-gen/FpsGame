@@ -28,8 +28,6 @@ namespace FpsGame.Server
     {
         private bool disposedValue;
         private TcpClient client;
-        private NetworkStream networkStream;
-        private BinaryReader reader;
 
         MessageSerializer messageSerializer;
 
@@ -40,19 +38,14 @@ namespace FpsGame.Server
         public ServerSideClient(TcpClient client, Func<ServerSideClient, JObject, bool> addDataToProcess)
         {
             this.client = client;
-            networkStream = client.GetStream();
-            messageSerializer = new MessageSerializer(networkStream);
-            reader = new BinaryReader(networkStream);
             AddDataToProcess = addDataToProcess;
+            messageSerializer = new MessageSerializer(client.GetStream(), addDataFromMessage);
             Status = ServerSideClientStatus.Connected;
         }
 
-        public void Reset(TcpClient client)
+        private bool addDataFromMessage(JObject data)
         {
-            this.client = client;
-            networkStream = client.GetStream();
-            reader = new BinaryReader(networkStream);
-            Status = ServerSideClientStatus.Connected;
+            return AddDataToProcess(this, data);
         }
 
         public void SetEntityReference(EntityReference entityReference)
@@ -75,22 +68,7 @@ namespace FpsGame.Server
             {
                 try
                 {
-                    if (networkStream.DataAvailable)
-                    {
-                        string message = reader.ReadString();
-                        if (!string.IsNullOrEmpty(message))
-                        {
-                            using (var sr = new StringReader(message))
-                            {
-                                using (JsonReader reader = new JsonTextReader(sr))
-                                {
-                                    JsonSerializer serializer = new JsonSerializer();
-
-                                    AddDataToProcess(this, serializer.Deserialize<JObject>(reader));
-                                }
-                            }
-                        }
-                    }
+                    messageSerializer.Receive();
                 }
                 catch
                 {
@@ -104,8 +82,6 @@ namespace FpsGame.Server
         {
             Status = ServerSideClientStatus.Disconnected;
             client?.Close();
-            reader?.Close();
-            networkStream?.Close();
         }
 
         public void Send(string data)
@@ -119,8 +95,7 @@ namespace FpsGame.Server
             {
                 if (disposing)
                 {
-                    reader?.Dispose();
-                    networkStream?.Dispose();
+                    messageSerializer.Dispose();
                 }
 
                 disposedValue = true;
