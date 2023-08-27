@@ -278,6 +278,10 @@ namespace FpsGame.Screens
                     }
                     lastMousePosition = mState.Position.ToVector2();
                 }
+                else if (!firstMove)
+                {
+                    firstMove = true;
+                }
 
                 if (clientInput.Forward ||
                     clientInput.Backward ||
