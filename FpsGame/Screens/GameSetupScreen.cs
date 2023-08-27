@@ -25,6 +25,8 @@ namespace FpsGame.Screens
         TextBox ipAddressTextBox;
         Label ipAddressSelectionLabel;
         ComboBox ipAddressSelection;
+        Label ipAddressPortSelectionLabel;
+        TextBox ipAddressPort;
         Button continueButton;
         Button backButton;
 
@@ -62,8 +64,13 @@ namespace FpsGame.Screens
                     ipAddressSelection = new ComboBox("ip-address-selection", availableIpListItems);
                     ipAddressSelection.UiWidget.SelectedIndex = 0;
 
+                    ipAddressPortSelectionLabel = new Label("ip-address-port-selection-label", "Hosting port:");
+                    ipAddressPort = new TextBox("ip-address-port", "12345");
+
                     panel.AddWidget(ipAddressSelectionLabel);
                     panel.AddWidget(ipAddressSelection);
+                    panel.AddWidget(ipAddressPortSelectionLabel);
+                    panel.AddWidget(ipAddressPort);
                 }
             }
             else
@@ -100,6 +107,9 @@ namespace FpsGame.Screens
             continueButton.UiWidget.Enabled = 
                 (gameSettings.GameMode == GameMode.MultiplayerJoin 
                     || !string.IsNullOrWhiteSpace(gameNameTextBox.Text))
+                && (gameSettings.GameMode == GameMode.SinglePlayer || gameSettings.GameMode == GameMode.MultiplayerJoin
+                    || (IPAddress.TryParse(ipAddressSelection.UiWidget.SelectedItem.Text, out dummy) 
+                        && int.TryParse(ipAddressPort.Text, out dummyPort)))
                 && (gameSettings.GameMode != GameMode.MultiplayerJoin
                     || (ipAddressTextBox.Text.Contains(':')
                         && IPAddress.TryParse(ipAddressTextBox.Text.Split(':')[0], out dummy)
@@ -122,7 +132,7 @@ namespace FpsGame.Screens
                 {
                     gameSettings.GameName = gameNameTextBox.Text;
                     gameSettings.GameIPAddress = IPAddress.Parse(ipAddressSelection.UiWidget.SelectedItem.Text);
-                    gameSettings.GamePort = 12345;
+                    gameSettings.GamePort = int.Parse(ipAddressPort.Text);
                 }
                 else
                 {
