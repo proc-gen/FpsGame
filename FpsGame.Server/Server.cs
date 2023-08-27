@@ -51,7 +51,7 @@ namespace FpsGame.Server
             this.cancellationToken = cancellationToken;
             this.gameSettings = gameSettings;
 
-            var ip = gameSettings.GameIPAddress.First();
+            var ip = gameSettings.GameIPAddress;
             
             var listener = new TcpListener(ip, gameSettings.GamePort);
             listener.Start();

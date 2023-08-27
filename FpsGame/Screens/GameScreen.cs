@@ -109,7 +109,7 @@ namespace FpsGame.Screens
                 client = new Client(AddDataToProcess, gameSettings, playerSettings.Value);
                 tasks.Add(Task.Run(() => client.Join(token.Token), token.Token));
 
-                hostLocationLabel = new Label("host-location", gameSettings.GameIPAddress.First().ToString() + ":" + gameSettings.GamePort);
+                hostLocationLabel = new Label("host-location", gameSettings.GameIPAddress.ToString() + ":" + gameSettings.GamePort);
                 gameNameLabel = new Label("game-name", gameSettings.GameName);
                 gameInfoPanel = new VerticalPanel("game-info", new Style()
                 {
@@ -340,7 +340,9 @@ namespace FpsGame.Screens
                 {
                     token?.Cancel();
                     server?.Dispose();
+                    server = null;
                     client?.Dispose();
+                    client = null;
                 }
 
                 disposedValue = true;

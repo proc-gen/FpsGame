@@ -32,7 +32,7 @@ namespace FpsGame.UiComponents
             string text = string.Empty;
             foreach(var msg in  messages)
             {
-                text += string.Format("{0} ({1}): {2} \n", msg.SenderName, msg.Time.ToShortTimeString(), msg.Message);
+                text += string.Format("{0} ({1}): {2} \n", msg.SenderName, msg.Time.ToLongTimeString(), msg.Message);
             }
 
             MessagesLabel.UpdateText(text);

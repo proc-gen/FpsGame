@@ -33,7 +33,7 @@ namespace FpsGame.Server
 
         public async Task Join(CancellationToken cancellationToken)
         {
-            await client.ConnectAsync(gameSettings.GameIPAddress.First(), gameSettings.GamePort);
+            await client.ConnectAsync(gameSettings.GameIPAddress, gameSettings.GamePort);
             messageSerializer = new MessageSerializer(client.GetStream(), AddDataToProcess);
 
             SendInputData(playerSettings);

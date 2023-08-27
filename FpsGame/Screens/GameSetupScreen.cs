@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Linq;
 
 namespace FpsGame.Screens
 {
@@ -22,6 +23,8 @@ namespace FpsGame.Screens
         TextBox playerNameTextBox;
         Label ipAddressLabel;
         TextBox ipAddressTextBox;
+        Label ipAddressSelectionLabel;
+        ComboBox ipAddressSelection;
         Button continueButton;
         Button backButton;
 
@@ -33,7 +36,7 @@ namespace FpsGame.Screens
             panel = new VerticalPanel("panel");
             titleLabel = new Label("title", "Game Setup");
             
-            continueButton = new Button("continue", "Start Game", ContinueButtonClick);
+            continueButton = new Button("continue", gameSettings.GameMode == GameMode.MultiplayerJoin ? "Join Game" : "Start Game", ContinueButtonClick);
             backButton = new Button("back", "Back to Main Menu", BackButtonClick);
             
             panel.AddWidget(titleLabel);
@@ -44,10 +47,28 @@ namespace FpsGame.Screens
                 gameNameTextBox = new TextBox("game-name");
                 panel.AddWidget(gameNameLabel);
                 panel.AddWidget(gameNameTextBox);
+
+                if(gameSettings.GameMode != GameMode.SinglePlayer)
+                {
+                    var availableIps = IPAddressUtils.GetAllLocalIPv4();
+                    List<ListItem> availableIpListItems = new List<ListItem>();
+
+                    foreach (var ip in availableIps)
+                    {
+                        availableIpListItems.Add(new ListItem(ip.ToString()));
+                    }
+
+                    ipAddressSelectionLabel = new Label("ip-address-selection-label", "Hosting address:");
+                    ipAddressSelection = new ComboBox("ip-address-selection", availableIpListItems);
+                    ipAddressSelection.UiWidget.Items.First().IsSelected = true;
+
+                    panel.AddWidget(ipAddressSelectionLabel);
+                    panel.AddWidget(ipAddressSelection);
+                }
             }
             else
             {
-                ipAddressLabel = new Label("ip-address-label", "Host IP Address: ");
+                ipAddressLabel = new Label("ip-address-label", "Host Address: ");
                 ipAddressTextBox = new TextBox("ip-address");
                 panel.AddWidget(ipAddressLabel);
                 panel.AddWidget(ipAddressTextBox);
@@ -94,22 +115,19 @@ namespace FpsGame.Screens
                 if(gameSettings.GameMode == GameMode.SinglePlayer)
                 {
                     gameSettings.GameName = gameNameTextBox.Text;
-                    gameSettings.GameIPAddress = new List<IPAddress>() { IPAddress.Loopback };
+                    gameSettings.GameIPAddress = IPAddress.Loopback;
                     gameSettings.GamePort = 12345;
                 }
                 else if (gameSettings.GameMode != GameMode.MultiplayerJoin)
                 {
                     gameSettings.GameName = gameNameTextBox.Text;
-                    gameSettings.GameIPAddress = IPAddressUtils.GetAllLocalIPv4();
-#if DEBUG
-                    gameSettings.GameIPAddress.Add(IPAddress.Loopback);
-#endif
+                    gameSettings.GameIPAddress = IPAddress.Parse(ipAddressSelection.UiWidget.SelectedItem.Text);
                     gameSettings.GamePort = 12345;
                 }
                 else
                 {
                     string[] ipAddress = ipAddressTextBox.Text.Split(':');
-                    gameSettings.GameIPAddress = new List<IPAddress>() { IPAddress.Parse(ipAddress[0]) };
+                    gameSettings.GameIPAddress = IPAddress.Parse(ipAddress[0]);
                     gameSettings.GamePort = int.Parse(ipAddress[1]);
                 }
 
