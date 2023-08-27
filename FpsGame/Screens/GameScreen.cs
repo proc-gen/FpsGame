@@ -22,8 +22,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 using FpsGame.UiComponents;
+using System.Net.NetworkInformation;
 
 namespace FpsGame.Screens
 {
@@ -47,6 +47,10 @@ namespace FpsGame.Screens
         private readonly JsonNetArchSerializer serializer = new JsonNetArchSerializer();
         private readonly Dictionary<Type, Converter> converters;
         
+        Ping serverPing = new Ping();
+        int pingTick = -1;
+        Task<PingReply> pingTask;
+
         private Vector2 lastMousePosition;
         private bool firstMove = true;
 
@@ -56,6 +60,7 @@ namespace FpsGame.Screens
 
         Label hostLocationLabel;
         Label gameNameLabel;
+        Label pingLabel;
         VerticalPanel gameInfoPanel;
 
         VerticalPanel messagesPanel;
@@ -111,6 +116,7 @@ namespace FpsGame.Screens
 
                 hostLocationLabel = new Label("host-location", gameSettings.GameIPAddress.ToString() + ":" + gameSettings.GamePort);
                 gameNameLabel = new Label("game-name", gameSettings.GameName);
+                pingLabel = new Label("ping-label", "Ping: ");
                 gameInfoPanel = new VerticalPanel("game-info", new Style()
                 {
                     Margin = new Thickness(0),
@@ -119,6 +125,7 @@ namespace FpsGame.Screens
                 });
                 gameInfoPanel.AddWidget(gameNameLabel);
                 gameInfoPanel.AddWidget(hostLocationLabel);
+                gameInfoPanel.AddWidget(pingLabel);
 
                 chatBox = new ChatBox();
                 messagesPanel = new VerticalPanel("messages-panel", new Style()
@@ -153,6 +160,7 @@ namespace FpsGame.Screens
             {
                 processServerData();
                 processInputData(kState, mState, gState);
+                checkPing();
             }
 
             server?.Run(gameTime);
@@ -296,6 +304,20 @@ namespace FpsGame.Screens
             }
         }
 
+        private void checkPing()
+        {
+            pingTick = (pingTick + 1) % 180;
+            if(pingTick == 0)
+            {
+                pingTask = serverPing.SendPingAsync(gameSettings.GameIPAddress.ToString());
+            }
+            if (pingTask != null && pingTask.IsCompleted)
+            {
+                pingLabel.UpdateText(string.Format("Ping: {0}ms", pingTask.Result.RoundtripTime));
+                pingTask = null;
+            }
+        }
+
         public override void Render(GameTime gameTime)
         {
             if(gameSettings.GameMode != GameMode.StandaloneServer)
@@ -342,7 +364,7 @@ namespace FpsGame.Screens
             {
                 if (disposing)
                 {
-                    token?.Cancel();
+                    //token?.Cancel();
                     server?.Dispose();
                     server = null;
                     client?.Dispose();
