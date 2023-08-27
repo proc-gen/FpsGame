@@ -60,7 +60,7 @@ namespace FpsGame.Screens
 
                     ipAddressSelectionLabel = new Label("ip-address-selection-label", "Hosting address:");
                     ipAddressSelection = new ComboBox("ip-address-selection", availableIpListItems);
-                    ipAddressSelection.UiWidget.Items.First().IsSelected = true;
+                    ipAddressSelection.UiWidget.SelectedIndex = 0;
 
                     panel.AddWidget(ipAddressSelectionLabel);
                     panel.AddWidget(ipAddressSelection);
