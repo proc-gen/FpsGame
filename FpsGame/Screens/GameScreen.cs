@@ -153,6 +153,8 @@ namespace FpsGame.Screens
                 || kState.IsKeyDown(Keys.Escape))
             {
                 client.SendInputData(new ClientDisconnect());
+                Thread.Sleep(1000);
+                token.Cancel();
                 ScreenManager.SetActiveScreen(ScreenNames.MainMenu);
             }
 
@@ -358,13 +360,23 @@ namespace FpsGame.Screens
             return true;
         }
 
-        protected override void Dispose(bool disposing)
+        protected void Dispose(bool disposing)
         {
             if (!disposedValue)
             {
                 if (disposing)
                 {
-                    //token?.Cancel();
+                    if (tasks.Any())
+                    {
+                        foreach (var task in tasks)
+                        {
+                            if (task.IsCompleted)
+                            {
+                                task.Dispose();
+                            }
+                        }
+                    }
+
                     server?.Dispose();
                     server = null;
                     client?.Dispose();
@@ -373,8 +385,6 @@ namespace FpsGame.Screens
 
                 disposedValue = true;
             }
-
-            base.Dispose(true);
         }
 
         public new void Dispose()

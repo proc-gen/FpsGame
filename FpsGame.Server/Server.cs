@@ -27,7 +27,7 @@ namespace FpsGame.Server
         private bool disposedValue;
         private readonly List<ServerSideClient> clients = new List<ServerSideClient>();
         private readonly List<ServerSideClient> newClients = new List<ServerSideClient>();
-        private readonly List<TcpListener> listeners = new List<TcpListener>();
+        private readonly TcpListener listener;
 
         private readonly JsonNetArchSerializer serializer = new JsonNetArchSerializer();
 
@@ -53,9 +53,8 @@ namespace FpsGame.Server
 
             var ip = gameSettings.GameIPAddress;
             
-            var listener = new TcpListener(ip, gameSettings.GamePort);
+            listener = new TcpListener(ip, gameSettings.GamePort);
             listener.Start();
-            listeners.Add(listener);
             
 
             world = World.Create();
@@ -85,76 +84,84 @@ namespace FpsGame.Server
 
         private async void AddNewClients()
         {
-            try {
-                foreach (var listener in listeners)
-                {
-                    TcpClient tcpClient = await listener.AcceptTcpClientAsync(cancellationToken);
-                    
-                    var client = new ServerSideClient(tcpClient, AddDataToProcess);
+            try
+            {
+                TcpClient tcpClient = await listener.AcceptTcpClientAsync(cancellationToken);
 
-                    tasks.Add(Task.Run(() => client.BeginReceiving(cancellationToken), cancellationToken));                    
-                    newClients.Add(client);
-                }
+                var client = new ServerSideClient(tcpClient, AddDataToProcess);
+
+                tasks.Add(Task.Run(() => client.BeginReceiving(cancellationToken), cancellationToken));
+                newClients.Add(client);
             }
-            catch { }
+            catch (OperationCanceledException ex)
+            {
+                //Do nothing
+            }
         }
 
         public void Run(GameTime gameTime)
         {
-            if (!cancellationToken.IsCancellationRequested)
+            if (cancellationToken.IsCancellationRequested)
             {
-                if (ClientMessages.Count > 0)
+                return;
+            }
+
+            HandleClientMessages();
+
+            foreach (var system in updateSystems)
+            {
+                system.Update(gameTime);
+            }
+
+            if (gameSettings.GameMode != GameMode.SinglePlayer || !clients.Any())
+            {
+                AddNewClients();
+            }
+
+            serverTick++;
+
+            if (serverTick % (60 / SendRate) == 0)
+            {
+                BroadcastWorld();
+            }
+            if(serverTick % 60 == 0)
+            {
+                BroadcastMessages();
+            }
+        }
+
+        private void HandleClientMessages()
+        {
+            if (ClientMessages.Count > 0)
+            {
+                do
                 {
-                    do
+                    var message = ClientMessages.Dequeue();
+                    if (message != null)
                     {
-                        var message = ClientMessages.Dequeue();
-                        if (message != null)
+                        switch (message.Data["Type"].ToString())
                         {
-                            switch (message.Data["Type"].ToString())
-                            {
-                                case "PlayerSettings":
-                                    var playerSettings = message.Data.ToObject<PlayerSettings>();
+                            case "PlayerSettings":
+                                var playerSettings = message.Data.ToObject<PlayerSettings>();
 
-                                    var entity = world.Create(new Player() { Id = (uint)clients.Count + 1, Name = playerSettings.Name, Color = playerSettings.Color }, new Camera(), new ClientInput(), new RenderModel() { Model = "sphere" });
-                                    message.Client.SetEntityReference(entity.Reference());
-                                    messagesToSend.Add(new ChatMessage()
-                                    {
-                                        SenderName = "Server",
-                                        Message = string.Format("{0} has connected", playerSettings.Name),
-                                        Time = DateTime.Now,
-                                    });
-                                    break;
-                                case "ClientInput":
-                                    message.EntityReference.Entity.Set(message.Data.ToObject<ClientInput>());
-                                    break;
-                                case "ClientDisconnect":
-                                    message.Client.Disconnect();
-                                    break;
-                            }
+                                var entity = world.Create(new Player() { Id = (uint)clients.Count + 1, Name = playerSettings.Name, Color = playerSettings.Color }, new Camera(), new ClientInput(), new RenderModel() { Model = "sphere" });
+                                message.Client.SetEntityReference(entity.Reference());
+                                messagesToSend.Add(new ChatMessage()
+                                {
+                                    SenderName = "Server",
+                                    Message = string.Format("{0} has connected", playerSettings.Name),
+                                    Time = DateTime.Now,
+                                });
+                                break;
+                            case "ClientInput":
+                                message.EntityReference.Entity.Set(message.Data.ToObject<ClientInput>());
+                                break;
+                            case "ClientDisconnect":
+                                message.Client.Disconnect();
+                                break;
                         }
-                    } while (ClientMessages.Count > 0);
-                }
-
-                foreach (var system in updateSystems)
-                {
-                    system.Update(gameTime);
-                }
-
-                if (gameSettings.GameMode != GameMode.SinglePlayer || !clients.Any())
-                {
-                    AddNewClients();
-                }
-
-                serverTick++;
-
-                if (serverTick % (60 / SendRate) == 0)
-                {
-                    BroadcastWorld();
-                }
-                if(serverTick % 60 == 0)
-                {
-                    BroadcastMessages();
-                }
+                    }
+                } while (ClientMessages.Count > 0);
             }
         }
     
@@ -246,13 +253,19 @@ namespace FpsGame.Server
             {
                 if (disposing)
                 {
-                    if (listeners.Any())
+                    if (tasks.Any())
                     {
-                        foreach(var listener in listeners)
+                        foreach (var task in tasks)
                         {
-                            listener.Stop();
+                            if (task.IsCompleted)
+                            {
+                                task.Dispose();
+                            }
                         }
                     }
+                    
+                    listener.Stop();
+                    
 
                     if (clients.Any())
                     {

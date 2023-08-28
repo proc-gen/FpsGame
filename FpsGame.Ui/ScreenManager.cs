@@ -55,7 +55,8 @@ namespace FpsGame.Ui
         {
             if(HasScreen(screenName))
             {
-                screens[screenName].Dispose();
+                var disposeMethod = screens[screenName].GetType().GetMethod("Dispose");
+                disposeMethod?.Invoke(screens[screenName], null);
                 screens.Remove(screenName);
             }
         }
@@ -66,7 +67,8 @@ namespace FpsGame.Ui
             {
                 if(screen.Key != screenName)
                 {
-                    screens[screen.Key].Dispose();
+                    var disposeMethod = screen.Value.GetType().GetMethod("Dispose");
+                    disposeMethod?.Invoke(screen.Value, null);
                     screens.Remove(screen.Key);
                 }
             }
@@ -93,7 +95,8 @@ namespace FpsGame.Ui
                     {
                         foreach(var screen in screens)
                         {
-                            screen.Value.Dispose();
+                            var disposeMethod = screen.GetType().GetMethod("Dispose");
+                            disposeMethod?.Invoke(screen, null);
                         }
                     }
                 }

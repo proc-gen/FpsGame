@@ -5,9 +5,8 @@ using System;
 
 namespace FpsGame.Ui
 {
-    public abstract class Screen : IDisposable
+    public abstract class Screen
     {
-        private bool disposedValue;
         protected Widget RootWidget;
         protected Game Game;
         protected ScreenManager ScreenManager;
@@ -26,24 +25,5 @@ namespace FpsGame.Ui
         public abstract void Update(GameTime gameTime);
 
         public abstract void Render(GameTime gameTime);
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-
-                }
-
-                disposedValue = true;
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
-        }
     }
 }
