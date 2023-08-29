@@ -3,8 +3,10 @@ using Arch.Core.Extensions;
 using FpsGame.Common.ClientData;
 using FpsGame.Common.Components;
 using FpsGame.Common.Serialization.Serializers;
+using FpsGame.Server.Utils;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 
@@ -30,11 +32,15 @@ namespace FpsGame.Server
         public EntityReference entityReference { get; private set; }
         public ServerSideClientStatus Status { get; set; }
 
+        IPEndPoint remoteIpEndPoint;
+        PingHelper pingHelper = new PingHelper();
+
         public ServerSideClient(TcpClient client, Func<ServerSideClient, JObject, bool> addDataToProcess)
         {
             this.client = client;
             AddDataToProcess = addDataToProcess;
             messageSerializer = new MessageSerializer(client.GetStream(), addDataFromMessage);
+            remoteIpEndPoint = client.Client.RemoteEndPoint as IPEndPoint;
             Status = ServerSideClientStatus.Connected;
         }
 
@@ -65,6 +71,12 @@ namespace FpsGame.Server
             }
 
             return;
+        }
+
+        public long CheckPing()
+        {
+            pingHelper.CheckPing(remoteIpEndPoint.Address.ToString());
+            return pingHelper.PingMs;
         }
 
         public void Disconnect()

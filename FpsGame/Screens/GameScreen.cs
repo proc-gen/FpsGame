@@ -66,6 +66,8 @@ namespace FpsGame.Screens
         VerticalPanel messagesPanel;
         ChatBox chatBox;
 
+        PlayersTable playersTable;
+
         Panel hudPanel;
 
         List<Task> tasks = new List<Task>();
@@ -134,10 +136,12 @@ namespace FpsGame.Screens
                     VerticalAlignment = VerticalAlignment.Bottom,
                 });
                 messagesPanel.AddWidget(chatBox.MessagesLabel);
+                playersTable = new PlayersTable();
 
                 hudPanel = new Panel("hud-panel");
                 hudPanel.AddWidget(gameInfoPanel);
                 hudPanel.AddWidget(messagesPanel);
+                hudPanel.AddWidget(playersTable.Table);
 
                 RootWidget = hudPanel.UiWidget;
             }
@@ -157,6 +161,8 @@ namespace FpsGame.Screens
                 token.Cancel();
                 ScreenManager.SetActiveScreen(ScreenNames.MainMenu);
             }
+
+            playersTable.Table.UiWidget.Visible = kState.IsKeyDown(Keys.Tab);
 
             if (client != null)
             {
@@ -189,6 +195,9 @@ namespace FpsGame.Screens
                             var message = data.ToObject<ChatMessage>();
                             chatMessages.Add(message);
                             chatBox.AddMessage(message);
+                            break;
+                        case "PlayersInfo":
+                            playersTable.Update(data.ToObject<PlayersInfo>().Players);
                             break;
                     }
                 } while(ServerData.Count > 0);

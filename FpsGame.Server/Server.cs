@@ -127,6 +127,7 @@ namespace FpsGame.Server
             if(serverTick % 60 == 0)
             {
                 BroadcastMessages();
+                BroadcastPlayerInfo();
             }
         }
 
@@ -238,6 +239,27 @@ namespace FpsGame.Server
                 }
 
                 messagesToSend.Clear();
+            }
+        }
+
+        private void BroadcastPlayerInfo()
+        {
+            var PlayersInfo = new PlayersInfo();
+            foreach (var client in clients.Where(a => a.Status == ServerSideClientStatus.InGame))
+            {
+                client.CheckPing();
+                var player = client.entityReference.Entity.Get<Player>();
+                PlayersInfo.Players.Add(new PlayerInfo()
+                {
+                    Name = player.Name,
+                    Color = player.Color,
+                    Ping = client.CheckPing(),
+                });
+            }
+
+            foreach (var client in clients.Where(a => a.Status == ServerSideClientStatus.InGame))
+            {
+                client.Send(PlayersInfo);
             }
         }
 
