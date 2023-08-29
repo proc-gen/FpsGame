@@ -114,9 +114,18 @@ namespace FpsGame.Screens
             client = new Client(AddDataToProcess, gameSettings, playerSettings.Value);
             tasks.Add(Task.Run(() => client.Join(token.Token), token.Token));
 
-            hostLocationLabel = new Label("host-location", gameSettings.GameIPAddress.ToString() + ":" + gameSettings.GamePort);
-            gameNameLabel = new Label("game-name", gameSettings.GameName);
-            pingLabel = new Label("ping-label", "Ping: ");
+            hostLocationLabel = new Label("host-location", gameSettings.GameIPAddress.ToString() + ":" + gameSettings.GamePort, new Style()
+            {
+                Margin = new Thickness(0),
+            });
+            gameNameLabel = new Label("game-name", gameSettings.GameName, new Style()
+            {
+                Margin = new Thickness(0),
+            });
+            pingLabel = new Label("ping-label", "Ping: ", new Style()
+            {
+                Margin = new Thickness(0),
+            });
             gameInfoPanel = new VerticalPanel("game-info", new Style()
             {
                 Margin = new Thickness(0),

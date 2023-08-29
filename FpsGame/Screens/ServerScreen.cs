@@ -1,6 +1,9 @@
 ﻿using FpsGame.Common.ClientData;
 using FpsGame.Common.Constants;
 using FpsGame.Ui;
+using FpsGame.Ui.Components;
+using FpsGame.Ui.Styles;
+using FpsGame.UiComponents;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System;
@@ -19,11 +22,55 @@ namespace FpsGame.Screens
         CancellationTokenSource token = new CancellationTokenSource();
         private GameSettings gameSettings;
 
+        Label hostLocationLabel;
+        Label gameNameLabel;
+        VerticalPanel gameInfoPanel;
+
+        VerticalPanel messagesPanel;
+        ChatBox chatBox;
+
+        PlayersTable playersTable;
+
+        Panel hudPanel;
+
         public ServerScreen(Game game, ScreenManager screenManager, GameSettings gameSettings) 
             : base(game, screenManager)
         {
             this.gameSettings = gameSettings;
             server = new Server.Server(token.Token, gameSettings);
+
+            hostLocationLabel = new Label("host-location", gameSettings.GameIPAddress.ToString() + ":" + gameSettings.GamePort, new Style()
+            {
+                Margin = new Thickness(0),
+            });
+            gameNameLabel = new Label("game-name", gameSettings.GameName, new Style()
+            {
+                Margin = new Thickness(0),
+            });
+            gameInfoPanel = new VerticalPanel("game-info", new Style()
+            {
+                Margin = new Thickness(0),
+                HorizontalAlignment = HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Top,
+            });
+            gameInfoPanel.AddWidget(gameNameLabel);
+            gameInfoPanel.AddWidget(hostLocationLabel);
+
+            chatBox = new ChatBox();
+            messagesPanel = new VerticalPanel("messages-panel", new Style()
+            {
+                HorizontalAlignment = HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Bottom,
+            });
+            messagesPanel.AddWidget(chatBox.MessagesLabel);
+            playersTable = new PlayersTable();
+
+            hudPanel = new Panel("hud-panel");
+            hudPanel.AddWidget(gameInfoPanel);
+            hudPanel.AddWidget(messagesPanel);
+            hudPanel.AddWidget(playersTable.Table);
+
+            RootWidget = hudPanel.UiWidget;
         }
 
         public override void Update(GameTime gameTime)
