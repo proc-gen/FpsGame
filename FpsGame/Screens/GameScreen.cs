@@ -27,7 +27,7 @@ using System.Net.NetworkInformation;
 
 namespace FpsGame.Screens
 {
-    public class GameScreen : Screen
+    public class GameScreen : Screen, IDisposable
     {
         private bool disposedValue = false;
         private Matrix view = Matrix.CreateLookAt(new Vector3(0, 0, 10), new Vector3(0, 0, 0), Vector3.UnitY);
@@ -111,40 +111,38 @@ namespace FpsGame.Screens
                 server = new Server.Server(token.Token, gameSettings);
             }
 
-            if (gameSettings.GameMode != GameMode.StandaloneServer)
+            client = new Client(AddDataToProcess, gameSettings, playerSettings.Value);
+            tasks.Add(Task.Run(() => client.Join(token.Token), token.Token));
+
+            hostLocationLabel = new Label("host-location", gameSettings.GameIPAddress.ToString() + ":" + gameSettings.GamePort);
+            gameNameLabel = new Label("game-name", gameSettings.GameName);
+            pingLabel = new Label("ping-label", "Ping: ");
+            gameInfoPanel = new VerticalPanel("game-info", new Style()
             {
-                client = new Client(AddDataToProcess, gameSettings, playerSettings.Value);
-                tasks.Add(Task.Run(() => client.Join(token.Token), token.Token));
+                Margin = new Thickness(0),
+                HorizontalAlignment = HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Top,
+            });
+            gameInfoPanel.AddWidget(gameNameLabel);
+            gameInfoPanel.AddWidget(hostLocationLabel);
+            gameInfoPanel.AddWidget(pingLabel);
 
-                hostLocationLabel = new Label("host-location", gameSettings.GameIPAddress.ToString() + ":" + gameSettings.GamePort);
-                gameNameLabel = new Label("game-name", gameSettings.GameName);
-                pingLabel = new Label("ping-label", "Ping: ");
-                gameInfoPanel = new VerticalPanel("game-info", new Style()
-                {
-                    Margin = new Thickness(0),
-                    HorizontalAlignment = HorizontalAlignment.Left,
-                    VerticalAlignment = VerticalAlignment.Top,
-                });
-                gameInfoPanel.AddWidget(gameNameLabel);
-                gameInfoPanel.AddWidget(hostLocationLabel);
-                gameInfoPanel.AddWidget(pingLabel);
+            chatBox = new ChatBox();
+            messagesPanel = new VerticalPanel("messages-panel", new Style()
+            {
+                HorizontalAlignment = HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Bottom,
+            });
+            messagesPanel.AddWidget(chatBox.MessagesLabel);
+            playersTable = new PlayersTable();
 
-                chatBox = new ChatBox();
-                messagesPanel = new VerticalPanel("messages-panel", new Style()
-                {
-                    HorizontalAlignment = HorizontalAlignment.Left,
-                    VerticalAlignment = VerticalAlignment.Bottom,
-                });
-                messagesPanel.AddWidget(chatBox.MessagesLabel);
-                playersTable = new PlayersTable();
+            hudPanel = new Panel("hud-panel");
+            hudPanel.AddWidget(gameInfoPanel);
+            hudPanel.AddWidget(messagesPanel);
+            hudPanel.AddWidget(playersTable.Table);
 
-                hudPanel = new Panel("hud-panel");
-                hudPanel.AddWidget(gameInfoPanel);
-                hudPanel.AddWidget(messagesPanel);
-                hudPanel.AddWidget(playersTable.Table);
-
-                RootWidget = hudPanel.UiWidget;
-            }
+            RootWidget = hudPanel.UiWidget;
+            
         }
 
         public override void Update(GameTime gameTime)
@@ -333,14 +331,7 @@ namespace FpsGame.Screens
 
         public override void Render(GameTime gameTime)
         {
-            if(gameSettings.GameMode != GameMode.StandaloneServer)
-            {
-                renderGame(gameTime);
-            }
-            else
-            {
-                renderServer(gameTime);
-            }
+            renderGame(gameTime);
         }
 
         private void renderGame(GameTime gameTime)
@@ -358,11 +349,6 @@ namespace FpsGame.Screens
                     system.Render(gameTime, view, projection);
                 }
             }
-        }
-
-        private void renderServer(GameTime gameTime)
-        {
-
         }
 
         public bool AddDataToProcess(JObject data)
@@ -398,7 +384,7 @@ namespace FpsGame.Screens
             }
         }
 
-        public new void Dispose()
+        public void Dispose()
         {
             Dispose(disposing: true);
             GC.SuppressFinalize(this);

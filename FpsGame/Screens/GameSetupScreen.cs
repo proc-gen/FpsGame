@@ -141,20 +141,25 @@ namespace FpsGame.Screens
                     gameSettings.GamePort = int.Parse(ipAddress[1]);
                 }
 
-                PlayerSettings? playerSettings = null;
-
                 if(gameSettings.GameMode != GameMode.StandaloneServer)
                 {
                     Random random = new Random();
-                    playerSettings = new PlayerSettings()
+                    PlayerSettings playerSettings = new PlayerSettings()
                     {
                         Name = playerNameTextBox.Text,
                         Color = new Vector3((float)random.NextDouble(), (float)random.NextDouble(), (float)random.NextDouble()),
                     };
-                }
 
-                ScreenManager.AddScreen(ScreenNames.Game, new GameScreen(Game, ScreenManager, gameSettings, playerSettings));
-                ScreenManager.SetActiveScreen(ScreenNames.Game);
+                    ScreenManager.AddScreen(ScreenNames.Game, new GameScreen(Game, ScreenManager, gameSettings, playerSettings));
+                    ScreenManager.SetActiveScreen(ScreenNames.Game);
+                }
+                else
+                {
+                    ScreenManager.AddScreen(ScreenNames.Server, new ServerScreen(Game, ScreenManager, gameSettings));
+                    ScreenManager.SetActiveScreen(ScreenNames.Server);
+                }
+                
+                
             }
         }
 
