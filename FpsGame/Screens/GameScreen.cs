@@ -156,16 +156,18 @@ namespace FpsGame.Screens
             if (gState.Buttons.Back == ButtonState.Pressed 
                 || kState.IsKeyDown(Keys.Escape))
             {
-                client.SendInputData(new ClientDisconnect());
-                Thread.Sleep(1000);
+                if (client != null)
+                {
+                    client.SendInputData(new ClientDisconnect());
+                    Thread.Sleep(250);
+                }
                 token.Cancel();
                 ScreenManager.SetActiveScreen(ScreenNames.MainMenu);
             }
 
-            playersTable.Table.UiWidget.Visible = kState.IsKeyDown(Keys.Tab);
-
             if (client != null)
             {
+                playersTable.Table.UiWidget.Visible = kState.IsKeyDown(Keys.Tab);
                 processServerData();
                 processInputData(kState, mState, gState);
                 checkPing();
