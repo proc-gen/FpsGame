@@ -33,6 +33,10 @@ namespace FpsGame.UiComponents
             Table = new Grid("players-table");
             Table.UiWidget.HorizontalAlignment = Myra.Graphics2D.UI.HorizontalAlignment.Center;
             Table.UiWidget.VerticalAlignment = Myra.Graphics2D.UI.VerticalAlignment.Center;
+            Table.UiWidget.Background = new SolidBrush(new Color(.1f, .1f, .1f));
+            Table.UiWidget.Margin = new Myra.Graphics2D.Thickness(4);
+            Table.UiWidget.Padding = new Myra.Graphics2D.Thickness(4);
+            Table.UiWidget.Opacity = .75f;
 
             Players = players;
 
