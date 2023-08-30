@@ -37,7 +37,6 @@ namespace FpsGame.Screens
             : base(game, screenManager)
         {
             this.gameSettings = gameSettings;
-            server = new Server.Server(token.Token, gameSettings);
 
             hostLocationLabel = new Label("host-location", gameSettings.GameIPAddress.ToString() + ":" + gameSettings.GamePort, new Style()
             {
@@ -71,6 +70,19 @@ namespace FpsGame.Screens
             hudPanel.AddWidget(playersTable.Table);
 
             RootWidget = hudPanel.UiWidget;
+
+            server = new Server.Server(token.Token, gameSettings, GetChatMessages);
+
+        }
+
+        private bool GetChatMessages(List<ChatMessage> messages)
+        {
+            foreach (ChatMessage message in messages)
+            {
+                chatBox.AddMessage(message);
+            }
+
+            return true;
         }
 
         public override void Update(GameTime gameTime)

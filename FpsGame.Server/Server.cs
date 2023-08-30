@@ -42,14 +42,16 @@ namespace FpsGame.Server
         GameSettings gameSettings;
 
         List<ChatMessage> messagesToSend = new List<ChatMessage>();
+        Func<List<ChatMessage>, bool> sendMessages;
 
         const int SendRate = 60;
         private int serverTick = 0;
 
-        public Server(CancellationToken cancellationToken, GameSettings gameSettings)
+        public Server(CancellationToken cancellationToken, GameSettings gameSettings, Func<List<ChatMessage>, bool> sendMessages = null)
         {
             this.cancellationToken = cancellationToken;
             this.gameSettings = gameSettings;
+            this.sendMessages = sendMessages;
 
             var ip = gameSettings.GameIPAddress;
             
@@ -236,6 +238,11 @@ namespace FpsGame.Server
                     {
                         client.Send(message);
                     }
+                }
+
+                if (sendMessages != null)
+                {
+                    sendMessages(messagesToSend);
                 }
 
                 messagesToSend.Clear();
