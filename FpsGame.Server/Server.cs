@@ -274,7 +274,10 @@ namespace FpsGame.Server
                 });
             }
 
-            sendData(PlayersInfo);
+            if (sendData != null)
+            {
+                sendData(PlayersInfo);
+            }
             foreach (var client in clients.Where(a => a.Status == ServerSideClientStatus.InGame))
             {
                 client.Send(PlayersInfo);
