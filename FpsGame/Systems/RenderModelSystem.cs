@@ -37,6 +37,7 @@ namespace FpsGame.Systems
                 foreach (BasicEffect effect in mesh.Effects)
                 {
                     effect.EnableDefaultLighting();
+                    effect.DiffuseColor = Color.White.ToVector3();
                     effect.World = Matrix.CreateRotationX(rotation.X)
                         * Matrix.CreateRotationY(rotation.Y)
                         * Matrix.CreateRotationZ(rotation.Z)

@@ -28,6 +28,14 @@
     <ProjectReference Include="..\FpsGame.Server\FpsGame.Server.csproj" />
     <ProjectReference Include="..\FpsGame.Ui\FpsGame.Ui.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Update="Content\cube.fbx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Content\sphere.fbx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
   <Target Name="RestoreDotnetTools" BeforeTargets="Restore">
     <Message Text="Restoring dotnet tools" Importance="High" />
     <Exec Command="dotnet tool restore" />

@@ -24,6 +24,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using FpsGame.UiComponents;
 using System.Net.NetworkInformation;
+using FpsGame.Common.Utils;
 
 namespace FpsGame.Screens
 {
@@ -73,12 +74,16 @@ namespace FpsGame.Screens
         List<Task> tasks = new List<Task>();
         List<ChatMessage> chatMessages = new List<ChatMessage>();
 
+        AssetImporter importer;
+
         public GameScreen(Game game, ScreenManager screenManager, GameSettings gameSettings, PlayerSettings? playerSettings)
             : base(game, screenManager)
         {
             this.gameSettings = gameSettings;
-            Models.Add("cube", game.Content.Load<Model>("cube"));
-            Models.Add("sphere", game.Content.Load<Model>("sphere"));
+            importer = new AssetImporter(game.GraphicsDevice);
+
+            Models.Add("cube", importer.LoadModel("Content/cube.fbx"));
+            Models.Add("sphere", importer.LoadModel("Content/sphere.fbx"));
 
             world = World.Create();
 
