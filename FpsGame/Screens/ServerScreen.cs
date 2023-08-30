@@ -71,8 +71,22 @@ namespace FpsGame.Screens
 
             RootWidget = hudPanel.UiWidget;
 
-            server = new Server.Server(token.Token, gameSettings, GetChatMessages);
+            server = new Server.Server(token.Token, gameSettings, GetServerData);
 
+        }
+
+        private bool GetServerData(object data)
+        {
+            Type dataType = data.GetType();
+            if (dataType == typeof(List<ChatMessage>))
+            {
+                return GetChatMessages(data as List<ChatMessage>);   
+            }
+            else if(dataType == typeof(PlayersInfo))
+            {
+                return GetPlayersInfo(data as PlayersInfo);
+            }
+            return false;
         }
 
         private bool GetChatMessages(List<ChatMessage> messages)
@@ -82,6 +96,12 @@ namespace FpsGame.Screens
                 chatBox.AddMessage(message);
             }
 
+            return true;
+        }
+
+        private bool GetPlayersInfo(PlayersInfo playersInfo)
+        {
+            playersTable.Update(playersInfo.Players);
             return true;
         }
 

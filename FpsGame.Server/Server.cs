@@ -37,21 +37,22 @@ namespace FpsGame.Server
         Queue<ClientData.ClientData> ClientMessages = new Queue<ClientData.ClientData>();
         
         List<Task> tasks = new List<Task>();
+        Task addNewClientTask = null;
         CancellationToken cancellationToken;
 
         GameSettings gameSettings;
 
         List<ChatMessage> messagesToSend = new List<ChatMessage>();
-        Func<List<ChatMessage>, bool> sendMessages;
+        Func<object, bool> sendData;
 
         const int SendRate = 60;
         private int serverTick = 0;
 
-        public Server(CancellationToken cancellationToken, GameSettings gameSettings, Func<List<ChatMessage>, bool> sendMessages = null)
+        public Server(CancellationToken cancellationToken, GameSettings gameSettings, Func<object, bool> sendData = null)
         {
             this.cancellationToken = cancellationToken;
             this.gameSettings = gameSettings;
-            this.sendMessages = sendMessages;
+            this.sendData = sendData;
 
             var ip = gameSettings.GameIPAddress;
             
@@ -84,21 +85,30 @@ namespace FpsGame.Server
             updateSystems.Add(new ModelRotatorSystem(world, queryDescriptions));
         }
 
-        private async void AddNewClients()
+        private void AddNewClients()
         {
-            try
+            if(addNewClientTask == null)
             {
-                TcpClient tcpClient = await listener.AcceptTcpClientAsync(cancellationToken);
+                addNewClientTask = Task.Run(async() =>
+                {
+                    try
+                    {
+                        TcpClient tcpClient = await listener.AcceptTcpClientAsync(cancellationToken);
 
-                var client = new ServerSideClient(tcpClient, AddDataToProcess);
+                        var client = new ServerSideClient(tcpClient, AddDataToProcess);
 
-                tasks.Add(Task.Run(() => client.BeginReceiving(cancellationToken), cancellationToken));
-                newClients.Add(client);
+                        tasks.Add(Task.Run(() => client.BeginReceiving(cancellationToken), cancellationToken));
+                        newClients.Add(client);
+                    }
+                    catch (OperationCanceledException ex)
+                    {
+                        //Do nothing
+                    }
+
+                    addNewClientTask = null;
+                });
             }
-            catch (OperationCanceledException ex)
-            {
-                //Do nothing
-            }
+            
         }
 
         public void Run(GameTime gameTime)
@@ -240,9 +250,9 @@ namespace FpsGame.Server
                     }
                 }
 
-                if (sendMessages != null)
+                if (sendData != null)
                 {
-                    sendMessages(messagesToSend);
+                    sendData(messagesToSend);
                 }
 
                 messagesToSend.Clear();
@@ -264,6 +274,7 @@ namespace FpsGame.Server
                 });
             }
 
+            sendData(PlayersInfo);
             foreach (var client in clients.Where(a => a.Status == ServerSideClientStatus.InGame))
             {
                 client.Send(PlayersInfo);
