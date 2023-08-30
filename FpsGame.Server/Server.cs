@@ -106,7 +106,7 @@ namespace FpsGame.Server
                     }
 
                     addNewClientTask = null;
-                });
+                }, cancellationToken);
             }
             
         }
