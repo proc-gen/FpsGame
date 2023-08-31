@@ -61,7 +61,6 @@ namespace FpsGame.Screens
 
         Label hostLocationLabel;
         Label gameNameLabel;
-        Label pingLabel;
         VerticalPanel gameInfoPanel;
 
         VerticalPanel messagesPanel;
@@ -127,10 +126,6 @@ namespace FpsGame.Screens
             {
                 Margin = new Thickness(0),
             });
-            pingLabel = new Label("ping-label", "Ping: ", new Style()
-            {
-                Margin = new Thickness(0),
-            });
             gameInfoPanel = new VerticalPanel("game-info", new Style()
             {
                 Margin = new Thickness(0),
@@ -139,7 +134,6 @@ namespace FpsGame.Screens
             });
             gameInfoPanel.AddWidget(gameNameLabel);
             gameInfoPanel.AddWidget(hostLocationLabel);
-            gameInfoPanel.AddWidget(pingLabel);
 
             chatBox = new ChatBox();
             messagesPanel = new VerticalPanel("messages-panel", new Style()
@@ -182,7 +176,6 @@ namespace FpsGame.Screens
                 playersTable.Table.UiWidget.Visible = kState.IsKeyDown(Keys.Tab);
                 processServerData();
                 processInputData(kState, mState, gState);
-                checkPing();
             }
 
             server?.Run(gameTime);
@@ -326,20 +319,6 @@ namespace FpsGame.Screens
                 {
                     client.SendInputData(clientInput);
                 }
-            }
-        }
-
-        private void checkPing()
-        {
-            pingTick = (pingTick + 1) % 180;
-            if(pingTick == 0)
-            {
-                pingTask = serverPing.SendPingAsync(gameSettings.GameIPAddress.ToString());
-            }
-            if (pingTask != null && pingTask.IsCompleted)
-            {
-                pingLabel.UpdateText(string.Format("Ping: {0}ms", pingTask.Result.RoundtripTime));
-                pingTask = null;
             }
         }
 
