@@ -11,6 +11,7 @@ using System.IO;
 using Microsoft.Xna.Framework.Content.Pipeline.Audio;
 using Microsoft.Xna.Framework.Media;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content.Pipeline.Graphics;
 
 namespace FpsGame.Common.Utils
 {
@@ -30,7 +31,7 @@ namespace FpsGame.Common.Utils
         PipelineProcessorContext _processContext;
 
         // importers
-        OpenAssetImporter _openImporter;
+        OpenAssetImporterNet _openImporter;
         EffectImporter _effectImporter;
         FontDescriptionImporter _fontImporter;
         Dictionary<string, ContentImporter<AudioContent>> _soundImporters = new Dictionary<string, ContentImporter<AudioContent>>();
@@ -57,7 +58,7 @@ namespace FpsGame.Common.Utils
         public AssetImporter(GraphicsDevice graphics)
         {
             _graphics = graphics;
-            _openImporter = new OpenAssetImporter();
+            _openImporter = new OpenAssetImporterNet();
             _effectImporter = new EffectImporter();
             _soundImporters[".wav"] = new WavImporter();
             _soundImporters[".ogg"] = new OggImporter();
