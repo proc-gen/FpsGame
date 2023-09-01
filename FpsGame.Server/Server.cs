@@ -19,6 +19,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Arch.Core.Events;
+using FpsGame.Common.Level;
 
 namespace FpsGame.Server
 {
@@ -45,6 +46,8 @@ namespace FpsGame.Server
         List<ChatMessage> messagesToSend = new List<ChatMessage>();
         Func<object, bool> sendData;
 
+        Level level;
+
         const int SendRate = 60;
         private int serverTick = 0;
 
@@ -59,21 +62,10 @@ namespace FpsGame.Server
             listener = new TcpListener(ip, gameSettings.GamePort);
             listener.Start();
             
-
             world = World.Create();
 
-            Random random = new Random();
-
-            for(int i = 0; i < 100; i++)
-            {
-                world.Create(
-                    new RenderModel() { Model = "cube" }, 
-                    new Position() { X = (float)random.NextDouble() * 100f - 50f, Y = -5f, Z = (float)random.NextDouble() * 100f - 50f }, 
-                    new Rotation(), 
-                    new Scale(0.5f + (float)random.NextDouble()), 
-                    new ModelRotator() { XIncrement = (1 + (float)random.NextDouble()) / 500f, YIncrement = (1 + (float)random.NextDouble()) / 500f, ZIncrement = (1 + (float)random.NextDouble()) / 500f }
-                );
-            }
+            level = new LevelGenerator(world);
+            level.PopulateLevel();
 
             queryDescriptions = new Dictionary<QueryDescriptions, QueryDescription>()
             {
