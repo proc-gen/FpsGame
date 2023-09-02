@@ -169,10 +169,10 @@ namespace FpsGame.Server
                                         Name = playerSettings.Name,
                                         Color = playerSettings.Color
                                     },
-                                    new Camera() { Position = new Vector3(20 + clients.Count, 0, 20) },
+                                    new Camera() { Position = new Vector3(20 + clients.Count, -2.9f, 20) },
                                     new ClientInput(),
                                     new RenderModel() { Model = "sphere" },
-                                    physicsWorld.AddBody(BodyDescription.CreateDynamic(new System.Numerics.Vector3(20 + clients.Count, 0, 20), sphereInertia, physicsWorld.Simulation.Shapes.Add(sphere), 0.1f))
+                                    physicsWorld.AddBody(BodyDescription.CreateDynamic(new System.Numerics.Vector3(20 + clients.Count, -2.9f, 20), sphereInertia, physicsWorld.Simulation.Shapes.Add(sphere), 0f))
                                 );
                                 message.Client.SetEntityReference(entity.Reference());
                                 messagesToSend.Add(new ChatMessage()
@@ -200,6 +200,7 @@ namespace FpsGame.Server
             {
                 foreach (var client in clients.Where(a => a.Status == ServerSideClientStatus.Disconnected))
                 {
+                    
                     client.entityReference.Entity.Add(new Remove());
                 }
             }
@@ -247,6 +248,10 @@ namespace FpsGame.Server
                         Message = string.Format("{0} has disconnected", playerInfo.Name),
                         Time = DateTime.Now,
                     });
+                    if (client.entityReference.Entity.Has<BodyHandle>())
+                    {
+                        physicsWorld.RemoveBody(client.entityReference.Entity.Get<BodyHandle>());
+                    }
                     world.Destroy(client.entityReference.Entity);
                     client.SetEntityReference(EntityReference.Null);
                     client.Status = ServerSideClientStatus.Removed;

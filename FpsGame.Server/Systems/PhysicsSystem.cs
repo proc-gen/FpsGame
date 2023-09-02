@@ -31,6 +31,7 @@ namespace FpsGame.Server.Systems
             {
                 var newPosition = physicsWorld.Simulation.Bodies[body].Pose.Position;
                 camera.Position = newPosition;
+                camera.ComponentState = SerializableObjectState.Update;
             });
         }
     }
