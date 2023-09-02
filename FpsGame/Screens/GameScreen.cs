@@ -47,10 +47,6 @@ namespace FpsGame.Screens
         Queue<JObject> ServerData = new Queue<JObject>();
         private readonly JsonNetArchSerializer serializer = new JsonNetArchSerializer();
         private readonly Dictionary<Type, Converter> converters;
-        
-        Ping serverPing = new Ping();
-        int pingTick = -1;
-        Task<PingReply> pingTask;
 
         private Vector2 lastMousePosition;
         private bool firstMove = true;
@@ -61,6 +57,7 @@ namespace FpsGame.Screens
 
         Label hostLocationLabel;
         Label gameNameLabel;
+        Label playerPositionLabel;
         VerticalPanel gameInfoPanel;
 
         VerticalPanel messagesPanel;
@@ -126,6 +123,10 @@ namespace FpsGame.Screens
             {
                 Margin = new Thickness(0),
             });
+            playerPositionLabel = new Label("player-position", string.Empty, new Style()
+            {
+                Margin = new Thickness(0),
+            });
             gameInfoPanel = new VerticalPanel("game-info", new Style()
             {
                 Margin = new Thickness(0),
@@ -134,6 +135,7 @@ namespace FpsGame.Screens
             });
             gameInfoPanel.AddWidget(gameNameLabel);
             gameInfoPanel.AddWidget(hostLocationLabel);
+            gameInfoPanel.AddWidget(playerPositionLabel);
 
             chatBox = new ChatBox();
             messagesPanel = new VerticalPanel("messages-panel", new Style()
@@ -176,6 +178,10 @@ namespace FpsGame.Screens
                 playersTable.Table.UiWidget.Visible = kState.IsKeyDown(Keys.Tab);
                 processServerData();
                 processInputData(kState, mState, gState);
+                if(Player != EntityReference.Null)
+                {
+                    playerPositionLabel.UpdateText(Player.Entity.Get<Camera>().Position.ToString());
+                }
             }
 
             server?.Run(gameTime);

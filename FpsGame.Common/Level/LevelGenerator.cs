@@ -27,7 +27,7 @@ namespace FpsGame.Common.Level
                 new Position() { X = 0, Y = -5f, Z = 0 },
                 new Rotation(),
                 new Scale() { X = 50, Y = 1, Z = 50 },
-                physicsWorld.AddStatic(new StaticDescription(new Vector3(0, -5, 0), physicsWorld.Simulation.Shapes.Add(new Box(50, 1, 50))))
+                physicsWorld.AddStatic(new StaticDescription(new Vector3(0, -5, 0), physicsWorld.Simulation.Shapes.Add(new Box(100, 2, 100))))
             );
 
             //Wall X+
@@ -36,7 +36,7 @@ namespace FpsGame.Common.Level
                 new Position() { X = 50.5f, Y = 0, Z = 0 },
                 new Rotation(),
                 new Scale() { X = 1, Y = 10, Z = 50 },
-                physicsWorld.AddStatic(new StaticDescription(new Vector3(50.5f, 0, 0), physicsWorld.Simulation.Shapes.Add(new Box(1, 10, 50))))
+                physicsWorld.AddStatic(new StaticDescription(new Vector3(50.5f, 0, 0), physicsWorld.Simulation.Shapes.Add(new Box(2, 20, 100))))
             
             );
 
@@ -46,7 +46,7 @@ namespace FpsGame.Common.Level
                 new Position() { X = -50.5f, Y = 0, Z = 0 },
                 new Rotation(),
                 new Scale() { X = 1, Y = 10, Z = 50 },
-                physicsWorld.AddStatic(new StaticDescription(new Vector3(-50.5f, 0, 0), physicsWorld.Simulation.Shapes.Add(new Box(1, 10, 50))))
+                physicsWorld.AddStatic(new StaticDescription(new Vector3(-50.5f, 0, 0), physicsWorld.Simulation.Shapes.Add(new Box(2, 20, 100))))
 
             );
 
@@ -56,7 +56,7 @@ namespace FpsGame.Common.Level
                 new Position() { X = 0, Y = 0, Z = 50.5f },
                 new Rotation(),
                 new Scale() {X = 50, Y = 10, Z = 1 },
-                physicsWorld.AddStatic(new StaticDescription(new Vector3(0, 0, 50.5f), physicsWorld.Simulation.Shapes.Add(new Box(50, 10, 1))))
+                physicsWorld.AddStatic(new StaticDescription(new Vector3(0, 0, 50.5f), physicsWorld.Simulation.Shapes.Add(new Box(100, 20, 2))))
 
             );
 
@@ -66,7 +66,7 @@ namespace FpsGame.Common.Level
                 new Position() { X = 0, Y = 0, Z = -50.5f },
                 new Rotation(),
                 new Scale() { X = 50, Y = 10, Z = 1 },
-                physicsWorld.AddStatic(new StaticDescription(new Vector3(0, 0, -50.5f), physicsWorld.Simulation.Shapes.Add(new Box(50, 10, 1))))
+                physicsWorld.AddStatic(new StaticDescription(new Vector3(0, 0, -50.5f), physicsWorld.Simulation.Shapes.Add(new Box(100, 20, 2))))
 
             );
 
@@ -76,7 +76,7 @@ namespace FpsGame.Common.Level
                 new Position() { X = 0, Y = 0, Z = 0 },
                 new Rotation(),
                 new Scale() { X = 10, Y = 10, Z = 10 },
-                physicsWorld.AddStatic(new StaticDescription(new Vector3(0, 0, 0), physicsWorld.Simulation.Shapes.Add(new Box(10, 10, 10))))
+                physicsWorld.AddStatic(new StaticDescription(new Vector3(0, 0, 0), physicsWorld.Simulation.Shapes.Add(new Box(20, 20, 20))))
             
             );
         }
