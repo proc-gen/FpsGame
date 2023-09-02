@@ -17,21 +17,61 @@ namespace FpsGame.Common.Level
 
         public override void PopulateLevel()
         {
-            Random random = new Random();
+            //Floor
+            world.Create(
+                new RenderModel() { Model = "cube" },
+                new Position() { X = 0, Y = -5f, Z = 0 },
+                new Rotation(),
+                new Scale() { X = 50, Y = 1, Z = 50 }
+            );
 
-            int max = 50, halfMax = 25;
-            for (int i = 0; i < max; i++)
-            {
-                for (int j = 0; j < max; j++)
-                {
-                    world.Create(
-                        new RenderModel() { Model = "cube" },
-                        new Position() { X = i - halfMax, Y = -5f, Z = j - halfMax },
-                        new Rotation(),
-                        new Scale(0.5f + (float)random.NextDouble())
-                    );
-                }
-            }
+            //Ceiling
+            world.Create(
+                new RenderModel() { Model = "cube" },
+                new Position() { X = 0, Y = 5f, Z = 0 },
+                new Rotation(),
+                new Scale() { X = 50, Y = 1, Z = 50 }
+            );
+
+            //Wall X+
+            world.Create(
+                new RenderModel() { Model = "cube" },
+                new Position() { X = 50.5f, Y = 0, Z = 0 },
+                new Rotation(),
+                new Scale() { X = 1, Y = 10, Z = 50 }
+            );
+
+            //Wall X-
+            world.Create(
+                new RenderModel() { Model = "cube" },
+                new Position() { X = -50.5f, Y = 0, Z = 0 },
+                new Rotation(),
+                new Scale() { X = 1, Y = 10, Z = 50 }
+            );
+
+            //Wall Z+
+            world.Create(
+                new RenderModel() { Model = "cube" },
+                new Position() { X = 0, Y = 0, Z = 50.5f },
+                new Rotation(),
+                new Scale() {X = 50, Y = 10, Z = 1 }
+            );
+
+            //Wall Z-
+            world.Create(
+                new RenderModel() { Model = "cube" },
+                new Position() { X = 0, Y = 0, Z = -50.5f },
+                new Rotation(),
+                new Scale() { X = 50, Y = 10, Z = 1 }
+            );
+
+            //Center
+            world.Create(
+                new RenderModel() { Model = "cube" },
+                new Position() { X = 0, Y = 0, Z = 0 },
+                new Rotation() { Y = MathF.PI / 2f },
+                new Scale() { X = 10, Y = 10, Z = 10 }
+            );
         }
     }
 }
