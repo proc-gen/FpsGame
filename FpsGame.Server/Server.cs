@@ -20,6 +20,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using Arch.Core.Events;
 using FpsGame.Common.Level;
+using BepuUtilities.Memory;
+using BepuUtilities;
+using BepuPhysics;
+using FpsGame.Common.Physics;
+using BepuPhysics.Collidables;
 
 namespace FpsGame.Server
 {
@@ -31,11 +36,15 @@ namespace FpsGame.Server
         private readonly TcpListener listener;
 
         private readonly JsonNetArchSerializer serializer = new JsonNetArchSerializer();
+        
+        
 
         World world;
         Dictionary<QueryDescriptions, QueryDescription> queryDescriptions;
         List<IUpdateSystem> updateSystems = new List<IUpdateSystem>();
         Queue<ClientData.ClientData> ClientMessages = new Queue<ClientData.ClientData>();
+
+        PhysicsWorld physicsWorld;
         
         List<Task> tasks = new List<Task>();
         Task addNewClientTask = null;
@@ -63,8 +72,9 @@ namespace FpsGame.Server
             listener.Start();
             
             world = World.Create();
+            physicsWorld = new PhysicsWorld();
 
-            level = new LevelGenerator(world);
+            level = new LevelGenerator(world, physicsWorld);
             level.PopulateLevel();
 
             queryDescriptions = new Dictionary<QueryDescriptions, QueryDescription>()
@@ -148,8 +158,19 @@ namespace FpsGame.Server
                         {
                             case "PlayerSettings":
                                 var playerSettings = message.Data.ToObject<PlayerSettings>();
+                                var sphere = new Sphere(1);
+                                var sphereInertia = sphere.ComputeInertia(1);
 
-                                var entity = world.Create(new Player() { Id = (uint)clients.Count + 1, Name = playerSettings.Name, Color = playerSettings.Color }, new Camera(), new ClientInput(), new RenderModel() { Model = "sphere" });
+                                var entity = world.Create(
+                                    new Player() { Id = (uint)clients.Count + 1,
+                                        Name = playerSettings.Name,
+                                        Color = playerSettings.Color
+                                    },
+                                    new Camera() { Position = new Vector3(20 + clients.Count, 0, 20) },
+                                    new ClientInput(),
+                                    new RenderModel() { Model = "sphere" },
+                                    physicsWorld.AddBody(BodyDescription.CreateDynamic(new System.Numerics.Vector3(20 + clients.Count, 0, 20), sphereInertia, physicsWorld.Simulation.Shapes.Add(sphere), 0.1f))
+                                );
                                 message.Client.SetEntityReference(entity.Reference());
                                 messagesToSend.Add(new ChatMessage()
                                 {
@@ -288,6 +309,9 @@ namespace FpsGame.Server
             {
                 if (disposing)
                 {
+                    physicsWorld.Dispose();
+                    world?.Dispose();
+
                     if (tasks.Any())
                     {
                         foreach (var task in tasks)
@@ -300,7 +324,6 @@ namespace FpsGame.Server
                     }
                     
                     listener.Stop();
-                    
 
                     if (clients.Any())
                     {

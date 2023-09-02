@@ -1,4 +1,5 @@
 ﻿using Arch.Core;
+using FpsGame.Common.Physics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,9 +11,11 @@ namespace FpsGame.Common.Level
     public abstract class Level
     {
         protected World world;
-        public Level(World world)
+        protected PhysicsWorld physicsWorld;
+        public Level(World world, PhysicsWorld physicsWorld)
         {
             this.world = world;
+            this.physicsWorld = physicsWorld;
         }
 
         public abstract void PopulateLevel();
