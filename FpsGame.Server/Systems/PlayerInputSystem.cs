@@ -9,22 +9,28 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BepuPhysics;
+using FpsGame.Common.Physics;
 
 namespace FpsGame.Server.Systems
 {
     public class PlayerInputSystem : ArchSystem, IUpdateSystem
     {
+        protected PhysicsWorld physicsWorld;
+
         float sensitivity = 0.2f;
         float controllerSensitivity = 0.5f;
-        public PlayerInputSystem(World world, Dictionary<QueryDescriptions, QueryDescription> queryDescriptions) 
+
+        public PlayerInputSystem(World world, Dictionary<QueryDescriptions, QueryDescription> queryDescriptions, PhysicsWorld physicsWorld) 
             : base(world, queryDescriptions)
         {
+            this.physicsWorld = physicsWorld;
         }
 
         public void Update(GameTime gameTime)
         {
             var query = queryDescriptions[QueryDescriptions.PlayerInput];
-            world.Query(in query, (ref Camera camera, ref ClientInput clientInput) =>
+            world.Query(in query, (ref Camera camera, ref ClientInput clientInput, ref BodyHandle body) =>
             {
                 camera.ComponentState =
                     (clientInput.Forward ||
@@ -46,22 +52,23 @@ namespace FpsGame.Server.Systems
 
                         if (clientInput.Forward)
                         {
-                            movement += camera.Front;
+                            movement += new Vector3(camera.Front.X, 0, camera.Front.Z);
                         }
                         if (clientInput.Backward)
                         {
-                            movement -= camera.Front;
+                            movement -= new Vector3(camera.Front.X, 0, camera.Front.Z);
                         }
                         if (clientInput.Left)
                         {
-                            movement -= camera.Right;
+                            movement -= new Vector3(camera.Right.X, 0, camera.Right.Z);
                         }
                         if (clientInput.Right)
                         {
-                            movement += camera.Right;
+                            movement += new Vector3(camera.Right.X, 0, camera.Right.Z);
                         }
 
-                        camera.Position += Vector3.Normalize(movement) / (float)gameTime.ElapsedGameTime.TotalMilliseconds;
+                        movement.Normalize();
+                        physicsWorld.Simulation.Bodies[body].ApplyLinearImpulse(new System.Numerics.Vector3(movement.X, movement.Y, movement.Z));
                     }
 
                     if(clientInput.MouseDelta != Vector2.Zero)
@@ -72,9 +79,9 @@ namespace FpsGame.Server.Systems
 
                     if(clientInput.LeftStick != Vector2.Zero)
                     {
-                        Vector3 movement = clientInput.LeftStick.X * camera.Right + clientInput.LeftStick.Y * camera.Front;
-
-                        camera.Position += Vector3.Normalize(movement) / (float)gameTime.ElapsedGameTime.TotalMilliseconds;
+                        Vector3 movement = clientInput.LeftStick.X * (new Vector3(camera.Right.X, 0, camera.Right.Z)) + clientInput.LeftStick.Y * (new Vector3(camera.Front.X, 0, camera.Front.Z));
+                        movement.Normalize();
+                        physicsWorld.Simulation.Bodies[body].ApplyLinearImpulse(new System.Numerics.Vector3(movement.X, movement.Y, movement.Z));
                     }
 
                     if (clientInput.RightStick != Vector2.Zero)

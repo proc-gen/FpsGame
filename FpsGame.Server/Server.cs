@@ -80,11 +80,14 @@ namespace FpsGame.Server
             queryDescriptions = new Dictionary<QueryDescriptions, QueryDescription>()
             {
                 { QueryDescriptions.ModelRotator, new QueryDescription().WithAll<Rotation, ModelRotator>() },
-                { QueryDescriptions.PlayerInput, new QueryDescription().WithAll<Player, Camera, ClientInput>() },
+                { QueryDescriptions.PlayerInput, new QueryDescription().WithAll<Player, Camera, ClientInput, BodyHandle>() },
+                { QueryDescriptions.DynamicPhysicsBodies, new QueryDescription().WithAll<BodyHandle>() },
+                { QueryDescriptions.StaticPhysicsBodies, new QueryDescription().WithAll<StaticHandle>() }
             };
 
-            updateSystems.Add(new PlayerInputSystem(world, queryDescriptions));
+            updateSystems.Add(new PlayerInputSystem(world, queryDescriptions, physicsWorld));
             updateSystems.Add(new ModelRotatorSystem(world, queryDescriptions));
+            updateSystems.Add(new PhysicsSystem(world, queryDescriptions, physicsWorld));
         }
 
         private void AddNewClients()
