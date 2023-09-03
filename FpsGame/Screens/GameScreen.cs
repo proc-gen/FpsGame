@@ -80,6 +80,7 @@ namespace FpsGame.Screens
 
             Models.Add("cube", importer.LoadModel("Content/cube.fbx"));
             Models.Add("sphere", importer.LoadModel("Content/sphere.fbx"));
+            Models.Add("capsule", importer.LoadModel("Content/capsule.fbx"));
 
             world = World.Create();
 

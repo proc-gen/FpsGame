@@ -161,18 +161,18 @@ namespace FpsGame.Server
                         {
                             case "PlayerSettings":
                                 var playerSettings = message.Data.ToObject<PlayerSettings>();
-                                var sphere = new Sphere(1);
-                                var sphereInertia = sphere.ComputeInertia(1);
+                                var box = new Box(2, 6.56f, 2);
+                                var boxInertia = box.ComputeInertia(180);
 
                                 var entity = world.Create(
                                     new Player() { Id = (uint)clients.Count + 1,
                                         Name = playerSettings.Name,
                                         Color = playerSettings.Color
                                     },
-                                    new Camera() { Position = new Vector3(20 + clients.Count, -2.9f, 20) },
+                                    new Camera() { Position = new Vector3(20 + clients.Count * 2, 0, 20) },
                                     new ClientInput(),
-                                    new RenderModel() { Model = "sphere" },
-                                    physicsWorld.AddBody(BodyDescription.CreateDynamic(new System.Numerics.Vector3(20 + clients.Count, -2.9f, 20), sphereInertia, physicsWorld.Simulation.Shapes.Add(sphere), 0f))
+                                    new RenderModel() { Model = "capsule" },
+                                    physicsWorld.AddBody(BodyDescription.CreateDynamic(new System.Numerics.Vector3(20 + clients.Count * 2, 0, 20), boxInertia, physicsWorld.Simulation.Shapes.Add(box), 0f))
                                 );
                                 message.Client.SetEntityReference(entity.Reference());
                                 messagesToSend.Add(new ChatMessage()

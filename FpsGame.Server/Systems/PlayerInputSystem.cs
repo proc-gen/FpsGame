@@ -68,7 +68,7 @@ namespace FpsGame.Server.Systems
                         }
 
                         movement.Normalize();
-                        physicsWorld.Simulation.Bodies[body].ApplyLinearImpulse(new System.Numerics.Vector3(movement.X, movement.Y, movement.Z));
+                        physicsWorld.Simulation.Bodies[body].ApplyLinearImpulse(new System.Numerics.Vector3(movement.X, movement.Y, movement.Z) * (1f / physicsWorld.Simulation.Bodies[body].LocalInertia.InverseMass));
                     }
 
                     if(clientInput.MouseDelta != Vector2.Zero)
@@ -81,7 +81,7 @@ namespace FpsGame.Server.Systems
                     {
                         Vector3 movement = clientInput.LeftStick.X * (new Vector3(camera.Right.X, 0, camera.Right.Z)) + clientInput.LeftStick.Y * (new Vector3(camera.Front.X, 0, camera.Front.Z));
                         movement.Normalize();
-                        physicsWorld.Simulation.Bodies[body].ApplyLinearImpulse(new System.Numerics.Vector3(movement.X, movement.Y, movement.Z));
+                        physicsWorld.Simulation.Bodies[body].ApplyLinearImpulse(new System.Numerics.Vector3(movement.X, movement.Y, movement.Z) * (1f /physicsWorld.Simulation.Bodies[body].LocalInertia.InverseMass));
                     }
 
                     if (clientInput.RightStick != Vector2.Zero)
