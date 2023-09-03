@@ -81,7 +81,7 @@ namespace FpsGame.Server
             {
                 { QueryDescriptions.ModelRotator, new QueryDescription().WithAll<Rotation, ModelRotator>() },
                 { QueryDescriptions.PlayerInput, new QueryDescription().WithAll<Player, Camera, ClientInput, BodyHandle>() },
-                { QueryDescriptions.DynamicPhysicsBodies, new QueryDescription().WithAll<BodyHandle>() },
+                { QueryDescriptions.DynamicPhysicsBodies, new QueryDescription().WithAll<Camera, BodyHandle>() },
                 { QueryDescriptions.StaticPhysicsBodies, new QueryDescription().WithAll<StaticHandle>() }
             };
 
@@ -207,15 +207,7 @@ namespace FpsGame.Server
 
             if (clients.Where(a => a.Status == ServerSideClientStatus.InGame).Any())
             {
-                var dataToSerialize = SerializableWorld.SerializeWorld(world, false);
-                if (newClients.Where(a => a.Status == ServerSideClientStatus.JoinedGame).Any())
-                {
-                    foreach (var client in newClients.Where(a => a.Status == ServerSideClientStatus.JoinedGame))
-                    {
-                        dataToSerialize.Entities.Add(SerializableEntity.SerializeEntity(client.entityReference.Entity, client.entityReference.Entity.GetAllComponents(), true));
-                    }
-                }
-                var data = serializer.Serialize(dataToSerialize);
+                var data = serializer.Serialize(SerializableWorld.SerializeWorld(world, false));
                 foreach (var client in clients.Where(a => a.Status == ServerSideClientStatus.InGame))
                 {
                     client.Send(data);
