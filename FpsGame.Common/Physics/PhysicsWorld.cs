@@ -6,7 +6,7 @@ using BepuUtilities;
 using BepuUtilities.Memory;
 using FpsGame.Common.Components;
 using FpsGame.Common.Physics.Character;
-using FpsGame.Common.Physics.Characters;
+using FpsGame.Common.Physics.Character;
 using System;
 using System.Collections.Generic;
 using System.Linq;

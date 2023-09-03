@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 using BepuPhysics;
 using FpsGame.Common.Physics;
 using FpsGame.Common.Physics.Character;
-using FpsGame.Common.Physics.Characters;
+using FpsGame.Common.Physics.Character;
 using BepuUtilities;
 using System.Diagnostics;
 

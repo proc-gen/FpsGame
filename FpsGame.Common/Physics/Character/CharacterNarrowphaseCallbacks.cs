@@ -4,11 +4,8 @@ using BepuPhysics.CollisionDetection;
 using System.Runtime.CompilerServices;
 using BepuPhysics.Constraints;
 
-namespace FpsGame.Common.Physics.Characters
+namespace FpsGame.Common.Physics.Character
 {
-    /// <summary>
-    /// Implements simple callbacks to inform the CharacterControllers system of created contacts.
-    /// </summary>
     struct CharacterNarrowphaseCallbacks : INarrowPhaseCallbacks
     {
         public CharacterControllers Characters;
