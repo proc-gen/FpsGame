@@ -68,7 +68,7 @@ namespace FpsGame.Common.Physics
                 initialPosition, 
                 new Capsule(1, 6.56f), 
                 0.1f, 
-                180, 
+                18, 
                 11811.6f, 
                 328, 
                 19.69f, 

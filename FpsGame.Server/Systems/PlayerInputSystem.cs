@@ -36,36 +36,25 @@ namespace FpsGame.Server.Systems
             var query = queryDescriptions[QueryDescriptions.PlayerInput];
             world.Query(in query, (ref Camera camera, ref ClientInput clientInput, ref CharacterInput body) =>
             {
-                camera.ComponentState =
-                    (clientInput.Forward ||
-                    clientInput.Backward ||
-                    clientInput.Left ||
-                    clientInput.Right || 
-                    clientInput.MouseDelta != Vector2.Zero ||
-                    clientInput.LeftStick != Vector2.Zero ||
-                    clientInput.RightStick != Vector2.Zero ||
-                    clientInput.Jump) ? SerializableObjectState.Update : SerializableObjectState.NoChange;
+                camera.ComponentState = SerializableObjectState.Update;
 
-                if (camera.ComponentState == SerializableObjectState.Update)
+                UpdatePlayerGoals(ref clientInput, ref body, ref camera);
+
+                if(clientInput.MouseDelta != Vector2.Zero)
                 {
-                    UpdatePlayerGoals(ref clientInput, ref body, ref camera);
-
-                    if(clientInput.MouseDelta != Vector2.Zero)
-                    {
-                        camera.YawAsDegrees += clientInput.MouseDelta.X * sensitivity;
-                        camera.PitchAsDegrees += -1f * clientInput.MouseDelta.Y * sensitivity;
-                    }
-
-                    if (clientInput.RightStick != Vector2.Zero)
-                    {
-                        camera.YawAsDegrees += clientInput.RightStick.X * controllerSensitivity;
-                        camera.PitchAsDegrees += clientInput.RightStick.Y * controllerSensitivity;
-                    }
-
-                    clientInput.Forward = clientInput.Backward = clientInput.Left = clientInput.Right = false;
-                    clientInput.MouseDelta = clientInput.LeftStick = clientInput.RightStick = Vector2.Zero;
-                    clientInput.Jump = false;
+                    camera.YawAsDegrees += clientInput.MouseDelta.X * sensitivity;
+                    camera.PitchAsDegrees += -1f * clientInput.MouseDelta.Y * sensitivity;
                 }
+
+                if (clientInput.RightStick != Vector2.Zero)
+                {
+                    camera.YawAsDegrees += clientInput.RightStick.X * controllerSensitivity;
+                    camera.PitchAsDegrees += clientInput.RightStick.Y * controllerSensitivity;
+                }
+                
+                clientInput.Forward = clientInput.Backward = clientInput.Left = clientInput.Right = false;
+                clientInput.MouseDelta = clientInput.LeftStick = clientInput.RightStick = Vector2.Zero;
+                clientInput.Jump = false;
             });
         }
 
