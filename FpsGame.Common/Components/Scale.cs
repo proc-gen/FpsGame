@@ -15,9 +15,15 @@ namespace FpsGame.Common.Components
         public float Y { get; set; }
         public float Z { get; set; }
 
+        public Scale()
+        {
+            ComponentState = SerializableObjectState.Add;
+        }
+
         public Scale(float defaultScale = 1f)
         {
             X = Y = Z = defaultScale;
+            ComponentState = SerializableObjectState.Add;
         }
     }
 }

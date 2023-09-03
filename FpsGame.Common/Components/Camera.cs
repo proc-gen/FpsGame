@@ -23,6 +23,7 @@ namespace FpsGame.Common.Components
             AspectRatio = aspectRatio;
             Up = Vector3.UnitY;
             Position = position;
+            ComponentState = SerializableObjectState.Add;
         }
 
         public SerializableObjectState ComponentState { get; set; }

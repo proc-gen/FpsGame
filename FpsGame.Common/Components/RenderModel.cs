@@ -12,5 +12,10 @@ namespace FpsGame.Common.Components
     {
         public SerializableObjectState ComponentState { get; set; }
         public string Model { get; set; }
+
+        public RenderModel()
+        {
+            ComponentState = SerializableObjectState.Add;
+        }
     }
 }

@@ -14,5 +14,10 @@ namespace FpsGame.Common.Components
         public float X { get; set; }
         public float Y { get; set; }
         public float Z { get; set; }
+
+        public Rotation()
+        {
+            ComponentState = SerializableObjectState.Add;
+        }
     }
 }

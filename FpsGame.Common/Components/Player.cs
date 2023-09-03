@@ -15,5 +15,10 @@ namespace FpsGame.Common.Components
         public uint Id { get; set; }
         public string Name { get; set; }
         public Vector3 Color { get; set; }
+
+        public Player()
+        {
+            ComponentState = SerializableObjectState.Add;
+        }
     }
 }
