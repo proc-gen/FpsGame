@@ -39,7 +39,7 @@ namespace FpsGame.Common.Physics.Character
             Vector3Wide.Add(linearImpulseAX, linearImpulseAY, out var linearImpulseA);
             Vector3Wide.Scale(linearImpulseA, inertiaA.InverseMass, out var linearChangeA);
             Vector3Wide.Add(velocityA.Linear, linearChangeA, out velocityA.Linear);
-            Vector3Wide.Scale(linearImpulseA, inertiaB.InverseMass, out var negatedLinearChangeB); //Linear jacobians for B are just A's negated linear jacobians.
+            Vector3Wide.Scale(linearImpulseA, inertiaB.InverseMass, out var negatedLinearChangeB);
             Vector3Wide.Subtract(velocityB.Linear, negatedLinearChangeB, out velocityB.Linear);
 
             Matrix2x3Wide.Transform(constraintSpaceImpulse, angularJacobianA, out var angularImpulseA);
@@ -59,7 +59,7 @@ namespace FpsGame.Common.Physics.Character
             Vector3Wide.Scale(basis.Y, constraintSpaceImpulse, out var linearImpulseA);
             Vector3Wide.Scale(linearImpulseA, inertiaA.InverseMass, out var linearChangeA);
             Vector3Wide.Add(velocityA.Linear, linearChangeA, out velocityA.Linear);
-            Vector3Wide.Scale(linearImpulseA, inertiaB.InverseMass, out var negatedLinearChangeB); //Linear jacobians for B are just A's negated linear jacobians.
+            Vector3Wide.Scale(linearImpulseA, inertiaB.InverseMass, out var negatedLinearChangeB);
             Vector3Wide.Subtract(velocityB.Linear, negatedLinearChangeB, out velocityB.Linear);
 
             Vector3Wide.Scale(angularJacobianA, constraintSpaceImpulse, out var angularImpulseA);
