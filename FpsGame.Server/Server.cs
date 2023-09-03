@@ -161,7 +161,7 @@ namespace FpsGame.Server
                         {
                             case "PlayerSettings":
                                 var playerSettings = message.Data.ToObject<PlayerSettings>();
-                                var box = new Box(2, 6.56f, 2);
+                                var box = new Box(2, 7f, 2);
                                 var boxInertia = box.ComputeInertia(180);
 
                                 var entity = world.Create(

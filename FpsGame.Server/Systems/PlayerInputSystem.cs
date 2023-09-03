@@ -39,7 +39,8 @@ namespace FpsGame.Server.Systems
                     clientInput.Right || 
                     clientInput.MouseDelta != Vector2.Zero ||
                     clientInput.LeftStick != Vector2.Zero ||
-                    clientInput.RightStick != Vector2.Zero) ? SerializableObjectState.Update : SerializableObjectState.NoChange;
+                    clientInput.RightStick != Vector2.Zero ||
+                    clientInput.Jump) ? SerializableObjectState.Update : SerializableObjectState.NoChange;
 
                 if (camera.ComponentState == SerializableObjectState.Update)
                 {
@@ -90,8 +91,14 @@ namespace FpsGame.Server.Systems
                         camera.PitchAsDegrees += clientInput.RightStick.Y * controllerSensitivity;
                     }
 
+                    if (clientInput.Jump)
+                    {
+                        physicsWorld.Simulation.Bodies[body].ApplyLinearImpulse(System.Numerics.Vector3.UnitY * 5 * (1f / physicsWorld.Simulation.Bodies[body].LocalInertia.InverseMass));
+                    }
+
                     clientInput.Forward = clientInput.Backward = clientInput.Left = clientInput.Right = false;
                     clientInput.MouseDelta = clientInput.LeftStick = clientInput.RightStick = Vector2.Zero;
+                    clientInput.Jump = false;
                 }
             });
         }

@@ -28,7 +28,7 @@ namespace FpsGame.Common.Physics
             var targetThreadCount = int.Max(1, Environment.ProcessorCount > 4 ? Environment.ProcessorCount - 2 : Environment.ProcessorCount - 1);
             Dispatcher = new ThreadDispatcher(targetThreadCount);
 
-            Simulation = Simulation.Create(Pool, new NarrowPhaseCallbacks(), new PoseIntegratorCallbacks(new Vector3(0, -10, 0)), new SolveDescription(8, 4));
+            Simulation = Simulation.Create(Pool, new NarrowPhaseCallbacks(), new PoseIntegratorCallbacks(new Vector3(0, -32, 0)), new SolveDescription(8, 4));
         }
 
         const float timeStep = 1 / 60f;
