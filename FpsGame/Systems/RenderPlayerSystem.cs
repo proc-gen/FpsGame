@@ -37,6 +37,7 @@ namespace FpsGame.Systems
                 foreach (BasicEffect effect in mesh.Effects)
                 {
                     effect.EnableDefaultLighting();
+                    effect.PreferPerPixelLighting = true;
                     effect.DiffuseColor = player.Color;
                     effect.World = Matrix.CreateFromYawPitchRoll(camera.Yaw, camera.Pitch, 0f) * Matrix.CreateTranslation(camera.Position);
                     effect.View = view;
