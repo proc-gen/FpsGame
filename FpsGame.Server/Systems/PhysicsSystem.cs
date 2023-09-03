@@ -4,6 +4,7 @@ using FpsGame.Common.Components;
 using FpsGame.Common.Constants;
 using FpsGame.Common.Ecs.Systems;
 using FpsGame.Common.Physics;
+using FpsGame.Common.Physics.Character;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -27,9 +28,9 @@ namespace FpsGame.Server.Systems
             physicsWorld.Step();
 
             var query = queryDescriptions[QueryDescriptions.DynamicPhysicsBodies];
-            world.Query(in query, (ref Camera camera, ref BodyHandle body) =>
+            world.Query(in query, (ref Camera camera, ref CharacterInput body) =>
             {
-                var newPosition = physicsWorld.Simulation.Bodies[body].Pose.Position;
+                var newPosition = physicsWorld.Simulation.Bodies[body.Body].Pose.Position;
                 camera.Position = newPosition;
                 camera.ComponentState = SerializableObjectState.Update;
             });

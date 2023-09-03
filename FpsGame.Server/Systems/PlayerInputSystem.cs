@@ -11,6 +11,10 @@ using System.Text;
 using System.Threading.Tasks;
 using BepuPhysics;
 using FpsGame.Common.Physics;
+using FpsGame.Common.Physics.Character;
+using FpsGame.Common.Physics.Characters;
+using BepuUtilities;
+using System.Diagnostics;
 
 namespace FpsGame.Server.Systems
 {
@@ -30,7 +34,7 @@ namespace FpsGame.Server.Systems
         public void Update(GameTime gameTime)
         {
             var query = queryDescriptions[QueryDescriptions.PlayerInput];
-            world.Query(in query, (ref Camera camera, ref ClientInput clientInput, ref BodyHandle body) =>
+            world.Query(in query, (ref Camera camera, ref ClientInput clientInput, ref CharacterInput body) =>
             {
                 camera.ComponentState =
                     (clientInput.Forward ||
@@ -44,45 +48,12 @@ namespace FpsGame.Server.Systems
 
                 if (camera.ComponentState == SerializableObjectState.Update)
                 {
-                    if(clientInput.Forward ||
-                    clientInput.Backward ||
-                    clientInput.Left ||
-                    clientInput.Right)
-                    {
-                        Vector3 movement = Vector3.Zero;
-
-                        if (clientInput.Forward)
-                        {
-                            movement += new Vector3(camera.Front.X, 0, camera.Front.Z);
-                        }
-                        if (clientInput.Backward)
-                        {
-                            movement -= new Vector3(camera.Front.X, 0, camera.Front.Z);
-                        }
-                        if (clientInput.Left)
-                        {
-                            movement -= new Vector3(camera.Right.X, 0, camera.Right.Z);
-                        }
-                        if (clientInput.Right)
-                        {
-                            movement += new Vector3(camera.Right.X, 0, camera.Right.Z);
-                        }
-
-                        movement.Normalize();
-                        physicsWorld.Simulation.Bodies[body].ApplyLinearImpulse(new System.Numerics.Vector3(movement.X, movement.Y, movement.Z) * (1f / physicsWorld.Simulation.Bodies[body].LocalInertia.InverseMass));
-                    }
+                    UpdatePlayerGoals(ref clientInput, ref body, ref camera);
 
                     if(clientInput.MouseDelta != Vector2.Zero)
                     {
                         camera.YawAsDegrees += clientInput.MouseDelta.X * sensitivity;
                         camera.PitchAsDegrees += -1f * clientInput.MouseDelta.Y * sensitivity;
-                    }
-
-                    if(clientInput.LeftStick != Vector2.Zero)
-                    {
-                        Vector3 movement = clientInput.LeftStick.X * (new Vector3(camera.Right.X, 0, camera.Right.Z)) + clientInput.LeftStick.Y * (new Vector3(camera.Front.X, 0, camera.Front.Z));
-                        movement.Normalize();
-                        physicsWorld.Simulation.Bodies[body].ApplyLinearImpulse(new System.Numerics.Vector3(movement.X, movement.Y, movement.Z) * (1f /physicsWorld.Simulation.Bodies[body].LocalInertia.InverseMass));
                     }
 
                     if (clientInput.RightStick != Vector2.Zero)
@@ -91,16 +62,102 @@ namespace FpsGame.Server.Systems
                         camera.PitchAsDegrees += clientInput.RightStick.Y * controllerSensitivity;
                     }
 
-                    if (clientInput.Jump)
-                    {
-                        physicsWorld.Simulation.Bodies[body].ApplyLinearImpulse(System.Numerics.Vector3.UnitY * 5 * (1f / physicsWorld.Simulation.Bodies[body].LocalInertia.InverseMass));
-                    }
-
                     clientInput.Forward = clientInput.Backward = clientInput.Left = clientInput.Right = false;
                     clientInput.MouseDelta = clientInput.LeftStick = clientInput.RightStick = Vector2.Zero;
                     clientInput.Jump = false;
                 }
             });
+        }
+
+        private void UpdatePlayerGoals(ref ClientInput clientInput, ref CharacterInput characterInput, ref Camera camera)
+        {
+            ref var character = ref physicsWorld.characters.GetCharacterByBodyHandle(characterInput.Body);
+            var movementDirection = GetMovementDirection(ref clientInput);
+            UpdatePlayerVelocity(ref character, ref clientInput, ref characterInput, ref camera, movementDirection);
+        }
+
+        private Vector2 GetMovementDirection(ref ClientInput clientInput)
+        {
+            Vector2 movementDirection = default;
+
+            if (clientInput.Forward ||
+                    clientInput.Backward ||
+                    clientInput.Left ||
+                    clientInput.Right)
+            {
+                if (clientInput.Forward)
+                {
+                    movementDirection += Vector2.UnitY;
+                }
+                if (clientInput.Backward)
+                {
+                    movementDirection -= Vector2.UnitY;
+                }
+                if (clientInput.Left)
+                {
+                    movementDirection -= Vector2.UnitX;
+                }
+                if (clientInput.Right)
+                {
+                    movementDirection += Vector2.UnitX;
+                }
+            }
+
+            if (clientInput.LeftStick != Vector2.Zero)
+            {
+                movementDirection = clientInput.LeftStick.X * Vector2.UnitX + clientInput.LeftStick.Y * Vector2.UnitY;
+            }
+
+            var movementDirectionLengthSquared = movementDirection.LengthSquared();
+            if (movementDirectionLengthSquared > 0)
+            {
+                movementDirection /= MathF.Sqrt(movementDirectionLengthSquared);
+            }
+
+            return movementDirection;
+        }
+    
+        private void UpdatePlayerVelocity(ref CharacterController character, ref ClientInput clientInput, ref CharacterInput characterInput, ref Camera camera, Vector2 movementDirection)
+        {
+            character.TryJump = clientInput.Jump;
+            var characterBody = new BodyReference(characterInput.Body, physicsWorld.characters.Simulation.Bodies);
+            var effectiveSpeed = characterInput.Speed;
+            var newTargetVelocity = movementDirection * effectiveSpeed;
+            var viewDirection = camera.Front;
+
+            if (!characterBody.Awake &&
+                ((character.TryJump && character.Supported) ||
+                newTargetVelocity != character.TargetVelocity ||
+                (newTargetVelocity != Vector2.Zero && character.ViewDirection != viewDirection)))
+            {
+                physicsWorld.characters.Simulation.Awakener.AwakenBody(character.BodyHandle);
+            }
+            character.TargetVelocity = new System.Numerics.Vector2(newTargetVelocity.X, newTargetVelocity.Y);
+            character.ViewDirection = new System.Numerics.Vector3(viewDirection.X, viewDirection.Y, viewDirection.Z);
+
+            if (!character.Supported && movementDirection != Vector2.Zero)
+            {
+                QuaternionEx.Transform(character.LocalUp, characterBody.Pose.Orientation, out var characterUp);
+                var characterRight = System.Numerics.Vector3.Cross(character.ViewDirection, characterUp);
+                var rightLengthSquared = characterRight.LengthSquared();
+                if (rightLengthSquared > 1e-10f)
+                {
+                    characterRight /= MathF.Sqrt(rightLengthSquared);
+                    var characterForward = System.Numerics.Vector3.Cross(characterUp, characterRight);
+                    var worldMovementDirection = characterRight * movementDirection.X + characterForward * movementDirection.Y;
+                    var currentVelocity = Vector3.Dot(characterBody.Velocity.Linear, worldMovementDirection);
+
+                    const float airControlForceScale = .2f;
+                    const float airControlSpeedScale = .2f;
+                    var airAccelerationDt = characterBody.LocalInertia.InverseMass * character.MaximumHorizontalForce * airControlForceScale * PhysicsWorld.timeStep;
+                    var maximumAirSpeed = effectiveSpeed * airControlSpeedScale;
+                    var targetVelocity = MathF.Min(currentVelocity + airAccelerationDt, maximumAirSpeed);
+
+                    var velocityChangeAlongMovementDirection = MathF.Max(0, targetVelocity - currentVelocity);
+                    characterBody.Velocity.Linear += worldMovementDirection * velocityChangeAlongMovementDirection;
+                    Debug.Assert(characterBody.Awake, "Velocity changes don't automatically update objects; the character should have already been woken up before applying air control.");
+                }
+            }
         }
     }
 }
