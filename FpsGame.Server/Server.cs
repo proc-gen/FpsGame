@@ -26,6 +26,7 @@ using BepuPhysics;
 using FpsGame.Common.Physics;
 using BepuPhysics.Collidables;
 using FpsGame.Common.Physics.Character;
+using FpsGame.Server.MessageProcessors;
 
 namespace FpsGame.Server
 {
@@ -44,6 +45,8 @@ namespace FpsGame.Server
         Dictionary<QueryDescriptions, QueryDescription> queryDescriptions;
         List<IUpdateSystem> updateSystems = new List<IUpdateSystem>();
         Queue<ClientData.ClientData> ClientMessages = new Queue<ClientData.ClientData>();
+
+        Dictionary<string, IServerMessageProcessor> MessageProcessors = new Dictionary<string, IServerMessageProcessor>();
 
         PhysicsWorld physicsWorld;
         
@@ -89,6 +92,10 @@ namespace FpsGame.Server
             updateSystems.Add(new PlayerInputSystem(world, queryDescriptions, physicsWorld));
             updateSystems.Add(new ModelRotatorSystem(world, queryDescriptions));
             updateSystems.Add(new PhysicsSystem(world, queryDescriptions, physicsWorld));
+
+            MessageProcessors.Add("PlayerSettings", new PlayerSettingsProcessor(world, physicsWorld, messagesToSend));
+            MessageProcessors.Add("ClientInput", new ClientInputProcessor());
+            MessageProcessors.Add("ClientDisconnect", new ClientDisconnectProcessor());
         }
 
         private void AddNewClients()
@@ -158,38 +165,7 @@ namespace FpsGame.Server
                     var message = ClientMessages.Dequeue();
                     if (message != null)
                     {
-                        switch (message.Data["Type"].ToString())
-                        {
-                            case "PlayerSettings":
-                                var playerSettings = message.Data.ToObject<PlayerSettings>();
-                                var box = new Box(2, 7f, 2);
-                                var boxInertia = box.ComputeInertia(180);
-
-                                var entity = world.Create(
-                                    new Player() { Id = (uint)clients.Count + 1,
-                                        Name = playerSettings.Name,
-                                        Color = playerSettings.Color
-                                    },
-                                    new Camera() { Position = new Vector3(20 + clients.Count * 2, 0, 20) },
-                                    new ClientInput(),
-                                    new RenderModel() { Model = "capsule" },
-                                    physicsWorld.AddCharacter(new System.Numerics.Vector3(20 + clients.Count * 2, 0, 20))
-                                );
-                                message.Client.SetEntityReference(entity.Reference());
-                                messagesToSend.Add(new ChatMessage()
-                                {
-                                    SenderName = "Server",
-                                    Message = string.Format("{0} has connected", playerSettings.Name),
-                                    Time = DateTime.Now,
-                                });
-                                break;
-                            case "ClientInput":
-                                message.EntityReference.Entity.Set(message.Data.ToObject<ClientInput>());
-                                break;
-                            case "ClientDisconnect":
-                                message.Client.Disconnect();
-                                break;
-                        }
+                        MessageProcessors[message.Data["Type"].ToString()].ProcessMessage(message);
                     }
                 } while (ClientMessages.Count > 0);
             }
@@ -201,7 +177,6 @@ namespace FpsGame.Server
             {
                 foreach (var client in clients.Where(a => a.Status == ServerSideClientStatus.Disconnected))
                 {
-                    
                     client.entityReference.Entity.Add(new Remove());
                 }
             }
