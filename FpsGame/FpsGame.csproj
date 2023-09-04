@@ -29,6 +29,9 @@
     <ProjectReference Include="..\FpsGame.Ui\FpsGame.Ui.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <None Update="Content\capsule.fbx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Content\cube.fbx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

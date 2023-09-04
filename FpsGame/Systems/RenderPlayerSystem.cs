@@ -39,7 +39,7 @@ namespace FpsGame.Systems
                     effect.EnableDefaultLighting();
                     effect.PreferPerPixelLighting = true;
                     effect.DiffuseColor = player.Color;
-                    effect.World = Matrix.CreateFromYawPitchRoll(camera.Yaw, camera.Pitch, 0f) * Matrix.CreateTranslation(camera.Position);
+                    effect.World = Matrix.CreateFromYawPitchRoll(camera.Yaw, 0f, 0f) * Matrix.CreateTranslation(camera.Position);
                     effect.View = view;
                     effect.Projection = projection;
                 }

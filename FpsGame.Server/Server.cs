@@ -25,6 +25,7 @@ using BepuUtilities;
 using BepuPhysics;
 using FpsGame.Common.Physics;
 using BepuPhysics.Collidables;
+using FpsGame.Common.Physics.Character;
 
 namespace FpsGame.Server
 {
@@ -80,8 +81,8 @@ namespace FpsGame.Server
             queryDescriptions = new Dictionary<QueryDescriptions, QueryDescription>()
             {
                 { QueryDescriptions.ModelRotator, new QueryDescription().WithAll<Rotation, ModelRotator>() },
-                { QueryDescriptions.PlayerInput, new QueryDescription().WithAll<Player, Camera, ClientInput, BodyHandle>() },
-                { QueryDescriptions.DynamicPhysicsBodies, new QueryDescription().WithAll<Camera, BodyHandle>() },
+                { QueryDescriptions.PlayerInput, new QueryDescription().WithAll<Player, Camera, ClientInput, CharacterInput>() },
+                { QueryDescriptions.DynamicPhysicsBodies, new QueryDescription().WithAll<Camera, CharacterInput>() },
                 { QueryDescriptions.StaticPhysicsBodies, new QueryDescription().WithAll<StaticHandle>() }
             };
 
@@ -161,18 +162,18 @@ namespace FpsGame.Server
                         {
                             case "PlayerSettings":
                                 var playerSettings = message.Data.ToObject<PlayerSettings>();
-                                var sphere = new Sphere(1);
-                                var sphereInertia = sphere.ComputeInertia(1);
+                                var box = new Box(2, 7f, 2);
+                                var boxInertia = box.ComputeInertia(180);
 
                                 var entity = world.Create(
                                     new Player() { Id = (uint)clients.Count + 1,
                                         Name = playerSettings.Name,
                                         Color = playerSettings.Color
                                     },
-                                    new Camera() { Position = new Vector3(20 + clients.Count, -2.9f, 20) },
+                                    new Camera() { Position = new Vector3(20 + clients.Count * 2, 0, 20) },
                                     new ClientInput(),
-                                    new RenderModel() { Model = "sphere" },
-                                    physicsWorld.AddBody(BodyDescription.CreateDynamic(new System.Numerics.Vector3(20 + clients.Count, -2.9f, 20), sphereInertia, physicsWorld.Simulation.Shapes.Add(sphere), 0f))
+                                    new RenderModel() { Model = "capsule" },
+                                    physicsWorld.AddCharacter(new System.Numerics.Vector3(20 + clients.Count * 2, 0, 20))
                                 );
                                 message.Client.SetEntityReference(entity.Reference());
                                 messagesToSend.Add(new ChatMessage()
@@ -240,9 +241,9 @@ namespace FpsGame.Server
                         Message = string.Format("{0} has disconnected", playerInfo.Name),
                         Time = DateTime.Now,
                     });
-                    if (client.entityReference.Entity.Has<BodyHandle>())
+                    if (client.entityReference.Entity.Has<CharacterInput>())
                     {
-                        physicsWorld.RemoveBody(client.entityReference.Entity.Get<BodyHandle>());
+                        physicsWorld.RemoveCharacter(client.entityReference.Entity.Get<CharacterInput>());
                     }
                     world.Destroy(client.entityReference.Entity);
                     client.SetEntityReference(EntityReference.Null);

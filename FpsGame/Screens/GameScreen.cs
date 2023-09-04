@@ -80,6 +80,7 @@ namespace FpsGame.Screens
 
             Models.Add("cube", importer.LoadModel("Content/cube.fbx"));
             Models.Add("sphere", importer.LoadModel("Content/sphere.fbx"));
+            Models.Add("capsule", importer.LoadModel("Content/capsule.fbx"));
 
             world = World.Create();
 
@@ -295,7 +296,7 @@ namespace FpsGame.Screens
                     Right = keys.Contains(Keys.Right) || keys.Contains(Keys.D) || gState.DPad.Right == ButtonState.Pressed,
                     LeftStick = gState.ThumbSticks.Left,
                     RightStick = gState.ThumbSticks.Right,
-                    
+                    Jump = keys.Contains(Keys.Space) || gState.Buttons.A == ButtonState.Pressed,
                 };
 
                 if (mState.RightButton == ButtonState.Pressed)
@@ -321,7 +322,8 @@ namespace FpsGame.Screens
                     clientInput.Right ||
                     clientInput.MouseDelta != Vector2.Zero ||
                     clientInput.LeftStick != Vector2.Zero ||
-                    clientInput.RightStick != Vector2.Zero)
+                    clientInput.RightStick != Vector2.Zero ||
+                    clientInput.Jump)
                 {
                     client.SendInputData(clientInput);
                 }
