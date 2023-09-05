@@ -179,7 +179,7 @@ namespace FpsGame.Screens
             processInputDataToSend(kState, mState, gState);
             updateHudData();
 
-            server?.Run(gameTime);
+            server?.Update(gameTime);
         }
 
         private void processInputDataLocal(KeyboardState kState, MouseState mState, GamePadState gState)

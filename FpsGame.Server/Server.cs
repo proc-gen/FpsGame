@@ -27,28 +27,25 @@ using FpsGame.Common.Physics;
 using BepuPhysics.Collidables;
 using FpsGame.Common.Physics.Character;
 using FpsGame.Server.MessageProcessors;
+using FpsGame.Server.MessageBroadcasters;
 
 namespace FpsGame.Server
 {
     public class Server : IDisposable
     {
-        private bool disposedValue;
-        private readonly List<ServerSideClient> clients = new List<ServerSideClient>();
-        private readonly List<ServerSideClient> newClients = new List<ServerSideClient>();
-        private readonly TcpListener listener;
-
-        private readonly JsonNetArchSerializer serializer = new JsonNetArchSerializer();
-        
-        
-
+        bool disposedValue;
+        List<ServerSideClient> clients = new List<ServerSideClient>();
+        List<ServerSideClient> newClients = new List<ServerSideClient>();
+        TcpListener listener;
+      
         World world;
+        PhysicsWorld physicsWorld;
+
         Dictionary<QueryDescriptions, QueryDescription> queryDescriptions;
         List<IUpdateSystem> updateSystems = new List<IUpdateSystem>();
         Queue<ClientData.ClientData> ClientMessages = new Queue<ClientData.ClientData>();
 
         Dictionary<string, IServerMessageProcessor> MessageProcessors = new Dictionary<string, IServerMessageProcessor>();
-
-        PhysicsWorld physicsWorld;
         
         List<Task> tasks = new List<Task>();
         Task addNewClientTask = null;
@@ -61,8 +58,8 @@ namespace FpsGame.Server
 
         Level level;
 
-        const int SendRate = 60;
-        private int serverTick = 0;
+        int serverTick = 0;
+        List<IServerMessageBroadcaster> broadcasters = new List<IServerMessageBroadcaster>();
 
         public Server(CancellationToken cancellationToken, GameSettings gameSettings, Func<object, bool> sendData = null)
         {
@@ -96,67 +93,36 @@ namespace FpsGame.Server
             MessageProcessors.Add("PlayerSettings", new PlayerSettingsProcessor(world, physicsWorld, messagesToSend));
             MessageProcessors.Add("ClientInput", new ClientInputProcessor());
             MessageProcessors.Add("ClientDisconnect", new ClientDisconnectProcessor());
+
+            broadcasters.Add(new SerializedWorldBroadcaster(gameSettings, clients, newClients, world, physicsWorld, messagesToSend));
+            broadcasters.Add(new ChatMessageBroadcaster(clients, messagesToSend, sendData));
+            broadcasters.Add(new PlayersInfoBroadcaster(clients, sendData));
         }
 
-        private void AddNewClients()
-        {
-            if(addNewClientTask == null)
-            {
-                addNewClientTask = Task.Run(async() =>
-                {
-                    try
-                    {
-                        TcpClient tcpClient = await listener.AcceptTcpClientAsync(cancellationToken);
-
-                        var client = new ServerSideClient(tcpClient, AddDataToProcess);
-
-                        tasks.Add(Task.Run(() => client.BeginReceiving(cancellationToken), cancellationToken));
-                        newClients.Add(client);
-                    }
-                    catch (OperationCanceledException ex)
-                    {
-                        //Do nothing
-                    }
-
-                    addNewClientTask = null;
-                }, cancellationToken);
-            }
-            
-        }
-
-        public void Run(GameTime gameTime)
+        public void Update(GameTime gameTime)
         {
             if (cancellationToken.IsCancellationRequested)
             {
                 return;
             }
+            serverTick++;
 
-            HandleClientMessages();
+            ProcessClientMessages();
 
             foreach (var system in updateSystems)
             {
                 system.Update(gameTime);
             }
 
-            if (gameSettings.GameMode != GameMode.SinglePlayer || !clients.Any())
-            {
-                AddNewClients();
-            }
+            AddNewClients();
 
-            serverTick++;
-
-            if (serverTick % (60 / SendRate) == 0)
+            foreach(var broadcaster in broadcasters)
             {
-                BroadcastWorld();
-            }
-            if(serverTick % 60 == 0)
-            {
-                BroadcastMessages();
-                BroadcastPlayerInfo();
+                broadcaster.Broadcast(serverTick);
             }
         }
 
-        private void HandleClientMessages()
+        private void ProcessClientMessages()
         {
             if (ClientMessages.Count > 0)
             {
@@ -170,106 +136,32 @@ namespace FpsGame.Server
                 } while (ClientMessages.Count > 0);
             }
         }
-    
-        private void BroadcastWorld()
+
+        private void AddNewClients()
         {
-            if (clients.Where(a => a.Status == ServerSideClientStatus.Disconnected).Any())
+            if (gameSettings.GameMode != GameMode.SinglePlayer || !clients.Any())
             {
-                foreach (var client in clients.Where(a => a.Status == ServerSideClientStatus.Disconnected))
+                if (addNewClientTask == null)
                 {
-                    client.entityReference.Entity.Add(new Remove());
-                }
-            }
-
-            if (clients.Where(a => a.Status == ServerSideClientStatus.InGame).Any())
-            {
-                var data = serializer.Serialize(SerializableWorld.SerializeWorld(world, false));
-                foreach (var client in clients.Where(a => a.Status == ServerSideClientStatus.InGame))
-                {
-                    client.Send(data);
-                }
-            }
-
-            if (newClients.Where(a => a.Status == ServerSideClientStatus.JoinedGame).Any())
-            {
-                foreach (var client in newClients.Where(a => a.Status == ServerSideClientStatus.JoinedGame))
-                {
-                    var serializedWorld = SerializableWorld.SerializeWorld(world, true);
-                    serializedWorld.PlayerId = client.GetPlayerId();
-                    client.Send(new GameSettings() { GameName = gameSettings.GameName });
-                    client.Send(serializer.Serialize(serializedWorld));
-                    client.Status = ServerSideClientStatus.InGame;
-
-                    clients.Add(client);
-                }
-                newClients.RemoveAll(a => a.Status == ServerSideClientStatus.JoinedGame);
-            }
-
-            if (clients.Where(a => a.Status == ServerSideClientStatus.Disconnected).Any())
-            {
-                foreach (var client in clients.Where(a => a.Status == ServerSideClientStatus.Disconnected))
-                {
-                    var playerInfo = client.entityReference.Entity.Get<Player>();
-                    messagesToSend.Add(new ChatMessage()
+                    addNewClientTask = Task.Run(async () =>
                     {
-                        SenderName = "Server",
-                        Message = string.Format("{0} has disconnected", playerInfo.Name),
-                        Time = DateTime.Now,
-                    });
-                    if (client.entityReference.Entity.Has<CharacterInput>())
-                    {
-                        physicsWorld.RemoveCharacter(client.entityReference.Entity.Get<CharacterInput>());
-                    }
-                    world.Destroy(client.entityReference.Entity);
-                    client.SetEntityReference(EntityReference.Null);
-                    client.Status = ServerSideClientStatus.Removed;
+                        try
+                        {
+                            TcpClient tcpClient = await listener.AcceptTcpClientAsync(cancellationToken);
+
+                            var client = new ServerSideClient(tcpClient, AddDataToProcess);
+
+                            tasks.Add(Task.Run(() => client.BeginReceiving(cancellationToken), cancellationToken));
+                            newClients.Add(client);
+                        }
+                        catch (OperationCanceledException ex)
+                        {
+                            //Do nothing
+                        }
+
+                        addNewClientTask = null;
+                    }, cancellationToken);
                 }
-            }
-        }
-
-        private void BroadcastMessages()
-        {
-            if(messagesToSend.Count > 0)
-            {
-                foreach(var client in clients.Where(a => a.Status == ServerSideClientStatus.InGame))
-                {
-                    foreach(var message in messagesToSend)
-                    {
-                        client.Send(message);
-                    }
-                }
-
-                if (sendData != null)
-                {
-                    sendData(messagesToSend);
-                }
-
-                messagesToSend.Clear();
-            }
-        }
-
-        private void BroadcastPlayerInfo()
-        {
-            var PlayersInfo = new PlayersInfo();
-            foreach (var client in clients.Where(a => a.Status == ServerSideClientStatus.InGame))
-            {
-                client.CheckPing();
-                var player = client.entityReference.Entity.Get<Player>();
-                PlayersInfo.Players.Add(new PlayerInfo()
-                {
-                    Name = player.Name,
-                    Color = player.Color,
-                    Ping = client.CheckPing(),
-                });
-            }
-
-            if (sendData != null)
-            {
-                sendData(PlayersInfo);
-            }
-            foreach (var client in clients.Where(a => a.Status == ServerSideClientStatus.InGame))
-            {
-                client.Send(PlayersInfo);
             }
         }
 
