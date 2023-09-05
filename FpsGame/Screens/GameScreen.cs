@@ -23,7 +23,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using FpsGame.UiComponents;
-using System.Net.NetworkInformation;
 using FpsGame.Common.Utils;
 using FpsGame.MessageProcessors;
 
