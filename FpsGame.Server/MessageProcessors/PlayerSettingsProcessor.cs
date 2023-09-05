@@ -2,7 +2,6 @@
 using Arch.Core.Extensions;
 using FpsGame.Common.ClientData;
 using FpsGame.Common.Components;
-using FpsGame.Common.Messages;
 using FpsGame.Common.Physics;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json.Linq;

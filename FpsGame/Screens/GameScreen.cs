@@ -25,6 +25,7 @@ using Newtonsoft.Json.Linq;
 using FpsGame.UiComponents;
 using System.Net.NetworkInformation;
 using FpsGame.Common.Utils;
+using FpsGame.MessageProcessors;
 
 namespace FpsGame.Screens
 {
@@ -35,7 +36,6 @@ namespace FpsGame.Screens
         private Matrix projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45), 800f / 480f, 0.1f, 100f);
 
         World world;
-        SerializableWorld serializableWorld = new SerializableWorld(false);
         List<IRenderSystem> renderSystems;
         Dictionary<QueryDescriptions, QueryDescription> queryDescriptions;
 
@@ -45,15 +45,14 @@ namespace FpsGame.Screens
         Client client;
         CancellationTokenSource token = new CancellationTokenSource();
         Queue<JObject> ServerData = new Queue<JObject>();
-        private readonly JsonNetArchSerializer serializer = new JsonNetArchSerializer();
-        private readonly Dictionary<Type, Converter> converters;
 
         private Vector2 lastMousePosition;
         private bool firstMove = true;
 
         private GameSettings gameSettings;
-        private uint PlayerId;
         private EntityReference Player = EntityReference.Null;
+        Dictionary<string, IMessageProcessor> MessageProcessors = new Dictionary<string, IMessageProcessor>();
+
 
         Label hostLocationLabel;
         Label gameNameLabel;
@@ -68,7 +67,6 @@ namespace FpsGame.Screens
         Panel hudPanel;
 
         List<Task> tasks = new List<Task>();
-        List<ChatMessage> chatMessages = new List<ChatMessage>();
 
         AssetImporter importer;
 
@@ -97,16 +95,7 @@ namespace FpsGame.Screens
                 new RenderPlayerSystem(world, queryDescriptions, Models),
             };
 
-            converters = new Dictionary<Type, Converter>()
-            {
-                {typeof(RenderModel), new RenderModelConverter()},
-                {typeof(Position), new PositionConverter()},
-                {typeof(Rotation), new RotationConverter()},
-                {typeof(Scale), new ScaleConverter()},
-                {typeof(ModelRotator), new ModelRotatorConverter()},
-                {typeof(Player), new PlayerConverter() },
-                {typeof(Camera), new CameraConverter() },
-            };
+            
 
             if (gameSettings.GameMode != GameMode.MultiplayerJoin)
             {
@@ -153,7 +142,11 @@ namespace FpsGame.Screens
             hudPanel.AddWidget(playersTable.Table);
 
             RootWidget = hudPanel.UiWidget;
-            
+
+            MessageProcessors.Add("SerializableWorld", new SerializableWorldProcessor(world, queryDescriptions));
+            MessageProcessors.Add("ChatMessage", new ChatMessageProcessor(chatBox));
+            MessageProcessors.Add("GameSettings", new GameSettingsProcessor(this.gameSettings, gameNameLabel));
+            MessageProcessors.Add("PlayersInfo", new PlayersInfoProcessor(playersTable));
         }
 
         public override void Update(GameTime gameTime)
@@ -195,90 +188,13 @@ namespace FpsGame.Screens
                 do
                 {
                     var data = ServerData.Dequeue();
+                    MessageProcessors[data["Type"].ToString()].ProcessMessage(data);
 
-                    switch (data["Type"].ToString())
+                    if(Player == EntityReference.Null && data["Type"].ToString() == "SerializableWorld")
                     {
-                        case "SerializableWorld":
-                            processSerializedWorldData(data);
-                            break;
-                        case "GameSettings":
-                            gameSettings.GameName = data["GameName"].ToString();
-                            gameNameLabel.UpdateText(gameSettings.GameName);
-                            break;
-                        case "ChatMessage":
-                            var message = data.ToObject<ChatMessage>();
-                            chatMessages.Add(message);
-                            chatBox.AddMessage(message);
-                            break;
-                        case "PlayersInfo":
-                            playersTable.Update(data.ToObject<PlayersInfo>().Players);
-                            break;
+                        Player = ((SerializableWorldProcessor)MessageProcessors["SerializableWorld"]).Player;
                     }
                 } while(ServerData.Count > 0);
-            }
-        }
-
-        private void processSerializedWorldData(JObject data)
-        {
-            serializer.Deserialize(data, serializableWorld);
-
-            if (serializableWorld.Entities.Where(a => a.EntityState == SerializableObjectState.Add).Any())
-            {
-                foreach (var entity in serializableWorld.Entities.Where(a => a.EntityState == SerializableObjectState.Add))
-                {
-                    Entity created = world.CreateFromArray(entity.GetDeserializedComponents(converters));
-                    entity.EntityReference = created.Reference();
-                    entity.DestinationId = created.Id;
-                    entity.DestinationVersionId = created.Version();
-                    entity.EntityState = SerializableObjectState.NoChange;
-                }
-            }
-
-            if (serializableWorld.Entities.Where(a => a.EntityState == SerializableObjectState.Update).Any())
-            {
-                foreach (var entity in serializableWorld.Entities.Where(a => a.EntityState == SerializableObjectState.Update))
-                {
-                    world.SetFromArray(entity.EntityReference.Entity, entity.GetDeserializedComponents(converters));
-                    entity.EntityState = SerializableObjectState.NoChange;
-                }
-            }
-
-            if (serializableWorld.Entities.Where(a => a.EntityState == SerializableObjectState.Remove).Any())
-            {
-                foreach (var entity in serializableWorld.Entities.Where(a => a.EntityState == SerializableObjectState.Remove))
-                {
-                    world.Destroy(entity.EntityReference);
-                    entity.EntityReference = EntityReference.Null;
-                }
-
-                serializableWorld.Entities.RemoveAll(a => a.EntityState == SerializableObjectState.Remove);
-            }
-
-            if (serializableWorld.EntitiesToRemove.Any())
-            {
-                foreach (var entity in serializableWorld.EntitiesToRemove)
-                {
-                    serializableWorld.Entities.RemoveAll(a => a.EntityReference == entity.EntityReference);
-                    world.Destroy(entity.EntityReference);
-                    entity.EntityReference = EntityReference.Null;
-                }
-
-                serializableWorld.EntitiesToRemove.Clear();
-            }
-
-            if (serializableWorld.FullLoad)
-            {
-                PlayerId = serializableWorld.PlayerId;
-
-                var playerQuery = queryDescriptions[QueryDescriptions.PlayerInput];
-
-                world.Query(in playerQuery, (in Entity entity, ref Player player) =>
-                {
-                    if (player.Id == PlayerId)
-                    {
-                        Player = entity.Reference();
-                    }
-                });
             }
         }
 

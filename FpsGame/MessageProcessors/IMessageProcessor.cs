@@ -1,5 +1,4 @@
 ﻿using FpsGame.Common.ClientData;
-using FpsGame.Common.Messages;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -7,10 +6,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FpsGame.Server.MessageProcessors
+namespace FpsGame.MessageProcessors
 {
-    public interface IServerMessageProcessor
+    public interface IMessageProcessor
     {
-        void ProcessMessage(ClientData.ClientData message);
+        void ProcessMessage(JObject data);
     }
 }
