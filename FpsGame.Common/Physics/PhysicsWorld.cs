@@ -1,20 +1,10 @@
 ﻿using BepuPhysics;
 using BepuPhysics.Collidables;
-using BepuPhysics.CollisionDetection;
-using BepuPhysics.Constraints;
 using BepuUtilities;
 using BepuUtilities.Memory;
-using FpsGame.Common.Components;
-using FpsGame.Common.Physics.Character;
 using FpsGame.Common.Physics.Character;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
-using System.Reflection.Metadata;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FpsGame.Common.Physics
 {

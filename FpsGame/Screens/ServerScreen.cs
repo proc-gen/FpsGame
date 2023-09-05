@@ -118,7 +118,7 @@ namespace FpsGame.Screens
                 ScreenManager.SetActiveScreen(ScreenNames.MainMenu);
             }
 
-            server?.Run(gameTime);
+            server?.Update(gameTime);
         }
 
         public override void Render(GameTime gameTime)
