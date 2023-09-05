@@ -53,7 +53,6 @@ namespace FpsGame.Screens
         private EntityReference Player = EntityReference.Null;
         Dictionary<string, IMessageProcessor> MessageProcessors = new Dictionary<string, IMessageProcessor>();
 
-
         Label hostLocationLabel;
         Label gameNameLabel;
         Label playerPositionLabel;
@@ -70,16 +69,29 @@ namespace FpsGame.Screens
 
         AssetImporter importer;
 
-        public GameScreen(Game game, ScreenManager screenManager, GameSettings gameSettings, PlayerSettings? playerSettings)
+        public GameScreen(Game game, ScreenManager screenManager, GameSettings gameSettings, PlayerSettings playerSettings)
             : base(game, screenManager)
         {
             this.gameSettings = gameSettings;
-            importer = new AssetImporter(game.GraphicsDevice);
+            
+            loadAssets();
+            initECS();
+            initClientServer(playerSettings);           
+            initUIComponents();
+            initMessageProcessors();
+        }
+
+        private void loadAssets()
+        {
+            importer = new AssetImporter(Game.GraphicsDevice);
 
             Models.Add("cube", importer.LoadModel("Content/cube.fbx"));
             Models.Add("sphere", importer.LoadModel("Content/sphere.fbx"));
             Models.Add("capsule", importer.LoadModel("Content/capsule.fbx"));
+        }
 
+        private void initECS()
+        {
             world = World.Create();
 
             queryDescriptions = new Dictionary<QueryDescriptions, QueryDescription>()
@@ -94,17 +106,21 @@ namespace FpsGame.Screens
                 new RenderModelSystem(world, queryDescriptions, Models),
                 new RenderPlayerSystem(world, queryDescriptions, Models),
             };
+        }
 
-            
-
+        private void initClientServer(PlayerSettings playerSettings)
+        {
             if (gameSettings.GameMode != GameMode.MultiplayerJoin)
             {
                 server = new Server.Server(token.Token, gameSettings);
             }
 
-            client = new Client(AddDataToProcess, gameSettings, playerSettings.Value);
+            client = new Client(AddDataToProcess, gameSettings, playerSettings);
             tasks.Add(Task.Run(() => client.Join(token.Token), token.Token));
+        }
 
+        private void initUIComponents()
+        {
             hostLocationLabel = new Label("host-location", gameSettings.GameIPAddress.ToString() + ":" + gameSettings.GamePort, new Style()
             {
                 Margin = new Thickness(0),
@@ -142,10 +158,13 @@ namespace FpsGame.Screens
             hudPanel.AddWidget(playersTable.Table);
 
             RootWidget = hudPanel.UiWidget;
+        }
 
+        private void initMessageProcessors()
+        {
             MessageProcessors.Add("SerializableWorld", new SerializableWorldProcessor(world, queryDescriptions));
             MessageProcessors.Add("ChatMessage", new ChatMessageProcessor(chatBox));
-            MessageProcessors.Add("GameSettings", new GameSettingsProcessor(this.gameSettings, gameNameLabel));
+            MessageProcessors.Add("GameSettings", new GameSettingsProcessor(gameSettings, gameNameLabel));
             MessageProcessors.Add("PlayersInfo", new PlayersInfoProcessor(playersTable));
         }
 
@@ -155,30 +174,28 @@ namespace FpsGame.Screens
             var kState = Keyboard.GetState();
             var mState = Mouse.GetState();
 
-            if (gState.Buttons.Back == ButtonState.Pressed 
+            processInputDataLocal(kState, mState, gState);
+            processServerData();
+            processInputDataToSend(kState, mState, gState);
+            updateHudData();
+
+            server?.Run(gameTime);
+        }
+
+        private void processInputDataLocal(KeyboardState kState, MouseState mState, GamePadState gState)
+        {
+            if (gState.Buttons.Back == ButtonState.Pressed
                 || kState.IsKeyDown(Keys.Escape))
             {
-                if (client != null)
-                {
-                    client.SendInputData(new ClientDisconnect());
-                    Thread.Sleep(250);
-                }
+
+                client.SendInputData(new ClientDisconnect());
+                Thread.Sleep(250);
+
                 token.Cancel();
                 ScreenManager.SetActiveScreen(ScreenNames.MainMenu);
             }
 
-            if (client != null)
-            {
-                playersTable.Table.UiWidget.Visible = kState.IsKeyDown(Keys.Tab);
-                processServerData();
-                processInputData(kState, mState, gState);
-                if(Player != EntityReference.Null)
-                {
-                    playerPositionLabel.UpdateText(Player.Entity.Get<Camera>().Position.ToString());
-                }
-            }
-
-            server?.Run(gameTime);
+            playersTable.Table.UiWidget.Visible = kState.IsKeyDown(Keys.Tab);
         }
 
         private void processServerData()
@@ -198,7 +215,7 @@ namespace FpsGame.Screens
             }
         }
 
-        private void processInputData(KeyboardState kState, MouseState mState, GamePadState gState)
+        private void processInputDataToSend(KeyboardState kState, MouseState mState, GamePadState gState)
         {
             if (Game.IsActive)
             {
@@ -246,12 +263,15 @@ namespace FpsGame.Screens
             }
         }
 
-        public override void Render(GameTime gameTime)
+        private void updateHudData()
         {
-            renderGame(gameTime);
+            if (Player != EntityReference.Null)
+            {
+                playerPositionLabel.UpdateText(Player.Entity.Get<Camera>().Position.ToString());
+            }
         }
 
-        private void renderGame(GameTime gameTime)
+        public override void Render(GameTime gameTime)
         {
             if (Player != EntityReference.Null)
             {
