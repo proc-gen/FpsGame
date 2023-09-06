@@ -12,6 +12,8 @@ using Microsoft.Xna.Framework.Content.Pipeline.Audio;
 using Microsoft.Xna.Framework.Media;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content.Pipeline.Graphics;
+using Assimp.Unmanaged;
+using System.Runtime.InteropServices;
 
 namespace FpsGame.Common.Utils
 {
@@ -31,7 +33,7 @@ namespace FpsGame.Common.Utils
         PipelineProcessorContext _processContext;
 
         // importers
-        OpenAssetImporterNet _openImporter;
+        OpenAssetImporter _openImporter;
         EffectImporter _effectImporter;
         FontDescriptionImporter _fontImporter;
         Dictionary<string, ContentImporter<AudioContent>> _soundImporters = new Dictionary<string, ContentImporter<AudioContent>>();
@@ -58,7 +60,7 @@ namespace FpsGame.Common.Utils
         public AssetImporter(GraphicsDevice graphics)
         {
             _graphics = graphics;
-            _openImporter = new OpenAssetImporterNet();
+            _openImporter = new OpenAssetImporter();
             _effectImporter = new EffectImporter();
             _soundImporters[".wav"] = new WavImporter();
             _soundImporters[".ogg"] = new OggImporter();
@@ -129,6 +131,16 @@ namespace FpsGame.Common.Utils
             }
 
             // load model and convert to model content
+            if(!AssimpLibrary.Instance.IsLibraryLoaded)
+            {
+                var isArm = RuntimeInformation.ProcessArchitecture == Architecture.Arm64;
+                var isOSX = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+
+                if(isArm && isOSX)
+                {
+                    AssimpLibrary.Instance.LoadLibrary(Directory.GetCurrentDirectory() + "/libassimp.dylib");
+                }
+            }
             var node = _openImporter.Import(modelPath, _importContext);
             ModelContent modelContent = _modelProcessor.Process(node, _processContext);
 
