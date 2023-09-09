@@ -115,7 +115,7 @@ namespace FpsGame.Server.Systems
                 newTargetVelocity != character.TargetVelocity ||
                 (newTargetVelocity != Vector2.Zero && character.ViewDirection != viewDirection)))
             {
-                physicsWorld.characters.Simulation.Awakener.AwakenBody(character.BodyHandle);
+                physicsWorld.Simulation.Awakener.AwakenBody(character.BodyHandle);
             }
             character.TargetVelocity = new System.Numerics.Vector2(newTargetVelocity.X, newTargetVelocity.Y);
             character.ViewDirection = new System.Numerics.Vector3(viewDirection.X, viewDirection.Y, viewDirection.Z);

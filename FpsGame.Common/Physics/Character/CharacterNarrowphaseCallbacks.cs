@@ -3,6 +3,7 @@ using BepuPhysics.Collidables;
 using BepuPhysics.CollisionDetection;
 using System.Runtime.CompilerServices;
 using BepuPhysics.Constraints;
+using System;
 
 namespace FpsGame.Common.Physics.Character
 {

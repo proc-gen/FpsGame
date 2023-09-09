@@ -68,7 +68,7 @@ namespace FpsGame.Common.Physics
         }
 
         public CharacterInput AddCharacter(
-            Vector3 initialPosition, 
+            Vector3 initialPosition,
             Capsule shape,
             float minimumSpeculativeMargin, 
             float mass, 
@@ -101,6 +101,50 @@ namespace FpsGame.Common.Physics
             character.MaximumVerticalForce = maximumVerticalGlueForce;
             character.MaximumHorizontalForce = maximumHorizontalForce;
             character.MinimumSupportDepth = shape.Radius * -0.01f;
+            character.MinimumSupportContinuationDepth = -minimumSpeculativeMargin;
+
+            return new CharacterInput()
+            {
+                Body = bodyHandle,
+                Speed = speed,
+                Shape = shape,
+            };
+        }
+
+        public CharacterInput AddNPC(
+            Vector3 initialPosition,
+            Box shape,
+            float minimumSpeculativeMargin,
+            float mass,
+            float maximumHorizontalForce,
+            float maximumVerticalGlueForce,
+            float jumpVelocity,
+            float speed,
+            float maximumSlope = MathF.PI * 0.25f
+        )
+        {
+            var shapeIndex = characters.Simulation.Shapes.Add(shape);
+            var bodyHandle = characters.Simulation.Bodies.Add(
+                BodyDescription.CreateDynamic(
+                    initialPosition,
+                    new BodyInertia { InverseMass = 1f / mass },
+                    new CollidableDescription(
+                        shapeIndex,
+                        minimumSpeculativeMargin,
+                        float.MaxValue,
+                        ContinuousDetection.Passive
+                    ),
+                    0.02f
+                )
+            );
+
+            ref var character = ref characters.AllocateCharacter(bodyHandle);
+            character.LocalUp = new Vector3(0, 1, 0);
+            character.CosMaximumSlope = MathF.Cos(maximumSlope);
+            character.JumpVelocity = jumpVelocity;
+            character.MaximumVerticalForce = maximumVerticalGlueForce;
+            character.MaximumHorizontalForce = maximumHorizontalForce;
+            character.MinimumSupportDepth = -0.01f;
             character.MinimumSupportContinuationDepth = -minimumSpeculativeMargin;
 
             return new CharacterInput()

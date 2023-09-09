@@ -62,6 +62,29 @@ namespace FpsGame.Common.Level
             );
         }
 
+        private void createCrate(Vector3 position, float yRot)
+        {
+            var box = new Box(4, 4, 4);
+
+            world.Create(
+                new RenderModel() { Model = "cube" },
+                new Position() { X = position.X, Y = position.Y, Z = position.Z },
+                new Rotation() { X = -MathF.PI / 2f, Y = yRot },
+                new Scale(2),
+                physicsWorld.AddNPC(
+                    position,
+                    box,
+                    0.1f,
+                    1f,
+                    11811.6f,
+                    328,
+                    19.69f,
+                    13.12f,
+                    MathF.PI * 0.4f
+                )
+            );
+        }
+
         public override void PopulateLevel()
         {
             //Floor
@@ -96,6 +119,8 @@ namespace FpsGame.Common.Level
             {
                 createWall(new Vector3(i * 4, 0, -48.5f), 0);
             }
+
+            createCrate(new Vector3(0, 0, 0), 0);
         }
     }
 }
