@@ -435,10 +435,13 @@ namespace FpsGame.Common.Utils
                 return cached;
             }
 
+            Texture2D loadedTexture = null;
+
             // load texture
-            FileStream fileStream = new FileStream(textureFile, FileMode.Open);
-            Texture2D loadedTexture = Texture2D.FromStream(_graphics, fileStream);
-            fileStream.Dispose();
+            using (FileStream fileStream = new FileStream(textureFile, FileMode.Open))
+            {
+                loadedTexture = Texture2D.FromStream(_graphics, fileStream);
+            }
 
             // add to cache and return 
             _loadedAssets[textureFile] = loadedTexture;

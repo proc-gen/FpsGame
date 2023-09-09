@@ -55,7 +55,7 @@ namespace FpsGame.Common.Serialization.Serializers
 
             foreach (var entity in newSerializableWorld.Entities)
             {
-                var origEntity = serializableWorld.Entities.Where(a => a.SourceId == entity.SourceId).FirstOrDefault();
+                var origEntity = serializableWorld.Entities.Where(a => a.FullOnly == entity.FullOnly && a.SourceId == entity.SourceId).FirstOrDefault();
                 if (origEntity != null)
                 {
                     if (entity.EntityState == SerializableObjectState.Remove)

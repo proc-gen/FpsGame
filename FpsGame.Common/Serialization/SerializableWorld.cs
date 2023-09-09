@@ -30,13 +30,13 @@ namespace FpsGame.Common.Serialization
         }
 
         private readonly static QueryDescription allEntitiesQuery = new QueryDescription();
+        private readonly static QueryDescription nonFullEntitiesQuery = new QueryDescription().WithNone<FullSerializeOnly>();
 
         public static SerializableWorld SerializeWorld(World world, bool full)
         {
             SerializableWorld serializableWorld = new SerializableWorld(full);
 
-
-            world.Query(in allEntitiesQuery, (in Entity entity) =>
+            world.Query(full ? allEntitiesQuery : nonFullEntitiesQuery, (in Entity entity) =>
             {
                 var components = entity.GetAllComponents();
                 if (components.Any(component => component is ISerializableComponent
@@ -48,7 +48,7 @@ namespace FpsGame.Common.Serialization
 
             if (!full)
             {
-                world.Query(in allEntitiesQuery, (in Entity entity) =>
+                world.Query(in nonFullEntitiesQuery, (in Entity entity) =>
                 {
                     var components = entity.GetAllComponents();
                     if (components.Any(component => component is ISerializableComponent
@@ -67,7 +67,7 @@ namespace FpsGame.Common.Serialization
                     }
                 });
 
-                world.Query(in allEntitiesQuery, (in Entity entity) =>
+                world.Query(in nonFullEntitiesQuery, (in Entity entity) =>
                 {
                     var components = entity.GetAllComponents();
                     if (components.Any(component => component is ISerializableComponent

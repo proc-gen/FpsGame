@@ -20,6 +20,7 @@ namespace FpsGame.Common.Serialization
         public EntityReference EntityReference { get; set; }
         public SerializableObjectState EntityState { get; set; }
         public Dictionary<Type, object> Components { get; set; }
+        public bool FullOnly { get; set; }
 
         public SerializableEntity() { }
         public SerializableEntity(int id, int versionId)
@@ -48,6 +49,11 @@ namespace FpsGame.Common.Serialization
                 else if (component is Remove)
                 {
                     ec.EntityState = SerializableObjectState.Remove;
+                }
+
+                if(component is FullSerializeOnly)
+                {
+                    ec.FullOnly = true;
                 }
             }
 
