@@ -14,6 +14,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content.Pipeline.Graphics;
 using Assimp.Unmanaged;
 using System.Runtime.InteropServices;
+using AssimpLibary = Assimp.Unmanaged.AssimpLibrary;
 
 namespace FpsGame.Common.Utils
 {
@@ -48,11 +49,6 @@ namespace FpsGame.Common.Utils
 
         // default effect to assign to all meshes
         public BasicEffect DefaultEffect;
-
-        /// <summary>
-        /// Method to generate / return effect per mesh part (or null to use default).
-        /// </summary>
-        public EffectsGenerator EffectsGenerator;
 
         /// <summary>
         /// Create the assets loader.
@@ -141,7 +137,30 @@ namespace FpsGame.Common.Utils
                     AssimpLibrary.Instance.LoadLibrary(Directory.GetCurrentDirectory() + "/libassimp.dylib");
                 }
             }
-            var node = _openImporter.Import(modelPath, _importContext);
+            NodeContent node = _openImporter.Import(modelPath, _importContext);
+
+            List<GeometryContent> source = node.Children.Where(a => a is MeshContent)
+                .Cast<MeshContent>()
+                .ToList()
+                .SelectMany(m => m.Geometry)
+                .ToList();
+
+            if(node is MeshContent)
+            {
+                source.AddRange((node as MeshContent).Geometry.ToList());
+            }
+
+            Dictionary<string, string> textures = new Dictionary<string, string>();
+
+            foreach (MaterialContent inputMaterial in source.Select((GeometryContent g) => g.Material).Distinct().ToList())
+            {
+                foreach(var texture in inputMaterial.Textures)
+                {
+                    texture.Value.Filename = texture.Value.Filename.Remove(0, texture.Value.Filename.IndexOf("Content"));
+                    textures.Add(texture.Key, texture.Value.Filename);
+                }
+            }
+
             ModelContent modelContent = _modelProcessor.Process(node, _processContext);
 
             // sanity
@@ -187,7 +206,7 @@ namespace FpsGame.Common.Utils
                 var meshTag = meshContent.Tag;
 
                 // extract parts
-                var parts = new List<ModelMeshPart>();
+                var parts = new List<Tuple<ModelMeshPart, ModelMeshPartContent>>();
                 foreach (var partContent in meshContent.MeshParts)
                 {
                     // build index buffer
@@ -224,11 +243,11 @@ namespace FpsGame.Common.Utils
                         VertexBuffer = vertexBuffer
                     };
 #pragma warning restore CS0618 // Type or member is obsolete
-                    parts.Add(part);
+                    parts.Add(new Tuple<ModelMeshPart, ModelMeshPartContent>(part, partContent));
                 }
 
                 // create and add mesh to meshes list
-                var mesh = new ModelMesh(_graphics, parts)
+                var mesh = new ModelMesh(_graphics, parts.Select(a => a.Item1).ToList())
                 {
                     Name = name,
                     BoundingSphere = boundingSphere,
@@ -236,11 +255,9 @@ namespace FpsGame.Common.Utils
                 };
                 meshes.Add(mesh);
 
-                // set parts effect (note: this must come *after* we add parts to the mesh otherwise we get exception).
                 foreach (var part in parts)
                 {
-                    var effect = EffectsGenerator != null ? EffectsGenerator(modelPath, modelContent, part) ?? DefaultEffect : DefaultEffect;
-                    part.Effect = effect;
+                    part.Item1.Effect = GenerateEffect(modelPath, modelContent, part.Item1, part.Item2, textures);
                 }
 
                 // add to parent bone
@@ -427,14 +444,25 @@ namespace FpsGame.Common.Utils
             _loadedAssets[textureFile] = loadedTexture;
             return loadedTexture;
         }
-    }
 
-    /// <summary>
-    /// A method to generate / return effect per mesh part.
-    /// </summary>
-    /// <param name="modelPath">Model path this part belongs to.</param>
-    /// <param name="modelContent">Loaded model raw content.</param>
-    /// <param name="part">Part instance we want to create effect for.</param>
-    /// <returns>Effect instance or null to use default.</returns>
-    public delegate Effect EffectsGenerator(string modelPath, ModelContent modelContent, ModelMeshPart part);
+        /// <summary>
+        /// A method to generate / return effect per mesh part.
+        /// </summary>
+        /// <param name="modelPath">Model path this part belongs to.</param>
+        /// <param name="modelContent">Loaded model raw content.</param>
+        /// <param name="part">Part instance we want to create effect for.</param>
+        /// <returns>Effect instance or null to use default.</returns>
+        public Effect GenerateEffect(string modelPath, ModelContent modelContent, ModelMeshPart part, ModelMeshPartContent partContent, Dictionary<string, string> textures)
+        {
+            if(partContent?.Material?.Textures?.Count > 0)
+            {
+                return new BasicEffect(_graphics)
+                {
+                    Texture = LoadTexture(textures[partContent.Material.Textures.First().Key]),
+                    TextureEnabled = true,
+                };
+            }
+            return DefaultEffect;
+        }
+    }
 }

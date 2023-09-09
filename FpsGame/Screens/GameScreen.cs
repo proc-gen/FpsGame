@@ -87,6 +87,7 @@ namespace FpsGame.Screens
             Models.Add("cube", importer.LoadModel("Content/cube.fbx"));
             Models.Add("sphere", importer.LoadModel("Content/sphere.fbx"));
             Models.Add("capsule", importer.LoadModel("Content/capsule.fbx"));
+            Models.Add("floor-tile", importer.LoadModel("Content/floor-tile.fbx"));
         }
 
         private void initECS()
@@ -204,11 +205,14 @@ namespace FpsGame.Screens
                 do
                 {
                     var data = ServerData.Dequeue();
-                    MessageProcessors[data["Type"].ToString()].ProcessMessage(data);
-
-                    if(Player == EntityReference.Null && data["Type"].ToString() == "SerializableWorld")
+                    if (data != null)
                     {
-                        Player = ((SerializableWorldProcessor)MessageProcessors["SerializableWorld"]).Player;
+                        MessageProcessors[data["Type"].ToString()].ProcessMessage(data);
+
+                        if (Player == EntityReference.Null && data["Type"].ToString() == "SerializableWorld")
+                        {
+                            Player = ((SerializableWorldProcessor)MessageProcessors["SerializableWorld"]).Player;
+                        }
                     }
                 } while(ServerData.Count > 0);
             }

@@ -16,8 +16,9 @@ namespace FpsGame.Common.Components
         public float Z { get; set; }
 
         public Scale()
+            : this(1)
         {
-            ComponentState = SerializableObjectState.Add;
+            
         }
 
         public Scale(float defaultScale = 1f)
