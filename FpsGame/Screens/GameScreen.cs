@@ -89,6 +89,7 @@ namespace FpsGame.Screens
             Models.Add("sphere", importer.LoadModel("Content/sphere.fbx"));
             Models.Add("capsule", importer.LoadModel("Content/capsule.fbx"));
             Models.Add("floor-tile", importer.LoadModel("Content/floor-tile.fbx"));
+            Models.Add("metal-wall", importer.LoadModel("Content/metal-wall.fbx"));
         }
 
         private void initECS()

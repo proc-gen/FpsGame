@@ -20,73 +20,82 @@ namespace FpsGame.Common.Level
         { 
         }
 
+        private void createFloorTile(Vector3 position)
+        {
+            world.Create(
+                new RenderModel() { Model = "floor-tile" },
+                new Position() { X = position.X, Y = position.Y, Z = position.Z },
+                new Rotation() { X = -MathF.PI / 2f },
+                new Scale(5),
+                physicsWorld.AddStatic(new StaticDescription(position, physicsWorld.Simulation.Shapes.Add(new Box(20, 2, 20)))),
+                new FullSerializeOnly()
+            );
+        }
+
+        private void createWall(Vector3 position, float yRot)
+        {
+            Vector3 positionOffset = new Vector3(MathF.Sin(yRot), 0, MathF.Cos(yRot));
+
+            world.Create(
+                new RenderModel() { Model = "metal-wall" },
+                new Position() { X = position.X, Y = position.Y + 0.5f, Z = position.Z },
+                new Rotation() { Y = yRot },
+                new Scale(2),
+                physicsWorld.AddStatic(new StaticDescription(new RigidPose(position, Quaternion.CreateFromYawPitchRoll(yRot, 0, 0)), physicsWorld.Simulation.Shapes.Add(new Box(10, 20, 2)))),
+                new FullSerializeOnly()
+            );
+
+            world.Create(
+                new RenderModel() { Model = "metal-wall" },
+                new Position() { X = position.X + positionOffset.X, Y = position.Y + 2 * 1.867f + 0.5f, Z = position.Z + positionOffset.Z },
+                new Rotation() { X = MathF.PI / 6f, Y = yRot },
+                new Scale(2),
+                new FullSerializeOnly()
+            );
+
+            world.Create(
+                new RenderModel() { Model = "metal-wall" },
+                new Position() { X = position.X + positionOffset.X, Y = position.Y - 2 * 1.867f + 0.5f, Z = position.Z + positionOffset.Z },
+                new Rotation() { X = -MathF.PI / 6f, Y = yRot },
+                new Scale(2),
+                new FullSerializeOnly()
+            );
+        }
+
         public override void PopulateLevel()
         {
             //Floor
-            for(int i = -5; i < 5; i++)
+            for(int i = -5; i <= 5; i++)
             {
-                for (int j = -5; j < 5; j++)
+                for (int j = -5; j <= 5; j++)
                 {
-                    world.Create(
-                        new RenderModel() { Model = "floor-tile" },
-                        new Position() { X = i * 10, Y = -5f, Z = j * 10 },
-                        new Rotation() { X = -MathF.PI / 2f },
-                        new Scale(5),
-                        physicsWorld.AddStatic(new StaticDescription(new Vector3(i * 10, -5, j * 10), physicsWorld.Simulation.Shapes.Add(new Box(20, 2, 20)))),
-                        new FullSerializeOnly()
-                    );
+                    createFloorTile(new Vector3(i * 10, -5, j * 10));
                 }
             }
 
             //Wall X+
-            world.Create(
-                new RenderModel() { Model = "cube" },
-                new Position() { X = 50.5f, Y = 0, Z = 0 },
-                new Rotation(),
-                new Scale() { X = 1, Y = 10, Z = 50 },
-                physicsWorld.AddStatic(new StaticDescription(new Vector3(50.5f, 0, 0), physicsWorld.Simulation.Shapes.Add(new Box(2, 20, 100)))),
-                new FullSerializeOnly()
-            );
+            for(int i = -12; i <= 12; i++)
+            {
+                createWall(new Vector3(48.5f, 0, i * 4), -MathF.PI / 2f);
+            }
 
             //Wall X-
-            world.Create(
-                new RenderModel() { Model = "cube" },
-                new Position() { X = -50.5f, Y = 0, Z = 0 },
-                new Rotation(),
-                new Scale() { X = 1, Y = 10, Z = 50 },
-                physicsWorld.AddStatic(new StaticDescription(new Vector3(-50.5f, 0, 0), physicsWorld.Simulation.Shapes.Add(new Box(2, 20, 100)))),
-                new FullSerializeOnly()
-            );
+            for (int i = -12; i <= 12; i++)
+            {
+                createWall(new Vector3(-48.5f, 0, i * 4), MathF.PI / 2f);
+            }
 
             //Wall Z+
-            world.Create(
-                new RenderModel() { Model = "cube" },
-                new Position() { X = 0, Y = 0, Z = 50.5f },
-                new Rotation(),
-                new Scale() {X = 50, Y = 10, Z = 1 },
-                physicsWorld.AddStatic(new StaticDescription(new Vector3(0, 0, 50.5f), physicsWorld.Simulation.Shapes.Add(new Box(100, 20, 2)))),
-                new FullSerializeOnly()
-            );
+            for (int i = -12; i <= 12; i++)
+            {
+                createWall(new Vector3(i * 4, 0, 48.5f), MathF.PI);
+            }
 
             //Wall Z-
-            world.Create(
-                new RenderModel() { Model = "cube" },
-                new Position() { X = 0, Y = 0, Z = -50.5f },
-                new Rotation(),
-                new Scale() { X = 50, Y = 10, Z = 1 },
-                physicsWorld.AddStatic(new StaticDescription(new Vector3(0, 0, -50.5f), physicsWorld.Simulation.Shapes.Add(new Box(100, 20, 2)))),
-                new FullSerializeOnly()
-            );
-
-            //Center
-            world.Create(
-                new RenderModel() { Model = "cube" },
-                new Position() { X = 0, Y = 0, Z = 0 },
-                new Rotation(),
-                new Scale() { X = 10, Y = 10, Z = 10 },
-                physicsWorld.AddStatic(new StaticDescription(new Vector3(0, 0, 0), physicsWorld.Simulation.Shapes.Add(new Box(20, 20, 20)))),
-                new FullSerializeOnly()
-            );
+            for (int i = -12; i <= 12; i++)
+            {
+                createWall(new Vector3(i * 4, 0, -48.5f), 0);
+            }
         }
     }
 }
