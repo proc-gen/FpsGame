@@ -25,6 +25,7 @@ using Newtonsoft.Json.Linq;
 using FpsGame.UiComponents;
 using FpsGame.Common.Utils;
 using FpsGame.MessageProcessors;
+using Myra.Graphics2D.Brushes;
 
 namespace FpsGame.Screens
 {
@@ -142,6 +143,8 @@ namespace FpsGame.Screens
             gameInfoPanel.AddWidget(gameNameLabel);
             gameInfoPanel.AddWidget(hostLocationLabel);
             gameInfoPanel.AddWidget(playerPositionLabel);
+            gameInfoPanel.UiWidget.Background = new SolidBrush(new Color(.1f, .1f, .1f));
+            gameInfoPanel.UiWidget.Opacity = .75f;
 
             chatBox = new ChatBox();
             messagesPanel = new VerticalPanel("messages-panel", new Style()
@@ -150,6 +153,9 @@ namespace FpsGame.Screens
                 VerticalAlignment = VerticalAlignment.Bottom,
             });
             messagesPanel.AddWidget(chatBox.MessagesLabel);
+            messagesPanel.UiWidget.Background = new SolidBrush(new Color(.1f, .1f, .1f));
+            messagesPanel.UiWidget.Opacity = .75f;
+
             playersTable = new PlayersTable();
 
             hudPanel = new Panel("hud-panel");
