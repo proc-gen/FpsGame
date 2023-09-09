@@ -62,25 +62,20 @@ namespace FpsGame.Common.Level
             );
         }
 
-        private void createCrate(Vector3 position, float yRot)
+        private void createCrate(Vector3 position, float yRot, float size)
         {
-            var box = new Box(4, 4, 4);
+            var box = new Box(size, size, size);
 
             world.Create(
                 new RenderModel() { Model = "cube" },
                 new Position() { X = position.X, Y = position.Y, Z = position.Z },
                 new Rotation() { X = -MathF.PI / 2f, Y = yRot },
-                new Scale(2),
+                new Scale(size/2f),
                 physicsWorld.AddNPC(
                     position,
                     box,
-                    0.1f,
-                    1f,
-                    11811.6f,
-                    328,
-                    19.69f,
-                    13.12f,
-                    MathF.PI * 0.4f
+                    0.5f,
+                    1f
                 )
             );
         }
@@ -120,7 +115,15 @@ namespace FpsGame.Common.Level
                 createWall(new Vector3(i * 4, 0, -48.5f), 0);
             }
 
-            createCrate(new Vector3(0, 0, 0), 0);
+            createCrate(new Vector3(0, -2, 0), 0, 4);
+            createCrate(new Vector3(1, 2, -1), 0, 4);
+            createCrate(new Vector3(0, 6, 0), 0, 4);
+
+            createCrate(new Vector3(10, -4, 0), 0, 2);
+            createCrate(new Vector3(11, -2, -1), 0, 2);
+            createCrate(new Vector3(10, 0, 0), 0, 2);
+            createCrate(new Vector3(11, 2, -1), 0, 2);
+            createCrate(new Vector3(10, 4, 0), 0, 2);
         }
     }
 }

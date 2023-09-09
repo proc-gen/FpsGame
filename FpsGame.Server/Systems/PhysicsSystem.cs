@@ -36,9 +36,9 @@ namespace FpsGame.Server.Systems
             });
 
             var query2 = queryDescriptions[QueryDescriptions.DynamicPhysicsBodies];
-            world.Query(in query2, (ref Position position, ref Rotation rotation, ref CharacterInput body) =>
+            world.Query(in query2, (ref Position position, ref Rotation rotation, ref BodyHandle body) =>
             {
-                var pose = physicsWorld.Simulation.Bodies[body.Body].Pose;
+                var pose = physicsWorld.Simulation.Bodies[body].Pose;
 
                 position.X = pose.Position.X;
                 position.Y = pose.Position.Y;

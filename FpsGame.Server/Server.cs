@@ -84,7 +84,7 @@ namespace FpsGame.Server
                 { QueryDescriptions.PlayerInput, new QueryDescription().WithAll<Player, Camera, ClientInput, CharacterInput>() },
                 { QueryDescriptions.CharacterPhysicsBodies, new QueryDescription().WithAll<Camera, CharacterInput>() },
                 { QueryDescriptions.StaticPhysicsBodies, new QueryDescription().WithAll<StaticHandle>() },
-                { QueryDescriptions.DynamicPhysicsBodies, new QueryDescription().WithAll<Position, Rotation, CharacterInput>() }
+                { QueryDescriptions.DynamicPhysicsBodies, new QueryDescription().WithAll<Position, Rotation, BodyHandle>() }
             };
 
             updateSystems.Add(new PlayerInputSystem(world, queryDescriptions, physicsWorld));

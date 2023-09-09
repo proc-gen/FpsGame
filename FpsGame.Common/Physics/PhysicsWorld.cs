@@ -111,16 +111,11 @@ namespace FpsGame.Common.Physics
             };
         }
 
-        public CharacterInput AddNPC(
+        public BodyHandle AddNPC(
             Vector3 initialPosition,
             Box shape,
             float minimumSpeculativeMargin,
-            float mass,
-            float maximumHorizontalForce,
-            float maximumVerticalGlueForce,
-            float jumpVelocity,
-            float speed,
-            float maximumSlope = MathF.PI * 0.25f
+            float mass
         )
         {
             var shapeIndex = characters.Simulation.Shapes.Add(shape);
@@ -138,21 +133,7 @@ namespace FpsGame.Common.Physics
                 )
             );
 
-            ref var character = ref characters.AllocateCharacter(bodyHandle);
-            character.LocalUp = new Vector3(0, 1, 0);
-            character.CosMaximumSlope = MathF.Cos(maximumSlope);
-            character.JumpVelocity = jumpVelocity;
-            character.MaximumVerticalForce = maximumVerticalGlueForce;
-            character.MaximumHorizontalForce = maximumHorizontalForce;
-            character.MinimumSupportDepth = -0.01f;
-            character.MinimumSupportContinuationDepth = -minimumSpeculativeMargin;
-
-            return new CharacterInput()
-            {
-                Body = bodyHandle,
-                Speed = speed,
-                Shape = shape,
-            };
+            return bodyHandle;
         }
 
         public void RemoveCharacter(CharacterInput character)
