@@ -23,16 +23,16 @@ namespace FpsGame.Common.Level
         public override void PopulateLevel()
         {
             //Floor
-            for(int i = -50; i < 50; i++)
+            for(int i = -5; i < 5; i++)
             {
-                for (int j = -50; j < 50; j++)
+                for (int j = -5; j < 5; j++)
                 {
                     world.Create(
                         new RenderModel() { Model = "floor-tile" },
-                        new Position() { X = i * 1, Y = -5f, Z = j * 1 },
+                        new Position() { X = i * 10, Y = -5f, Z = j * 10 },
                         new Rotation() { X = -MathF.PI / 2f },
-                        new Scale(),
-                        physicsWorld.AddStatic(new StaticDescription(new Vector3(i * 1, -5, j * 1), physicsWorld.Simulation.Shapes.Add(new Box(2, 2, 2)))),
+                        new Scale(5),
+                        physicsWorld.AddStatic(new StaticDescription(new Vector3(i * 10, -5, j * 10), physicsWorld.Simulation.Shapes.Add(new Box(20, 2, 20)))),
                         new FullSerializeOnly()
                     );
                 }
