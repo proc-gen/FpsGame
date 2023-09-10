@@ -50,6 +50,9 @@ namespace FpsGame.Common.Utils
         // default effect to assign to all meshes
         public BasicEffect DefaultEffect;
 
+        bool isArm = RuntimeInformation.ProcessArchitecture == Architecture.Arm64;
+        bool isOSX = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+
         /// <summary>
         /// Create the assets loader.
         /// </summary>
@@ -129,9 +132,6 @@ namespace FpsGame.Common.Utils
             // load model and convert to model content
             if(!AssimpLibrary.Instance.IsLibraryLoaded)
             {
-                var isArm = RuntimeInformation.ProcessArchitecture == Architecture.Arm64;
-                var isOSX = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
-
                 if(isArm && isOSX)
                 {
                     AssimpLibrary.Instance.LoadLibrary(Directory.GetCurrentDirectory() + "/libassimp.dylib");
@@ -154,10 +154,17 @@ namespace FpsGame.Common.Utils
 
             foreach (MaterialContent inputMaterial in source.Select((GeometryContent g) => g.Material).Distinct().ToList())
             {
-                foreach(var texture in inputMaterial.Textures)
+                if (!isArm)
                 {
-                    texture.Value.Filename = texture.Value.Filename.Remove(0, texture.Value.Filename.IndexOf("Content"));
-                    textures.Add(texture.Key, texture.Value.Filename);
+                    foreach (var texture in inputMaterial.Textures)
+                    {
+                        texture.Value.Filename = texture.Value.Filename.Remove(0, texture.Value.Filename.IndexOf("Content"));
+                        textures.Add(texture.Key, texture.Value.Filename);
+                    }
+                }
+                else
+                {
+                    inputMaterial.Textures.Clear();
                 }
             }
 
@@ -457,7 +464,7 @@ namespace FpsGame.Common.Utils
         /// <returns>Effect instance or null to use default.</returns>
         public Effect GenerateEffect(string modelPath, ModelContent modelContent, ModelMeshPart part, ModelMeshPartContent partContent, Dictionary<string, string> textures)
         {
-            if(partContent?.Material?.Textures?.Count > 0)
+            if(!isArm && partContent?.Material?.Textures?.Count > 0)
             {
                 return new BasicEffect(_graphics)
                 {
