@@ -111,25 +111,20 @@ namespace FpsGame.Common.Physics
             };
         }
 
-        public BodyHandle AddNPC(
+        public BodyHandle AddMoveableObject<T>(
             Vector3 initialPosition,
-            Box shape,
+            T shape,
             float minimumSpeculativeMargin,
             float mass
-        )
+        ) where T: unmanaged, IShape, IConvexShape
         {
             var shapeIndex = characters.Simulation.Shapes.Add(shape);
             var bodyHandle = characters.Simulation.Bodies.Add(
-                BodyDescription.CreateDynamic(
+                BodyDescription.CreateConvexDynamic(
                     initialPosition,
-                    new BodyInertia { InverseMass = 1f / mass },
-                    new CollidableDescription(
-                        shapeIndex,
-                        minimumSpeculativeMargin,
-                        float.MaxValue,
-                        ContinuousDetection.Passive
-                    ),
-                    0.02f
+                     mass,
+                     characters.Simulation.Shapes,
+                     shape
                 )
             );
 

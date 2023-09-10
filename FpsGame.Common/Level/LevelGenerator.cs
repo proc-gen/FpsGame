@@ -1,11 +1,13 @@
 ﻿using Arch.Core;
 using BepuPhysics;
 using BepuPhysics.Collidables;
+using CommunityToolkit.HighPerformance;
 using FpsGame.Common.Components;
 using FpsGame.Common.Physics;
 using FpsGame.Common.Serialization.ComponentConverters;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -71,9 +73,27 @@ namespace FpsGame.Common.Level
                 new Position() { X = position.X, Y = position.Y, Z = position.Z },
                 new Rotation() { X = -MathF.PI / 2f, Y = yRot },
                 new Scale(size/2f),
-                physicsWorld.AddNPC(
+                physicsWorld.AddMoveableObject(
                     position,
                     box,
+                    0.5f,
+                    1f
+                )
+            );
+        }
+
+        private void createSphere(Vector3 position, float radius)
+        {
+            var sphere = new Sphere(radius);
+
+            world.Create(
+                new RenderModel() { Model = "sphere" },
+                new Position() { X = position.X, Y = position.Y, Z = position.Z },
+                new Rotation(),
+                new Scale(radius),
+                physicsWorld.AddMoveableObject(
+                    position,
+                    sphere,
                     0.5f,
                     1f
                 )
@@ -124,6 +144,9 @@ namespace FpsGame.Common.Level
             createCrate(new Vector3(10, 0, 0), 0, 2);
             createCrate(new Vector3(11, 2, -1), 0, 2);
             createCrate(new Vector3(10, 4, 0), 0, 2);
+
+            createSphere(new Vector3(0, 100, 0), 1);
+            createSphere(new Vector3(20, 0, -20), 2);
         }
     }
 }
