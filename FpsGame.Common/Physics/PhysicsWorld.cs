@@ -114,11 +114,9 @@ namespace FpsGame.Common.Physics
         public BodyHandle AddMoveableObject<T>(
             Vector3 initialPosition,
             T shape,
-            float minimumSpeculativeMargin,
             float mass
         ) where T: unmanaged, IShape, IConvexShape
         {
-            var shapeIndex = characters.Simulation.Shapes.Add(shape);
             var bodyHandle = characters.Simulation.Bodies.Add(
                 BodyDescription.CreateConvexDynamic(
                     initialPosition,

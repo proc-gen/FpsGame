@@ -76,7 +76,6 @@ namespace FpsGame.Common.Level
                 physicsWorld.AddMoveableObject(
                     position,
                     box,
-                    0.5f,
                     1f
                 )
             );
@@ -94,7 +93,6 @@ namespace FpsGame.Common.Level
                 physicsWorld.AddMoveableObject(
                     position,
                     sphere,
-                    0.5f,
                     1f
                 )
             );
