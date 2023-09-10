@@ -38,20 +38,23 @@ namespace FpsGame.Server.Systems
             var query2 = queryDescriptions[QueryDescriptions.DynamicPhysicsBodies];
             world.Query(in query2, (ref Position position, ref Rotation rotation, ref BodyHandle body) =>
             {
-                var pose = physicsWorld.Simulation.Bodies[body].Pose;
+                if (physicsWorld.Simulation.Bodies[body].Awake)
+                {
+                    var pose = physicsWorld.Simulation.Bodies[body].MotionState.Pose;
 
-                position.X = pose.Position.X;
-                position.Y = pose.Position.Y;
-                position.Z = pose.Position.Z;
+                    position.X = pose.Position.X;
+                    position.Y = pose.Position.Y;
+                    position.Z = pose.Position.Z;
 
-                var q = pose.Orientation;
+                    var q = pose.Orientation;
 
-                rotation.X = MathF.Atan2(2.0f * (q.Y * q.Z + q.W * q.X), q.W * q.W - q.W * q.W - q.W * q.W + q.W * q.W);
-                rotation.Z = MathF.Asin(-2.0f * (q.W * q.W - q.W * q.W));
-                rotation.Y = MathF.Atan2(2.0f * (q.W * q.W + q.W * q.W), q.W * q.W + q.W * q.W - q.W * q.W + q.W * q.W - q.W * q.W + q.W * q.W);
+                    rotation.X = MathF.Atan2(2.0f * (q.Y * q.Z + q.W * q.X), q.W * q.W - q.X * q.X - q.Y * q.Y + q.Z * q.Z);
+                    rotation.Y = MathF.Asin(-2.0f * (q.X * q.Z - q.W * q.Y));
+                    rotation.Z = MathF.Atan2(2.0f * (q.X * q.Y + q.W * q.Z), q.W * q.W + q.X * q.X - q.Y * q.Y - q.Z * q.Z);
 
-                position.ComponentState = SerializableObjectState.Update;
-                rotation.ComponentState = SerializableObjectState.Update;
+                    position.ComponentState = SerializableObjectState.Update;
+                    rotation.ComponentState = SerializableObjectState.Update;
+                }
             });
         }
     }
