@@ -49,10 +49,8 @@ namespace FpsGame.Screens
         private Vector2 lastMousePosition;
         private bool firstMove = true;
 
-        float mouseSensitivity = 0.2f;
-        float controllerSensitivity = 0.5f;
-
         private GameSettings gameSettings;
+        private PlayerSettings playerSettings;
         private EntityReference Player = EntityReference.Null;
         Dictionary<string, IMessageProcessor> MessageProcessors = new Dictionary<string, IMessageProcessor>();
 
@@ -76,10 +74,11 @@ namespace FpsGame.Screens
             : base(game, screenManager)
         {
             this.gameSettings = gameSettings;
+            this.playerSettings = playerSettings;
             
             loadAssets();
             initECS();
-            initClientServer(playerSettings);           
+            initClientServer();           
             initUIComponents();
             initMessageProcessors();
         }
@@ -113,15 +112,15 @@ namespace FpsGame.Screens
             };
         }
 
-        private void initClientServer(PlayerSettings playerSettings)
+        private void initClientServer()
         {
             if (gameSettings.GameMode != GameMode.MultiplayerJoin)
             {
                 server = new Server.Server(token.Token, gameSettings);
             }
 
-            playerSettings.MouseSensitivity = mouseSensitivity;
-            playerSettings.ControllerSensitivity = controllerSensitivity;
+            playerSettings.MouseSensitivity = 0.5f;
+            playerSettings.ControllerSensitivity = 5f;
             client = new Client(AddDataToProcess, gameSettings, playerSettings);
             tasks.Add(Task.Run(() => client.Join(token.Token), token.Token));
         }
@@ -189,6 +188,7 @@ namespace FpsGame.Screens
             processInputDataLocal(kState, mState, gState);
             processServerData();
             processInputDataToSend(kState, mState, gState);
+            processPlayerSettingsChanged(kState, gState);
             updateHudData();
 
             server?.Update(gameTime);
@@ -238,10 +238,10 @@ namespace FpsGame.Screens
 
                 ClientInput clientInput = new ClientInput()
                 {
-                    Forward = keys.Contains(Keys.Up) || keys.Contains(Keys.W) || gState.DPad.Up == ButtonState.Pressed,
-                    Backward = keys.Contains(Keys.Down) || keys.Contains(Keys.S) || gState.DPad.Down == ButtonState.Pressed,
-                    Left = keys.Contains(Keys.Left) || keys.Contains(Keys.A) || gState.DPad.Left == ButtonState.Pressed,
-                    Right = keys.Contains(Keys.Right) || keys.Contains(Keys.D) || gState.DPad.Right == ButtonState.Pressed,
+                    Forward = keys.Contains(Keys.W),
+                    Backward = keys.Contains(Keys.S),
+                    Left = keys.Contains(Keys.A),
+                    Right = keys.Contains(Keys.D),
                     LeftStick = gState.ThumbSticks.Left,
                     RightStick = gState.ThumbSticks.Right,
                     Jump = keys.Contains(Keys.Space) || gState.Buttons.A == ButtonState.Pressed,
@@ -274,6 +274,40 @@ namespace FpsGame.Screens
                     clientInput.Jump)
                 {
                     client.SendInputData(clientInput);
+                }
+            }
+        }
+
+        private void processPlayerSettingsChanged(KeyboardState kState, GamePadState gState)
+        {
+            if(Game.IsActive)
+            {
+                bool settingsChanged = false;
+                if (kState.IsKeyDown(Keys.Left))
+                {
+                    playerSettings.MouseSensitivity = MathF.Max(0.01f, playerSettings.MouseSensitivity - 0.01f);
+                    settingsChanged = true;
+                }
+                if(kState.IsKeyDown(Keys.Right))
+                {
+                    playerSettings.MouseSensitivity = MathF.Min(1.0f, playerSettings.MouseSensitivity + 0.01f);
+                    settingsChanged = true;
+                }
+
+                if (gState.DPad.Left == ButtonState.Pressed)
+                {
+                    playerSettings.ControllerSensitivity = MathF.Max(0.1f, playerSettings.ControllerSensitivity - 0.1f);
+                    settingsChanged = true;
+                }
+                if (gState.DPad.Right == ButtonState.Pressed)
+                {
+                    playerSettings.ControllerSensitivity = MathF.Min(10.0f, playerSettings.ControllerSensitivity + 0.1f);
+                    settingsChanged = true;
+                }
+
+                if (settingsChanged)
+                {
+                    client.SendInputData(playerSettings);
                 }
             }
         }
