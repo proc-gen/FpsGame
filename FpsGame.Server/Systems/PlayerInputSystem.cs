@@ -18,9 +18,6 @@ namespace FpsGame.Server.Systems
     {
         protected PhysicsWorld physicsWorld;
 
-        float sensitivity = 0.2f;
-        float controllerSensitivity = 0.5f;
-
         public PlayerInputSystem(World world, Dictionary<QueryDescriptions, QueryDescription> queryDescriptions, PhysicsWorld physicsWorld) 
             : base(world, queryDescriptions)
         {
@@ -30,7 +27,7 @@ namespace FpsGame.Server.Systems
         public void Update(GameTime gameTime)
         {
             var query = queryDescriptions[QueryDescriptions.PlayerInput];
-            world.Query(in query, (ref Camera camera, ref ClientInput clientInput, ref CharacterInput body) =>
+            world.Query(in query, (ref Player player, ref Camera camera, ref ClientInput clientInput, ref CharacterInput body) =>
             {
                 camera.ComponentState = SerializableObjectState.Update;
 
@@ -38,14 +35,14 @@ namespace FpsGame.Server.Systems
 
                 if(clientInput.MouseDelta != Vector2.Zero)
                 {
-                    camera.YawAsDegrees += clientInput.MouseDelta.X * sensitivity;
-                    camera.PitchAsDegrees += -1f * clientInput.MouseDelta.Y * sensitivity;
+                    camera.YawAsDegrees += clientInput.MouseDelta.X * player.MouseSensitivity;
+                    camera.PitchAsDegrees += -1f * clientInput.MouseDelta.Y * player.MouseSensitivity;
                 }
 
                 if (clientInput.RightStick != Vector2.Zero)
                 {
-                    camera.YawAsDegrees += clientInput.RightStick.X * controllerSensitivity;
-                    camera.PitchAsDegrees += clientInput.RightStick.Y * controllerSensitivity;
+                    camera.YawAsDegrees += clientInput.RightStick.X * player.ControllerSensitivity;
+                    camera.PitchAsDegrees += clientInput.RightStick.Y * player.ControllerSensitivity;
                 }
                 
                 clientInput.Forward = clientInput.Backward = clientInput.Left = clientInput.Right = false;
@@ -115,7 +112,7 @@ namespace FpsGame.Server.Systems
                 newTargetVelocity != character.TargetVelocity ||
                 (newTargetVelocity != Vector2.Zero && character.ViewDirection != viewDirection)))
             {
-                physicsWorld.characters.Simulation.Awakener.AwakenBody(character.BodyHandle);
+                physicsWorld.Simulation.Awakener.AwakenBody(character.BodyHandle);
             }
             character.TargetVelocity = new System.Numerics.Vector2(newTargetVelocity.X, newTargetVelocity.Y);
             character.ViewDirection = new System.Numerics.Vector3(viewDirection.X, viewDirection.Y, viewDirection.Z);

@@ -25,6 +25,7 @@ using Newtonsoft.Json.Linq;
 using FpsGame.UiComponents;
 using FpsGame.Common.Utils;
 using FpsGame.MessageProcessors;
+using Myra.Graphics2D.Brushes;
 
 namespace FpsGame.Screens
 {
@@ -49,6 +50,7 @@ namespace FpsGame.Screens
         private bool firstMove = true;
 
         private GameSettings gameSettings;
+        private PlayerSettings playerSettings;
         private EntityReference Player = EntityReference.Null;
         Dictionary<string, IMessageProcessor> MessageProcessors = new Dictionary<string, IMessageProcessor>();
 
@@ -72,10 +74,11 @@ namespace FpsGame.Screens
             : base(game, screenManager)
         {
             this.gameSettings = gameSettings;
+            this.playerSettings = playerSettings;
             
             loadAssets();
             initECS();
-            initClientServer(playerSettings);           
+            initClientServer();           
             initUIComponents();
             initMessageProcessors();
         }
@@ -87,6 +90,8 @@ namespace FpsGame.Screens
             Models.Add("cube", importer.LoadModel("Content/cube.fbx"));
             Models.Add("sphere", importer.LoadModel("Content/sphere.fbx"));
             Models.Add("capsule", importer.LoadModel("Content/capsule.fbx"));
+            Models.Add("floor-tile", importer.LoadModel("Content/floor-tile.fbx"));
+            Models.Add("metal-wall", importer.LoadModel("Content/metal-wall.fbx"));
         }
 
         private void initECS()
@@ -97,7 +102,7 @@ namespace FpsGame.Screens
             {
                 { QueryDescriptions.RenderModel, new QueryDescription().WithAll<RenderModel, Position, Rotation, Scale>() },
                 { QueryDescriptions.PlayerInput, new QueryDescription().WithAll<Player, Camera>() },
-                { QueryDescriptions.RenderPlayer, new QueryDescription().WithAll<Player, RenderModel, Camera>() }
+                { QueryDescriptions.RenderPlayer, new QueryDescription().WithAll<Player, RenderModel, Camera, Position>() }
             };
 
             renderSystems = new List<IRenderSystem>()
@@ -107,13 +112,15 @@ namespace FpsGame.Screens
             };
         }
 
-        private void initClientServer(PlayerSettings playerSettings)
+        private void initClientServer()
         {
             if (gameSettings.GameMode != GameMode.MultiplayerJoin)
             {
                 server = new Server.Server(token.Token, gameSettings);
             }
 
+            playerSettings.MouseSensitivity = 0.5f;
+            playerSettings.ControllerSensitivity = 5f;
             client = new Client(AddDataToProcess, gameSettings, playerSettings);
             tasks.Add(Task.Run(() => client.Join(token.Token), token.Token));
         }
@@ -141,6 +148,8 @@ namespace FpsGame.Screens
             gameInfoPanel.AddWidget(gameNameLabel);
             gameInfoPanel.AddWidget(hostLocationLabel);
             gameInfoPanel.AddWidget(playerPositionLabel);
+            gameInfoPanel.UiWidget.Background = new SolidBrush(new Color(.1f, .1f, .1f));
+            gameInfoPanel.UiWidget.Opacity = .75f;
 
             chatBox = new ChatBox();
             messagesPanel = new VerticalPanel("messages-panel", new Style()
@@ -149,6 +158,9 @@ namespace FpsGame.Screens
                 VerticalAlignment = VerticalAlignment.Bottom,
             });
             messagesPanel.AddWidget(chatBox.MessagesLabel);
+            messagesPanel.UiWidget.Background = new SolidBrush(new Color(.1f, .1f, .1f));
+            messagesPanel.UiWidget.Opacity = .75f;
+
             playersTable = new PlayersTable();
 
             hudPanel = new Panel("hud-panel");
@@ -176,6 +188,7 @@ namespace FpsGame.Screens
             processInputDataLocal(kState, mState, gState);
             processServerData();
             processInputDataToSend(kState, mState, gState);
+            processPlayerSettingsChanged(kState, gState);
             updateHudData();
 
             server?.Update(gameTime);
@@ -204,11 +217,14 @@ namespace FpsGame.Screens
                 do
                 {
                     var data = ServerData.Dequeue();
-                    MessageProcessors[data["Type"].ToString()].ProcessMessage(data);
-
-                    if(Player == EntityReference.Null && data["Type"].ToString() == "SerializableWorld")
+                    if (data != null)
                     {
-                        Player = ((SerializableWorldProcessor)MessageProcessors["SerializableWorld"]).Player;
+                        MessageProcessors[data["Type"].ToString()].ProcessMessage(data);
+
+                        if (Player == EntityReference.Null && data["Type"].ToString() == "SerializableWorld")
+                        {
+                            Player = ((SerializableWorldProcessor)MessageProcessors["SerializableWorld"]).Player;
+                        }
                     }
                 } while(ServerData.Count > 0);
             }
@@ -222,10 +238,10 @@ namespace FpsGame.Screens
 
                 ClientInput clientInput = new ClientInput()
                 {
-                    Forward = keys.Contains(Keys.Up) || keys.Contains(Keys.W) || gState.DPad.Up == ButtonState.Pressed,
-                    Backward = keys.Contains(Keys.Down) || keys.Contains(Keys.S) || gState.DPad.Down == ButtonState.Pressed,
-                    Left = keys.Contains(Keys.Left) || keys.Contains(Keys.A) || gState.DPad.Left == ButtonState.Pressed,
-                    Right = keys.Contains(Keys.Right) || keys.Contains(Keys.D) || gState.DPad.Right == ButtonState.Pressed,
+                    Forward = keys.Contains(Keys.W),
+                    Backward = keys.Contains(Keys.S),
+                    Left = keys.Contains(Keys.A),
+                    Right = keys.Contains(Keys.D),
                     LeftStick = gState.ThumbSticks.Left,
                     RightStick = gState.ThumbSticks.Right,
                     Jump = keys.Contains(Keys.Space) || gState.Buttons.A == ButtonState.Pressed,
@@ -258,6 +274,40 @@ namespace FpsGame.Screens
                     clientInput.Jump)
                 {
                     client.SendInputData(clientInput);
+                }
+            }
+        }
+
+        private void processPlayerSettingsChanged(KeyboardState kState, GamePadState gState)
+        {
+            if(Game.IsActive)
+            {
+                bool settingsChanged = false;
+                if (kState.IsKeyDown(Keys.Left))
+                {
+                    playerSettings.MouseSensitivity = MathF.Max(0.01f, playerSettings.MouseSensitivity - 0.01f);
+                    settingsChanged = true;
+                }
+                if(kState.IsKeyDown(Keys.Right))
+                {
+                    playerSettings.MouseSensitivity = MathF.Min(1.0f, playerSettings.MouseSensitivity + 0.01f);
+                    settingsChanged = true;
+                }
+
+                if (gState.DPad.Left == ButtonState.Pressed)
+                {
+                    playerSettings.ControllerSensitivity = MathF.Max(0.1f, playerSettings.ControllerSensitivity - 0.1f);
+                    settingsChanged = true;
+                }
+                if (gState.DPad.Right == ButtonState.Pressed)
+                {
+                    playerSettings.ControllerSensitivity = MathF.Min(10.0f, playerSettings.ControllerSensitivity + 0.1f);
+                    settingsChanged = true;
+                }
+
+                if (settingsChanged)
+                {
+                    client.SendInputData(playerSettings);
                 }
             }
         }

@@ -68,7 +68,7 @@ namespace FpsGame.Common.Physics
         }
 
         public CharacterInput AddCharacter(
-            Vector3 initialPosition, 
+            Vector3 initialPosition,
             Capsule shape,
             float minimumSpeculativeMargin, 
             float mass, 
@@ -109,6 +109,24 @@ namespace FpsGame.Common.Physics
                 Speed = speed,
                 Shape = shape,
             };
+        }
+
+        public BodyHandle AddMoveableObject<T>(
+            Vector3 initialPosition,
+            T shape,
+            float mass
+        ) where T: unmanaged, IShape, IConvexShape
+        {
+            var bodyHandle = characters.Simulation.Bodies.Add(
+                BodyDescription.CreateConvexDynamic(
+                    initialPosition,
+                     mass,
+                     characters.Simulation.Shapes,
+                     shape
+                )
+            );
+
+            return bodyHandle;
         }
 
         public void RemoveCharacter(CharacterInput character)

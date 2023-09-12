@@ -24,13 +24,13 @@ namespace FpsGame.Systems
         public void Render(GameTime gameTime, Matrix view, Matrix projection)
         {
             var query = queryDescriptions[QueryDescriptions.RenderPlayer];
-            world.Query(in query, (ref Player player, ref RenderModel renderModel, ref Camera camera) => 
+            world.Query(in query, (ref Player player, ref RenderModel renderModel, ref Camera camera, ref Position position) => 
             {
-                DrawModel(view, projection, models[renderModel.Model], player, camera);
+                DrawModel(view, projection, models[renderModel.Model], player, camera, position);
             });
         }
 
-        private void DrawModel(Matrix view, Matrix projection, Model model, Player player, Camera camera)
+        private void DrawModel(Matrix view, Matrix projection, Model model, Player player, Camera camera, Position position)
         {
             foreach (var mesh in model.Meshes)
             {
@@ -39,7 +39,7 @@ namespace FpsGame.Systems
                     effect.EnableDefaultLighting();
                     effect.PreferPerPixelLighting = true;
                     effect.DiffuseColor = player.Color;
-                    effect.World = Matrix.CreateFromYawPitchRoll(camera.Yaw, 0f, 0f) * Matrix.CreateTranslation(camera.Position);
+                    effect.World = Matrix.CreateFromYawPitchRoll(camera.Yaw, 0f, 0f) * Matrix.CreateTranslation(position.X, position.Y, position.Z);
                     effect.View = view;
                     effect.Projection = projection;
                 }

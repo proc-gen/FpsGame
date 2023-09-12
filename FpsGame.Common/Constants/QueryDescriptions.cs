@@ -12,7 +12,8 @@ namespace FpsGame.Common.Constants
         RenderPlayer,
         ModelRotator,
         PlayerInput,
-        DynamicPhysicsBodies,
+        CharacterPhysicsBodies,
         StaticPhysicsBodies,
+        DynamicPhysicsBodies,
     }
 }

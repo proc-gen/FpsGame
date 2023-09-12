@@ -17,6 +17,8 @@ namespace FpsGame.Common.ClientData
         public string Type { get; set; }
         public string Name { get; set; }
         public Vector3 Color { get; set; }
+        public float MouseSensitivity { get; set; }
+        public float ControllerSensitivity { get; set; }
 
         public string MessageType()
         {

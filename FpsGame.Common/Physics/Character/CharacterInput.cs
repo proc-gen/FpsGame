@@ -12,6 +12,6 @@ namespace FpsGame.Common.Physics.Character
     {
         public BodyHandle Body {  get; set; }
         public float Speed { get; set; }
-        public Capsule Shape { get; set; }
+        public IConvexShape Shape { get; set; }
     }
 }

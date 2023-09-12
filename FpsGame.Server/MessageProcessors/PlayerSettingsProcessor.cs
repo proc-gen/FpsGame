@@ -31,6 +31,18 @@ namespace FpsGame.Server.MessageProcessors
         public void ProcessMessage(ClientData.ClientData message)
         {
             var playerSettings = message.Data.ToObject<PlayerSettings>();
+            if (message.EntityReference == EntityReference.Null)
+            {
+                processNewPlayer(message, playerSettings);
+            }
+            else
+            {
+                processExistingPlayer(message, playerSettings);
+            }
+        }
+
+        private void processNewPlayer(ClientData.ClientData message, PlayerSettings playerSettings)
+        {
             var position = new System.Numerics.Vector3(20 + numClients * 2, 0, 20);
 
             var entity = world.Create(
@@ -38,10 +50,13 @@ namespace FpsGame.Server.MessageProcessors
                 {
                     Id = numClients + 1,
                     Name = playerSettings.Name,
-                    Color = playerSettings.Color
+                    Color = playerSettings.Color,
+                    MouseSensitivity = playerSettings.MouseSensitivity,
+                    ControllerSensitivity = playerSettings.ControllerSensitivity,
                 },
-                new Camera() { Position = position },
-            new ClientInput(),
+                new Camera() { Position = position + Vector3.UnitY * 2.5f },
+                new Position() { X = position.X, Y = position.Y, Z = position.Z },
+                new ClientInput(),
                 new RenderModel() { Model = "capsule" },
                 physicsWorld.AddCharacter(position)
             );
@@ -52,8 +67,17 @@ namespace FpsGame.Server.MessageProcessors
                 Message = string.Format("{0} has connected", playerSettings.Name),
                 Time = DateTime.Now,
             });
-
             numClients++;
+        }
+
+        private void processExistingPlayer(ClientData.ClientData message, PlayerSettings playerSettings)
+        {
+            var player = message.EntityReference.Entity.Get<Player>();
+            player.Name = playerSettings.Name;
+            player.Color = playerSettings.Color;
+            player.MouseSensitivity = playerSettings.MouseSensitivity;
+            player.ControllerSensitivity = playerSettings.ControllerSensitivity;
+            message.EntityReference.Entity.Set(player);
         }
     }
 }
