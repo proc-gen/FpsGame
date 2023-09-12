@@ -100,7 +100,7 @@ namespace FpsGame.Screens
             {
                 { QueryDescriptions.RenderModel, new QueryDescription().WithAll<RenderModel, Position, Rotation, Scale>() },
                 { QueryDescriptions.PlayerInput, new QueryDescription().WithAll<Player, Camera>() },
-                { QueryDescriptions.RenderPlayer, new QueryDescription().WithAll<Player, RenderModel, Camera>() }
+                { QueryDescriptions.RenderPlayer, new QueryDescription().WithAll<Player, RenderModel, Camera, Position>() }
             };
 
             renderSystems = new List<IRenderSystem>()
