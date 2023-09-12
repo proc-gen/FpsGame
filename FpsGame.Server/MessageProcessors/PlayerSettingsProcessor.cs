@@ -40,8 +40,9 @@ namespace FpsGame.Server.MessageProcessors
                     Name = playerSettings.Name,
                     Color = playerSettings.Color
                 },
-                new Camera() { Position = position },
-            new ClientInput(),
+                new Camera() { Position = position + Vector3.UnitY * 2.5f },
+                new Position() { X = position.X, Y = position.Y, Z = position.Z },
+                new ClientInput(),
                 new RenderModel() { Model = "capsule" },
                 physicsWorld.AddCharacter(position)
             );

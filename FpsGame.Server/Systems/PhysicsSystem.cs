@@ -28,10 +28,16 @@ namespace FpsGame.Server.Systems
             physicsWorld.Step();
 
             var query = queryDescriptions[QueryDescriptions.CharacterPhysicsBodies];
-            world.Query(in query, (ref Camera camera, ref CharacterInput body) =>
+            world.Query(in query, (ref Camera camera, ref Position position, ref CharacterInput body) =>
             {
                 var newPosition = physicsWorld.Simulation.Bodies[body.Body].Pose.Position;
-                camera.Position = newPosition;
+
+                position.X = newPosition.X;
+                position.Y = newPosition.Y;
+                position.Z = newPosition.Z;
+                position.ComponentState = SerializableObjectState.Update;
+
+                camera.Position = newPosition + Vector3.UnitY * 2.5f;
                 camera.ComponentState = SerializableObjectState.Update;
             });
 
