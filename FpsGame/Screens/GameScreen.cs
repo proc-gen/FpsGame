@@ -49,6 +49,9 @@ namespace FpsGame.Screens
         private Vector2 lastMousePosition;
         private bool firstMove = true;
 
+        float mouseSensitivity = 0.2f;
+        float controllerSensitivity = 0.5f;
+
         private GameSettings gameSettings;
         private EntityReference Player = EntityReference.Null;
         Dictionary<string, IMessageProcessor> MessageProcessors = new Dictionary<string, IMessageProcessor>();
@@ -117,6 +120,8 @@ namespace FpsGame.Screens
                 server = new Server.Server(token.Token, gameSettings);
             }
 
+            playerSettings.MouseSensitivity = mouseSensitivity;
+            playerSettings.ControllerSensitivity = controllerSensitivity;
             client = new Client(AddDataToProcess, gameSettings, playerSettings);
             tasks.Add(Task.Run(() => client.Join(token.Token), token.Token));
         }

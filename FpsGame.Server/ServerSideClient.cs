@@ -29,7 +29,7 @@ namespace FpsGame.Server
         MessageSerializer messageSerializer;
 
         Func<ServerSideClient, JObject, bool> AddDataToProcess;
-        public EntityReference entityReference { get; private set; }
+        public EntityReference entityReference { get; private set; } = EntityReference.Null;
         public ServerSideClientStatus Status { get; set; }
 
         IPEndPoint remoteIpEndPoint;

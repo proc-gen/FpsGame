@@ -15,7 +15,8 @@ namespace FpsGame.Common.Components
         public uint Id { get; set; }
         public string Name { get; set; }
         public Vector3 Color { get; set; }
-
+        public float MouseSensitivity { get; set; }
+        public float ControllerSensitivity { get; set; }
         public Player()
         {
             ComponentState = SerializableObjectState.Add;
