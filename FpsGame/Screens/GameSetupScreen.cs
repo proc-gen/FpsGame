@@ -20,11 +20,11 @@ namespace FpsGame.Screens
         VerticalPanel panel; 
         Label titleLabel;
 
-        InputWrapper<Component<MyraTextBox>, MyraTextBox> gameNameWrapper;
-        InputWrapper<Component<MyraTextBox>, MyraTextBox> playerNameWrapper;
-        InputWrapper<Component<MyraTextBox>, MyraTextBox> ipAddressWrapper;
-        InputWrapper<Component<MyraCombo>, MyraCombo> ipAddressSelectionWrapper;
-        InputWrapper<Component<MyraTextBox>, MyraTextBox> ipAddressPortSelectionWrapper;
+        InputWrapper<TextBox, MyraTextBox> gameNameWrapper;
+        InputWrapper<TextBox, MyraTextBox> playerNameWrapper;
+        InputWrapper<TextBox, MyraTextBox> ipAddressWrapper;
+        InputWrapper<ComboBox, MyraCombo> ipAddressSelectionWrapper;
+        InputWrapper<TextBox, MyraTextBox> ipAddressPortSelectionWrapper;
 
         Grid buttonGrid;
         Button continueButton;
@@ -56,7 +56,7 @@ namespace FpsGame.Screens
             {
                 var gameNameLabel = new Label("game-name-label", "Game Name: ");
                 var gameNameTextBox = new TextBox("game-name");
-                gameNameWrapper = new InputWrapper<Component<MyraTextBox>, MyraTextBox>("game-name", gameNameLabel, gameNameTextBox);
+                gameNameWrapper = new InputWrapper<TextBox, MyraTextBox>("game-name", gameNameLabel, gameNameTextBox);
 
                 panel.AddWidget(gameNameWrapper.Grid);
             }
@@ -78,12 +78,12 @@ namespace FpsGame.Screens
                 var ipAddressSelectionLabel = new Label("ip-address-selection-label", "Hosting Address:");
                 var ipAddressSelection = new ComboBox("ip-address-selection", availableIpListItems);
                 ipAddressSelection.UiWidget.SelectedIndex = 0;
-                ipAddressSelectionWrapper = new InputWrapper<Component<MyraCombo>, MyraCombo>("ip-address-selection", ipAddressSelectionLabel, ipAddressSelection);
+                ipAddressSelectionWrapper = new InputWrapper<ComboBox, MyraCombo>("ip-address-selection", ipAddressSelectionLabel, ipAddressSelection);
                 panel.AddWidget(ipAddressSelectionWrapper.Grid);
 
                 var ipAddressPortSelectionLabel = new Label("ip-address-port-selection-label", "Hosting Port:");
                 var ipAddressPort = new TextBox("ip-address-port", "12345");
-                ipAddressPortSelectionWrapper = new InputWrapper<Component<MyraTextBox>, MyraTextBox>("ip-address-port", ipAddressPortSelectionLabel, ipAddressPort);
+                ipAddressPortSelectionWrapper = new InputWrapper<TextBox, MyraTextBox>("ip-address-port", ipAddressPortSelectionLabel, ipAddressPort);
                 panel.AddWidget(ipAddressPortSelectionWrapper.Grid);
             }
         }
@@ -94,7 +94,7 @@ namespace FpsGame.Screens
             {
                 var ipAddressLabel = new Label("ip-address-label", "Host Address: ");
                 var ipAddressTextBox = new TextBox("ip-address");
-                ipAddressWrapper = new InputWrapper<Component<MyraTextBox>, MyraTextBox>("ip-address", ipAddressLabel, ipAddressTextBox);
+                ipAddressWrapper = new InputWrapper<TextBox, MyraTextBox>("ip-address", ipAddressLabel, ipAddressTextBox);
                 panel.AddWidget(ipAddressWrapper.Grid);
             }
         }
@@ -105,7 +105,7 @@ namespace FpsGame.Screens
             {
                 var playerNameLabel = new Label("player-name-label", "Player Name: ");
                 var playerNameTextBox = new TextBox("player-name");
-                playerNameWrapper = new InputWrapper<Component<MyraTextBox>, MyraTextBox>("player-name", playerNameLabel, playerNameTextBox);
+                playerNameWrapper = new InputWrapper<TextBox, MyraTextBox>("player-name", playerNameLabel, playerNameTextBox);
 
                 panel.AddWidget(playerNameWrapper.Grid);
             }
@@ -134,16 +134,16 @@ namespace FpsGame.Screens
         {
             continueButton.UiWidget.Enabled = 
                 (gameSettings.GameMode == GameMode.MultiplayerJoin 
-                    || !string.IsNullOrWhiteSpace(gameNameWrapper.InputComponent.UiWidget.Text))
+                    || !string.IsNullOrWhiteSpace(gameNameWrapper.InputComponent.Text))
                 && (gameSettings.GameMode == GameMode.SinglePlayer || gameSettings.GameMode == GameMode.MultiplayerJoin
                     || (IPAddress.TryParse(ipAddressSelectionWrapper.InputComponent.UiWidget.SelectedItem.Text, out IPAddress _dummy) 
-                        && int.TryParse(ipAddressPortSelectionWrapper.InputComponent.UiWidget.Text, out int _dummyPort)))
+                        && int.TryParse(ipAddressPortSelectionWrapper.InputComponent.Text, out int _dummyPort)))
                 && (gameSettings.GameMode != GameMode.MultiplayerJoin
-                    || (ipAddressWrapper.InputComponent.UiWidget.Text.Contains(':')
-                        && IPAddress.TryParse(ipAddressWrapper.InputComponent.UiWidget.Text.Split(':')[0], out IPAddress _dummy2)
-                        && int.TryParse(ipAddressWrapper.InputComponent.UiWidget.Text.Split(':')[1], out int _dummyPort2)))
+                    || (ipAddressWrapper.InputComponent.Text.Contains(':')
+                        && IPAddress.TryParse(ipAddressWrapper.InputComponent.Text.Split(':')[0], out IPAddress _dummy2)
+                        && int.TryParse(ipAddressWrapper.InputComponent.Text.Split(':')[1], out int _dummyPort2)))
                 && (gameSettings.GameMode == GameMode.StandaloneServer
-                    || !string.IsNullOrWhiteSpace(playerNameWrapper.InputComponent.UiWidget.Text));
+                    || !string.IsNullOrWhiteSpace(playerNameWrapper.InputComponent.Text));
         }
 
         protected void ContinueButtonClick(object e, EventArgs eventArgs)
@@ -152,7 +152,7 @@ namespace FpsGame.Screens
             {
                 if(gameSettings.GameMode == GameMode.SinglePlayer)
                 {
-                    gameSettings.GameName = gameNameWrapper.InputComponent.UiWidget.Text;
+                    gameSettings.GameName = gameNameWrapper.InputComponent.Text;
                     gameSettings.GameIPAddress = IPAddress.Loopback;
                     gameSettings.GamePort = 12345;
                 }
@@ -160,11 +160,11 @@ namespace FpsGame.Screens
                 {
                     gameSettings.GameName = gameNameWrapper.InputComponent.UiWidget.Text;
                     gameSettings.GameIPAddress = IPAddress.Parse(ipAddressSelectionWrapper.InputComponent.UiWidget.SelectedItem.Text);
-                    gameSettings.GamePort = int.Parse(ipAddressPortSelectionWrapper.InputComponent.UiWidget.Text);
+                    gameSettings.GamePort = int.Parse(ipAddressPortSelectionWrapper.InputComponent.Text);
                 }
                 else
                 {
-                    string[] ipAddress = ipAddressWrapper.InputComponent.UiWidget.Text.Split(':');
+                    string[] ipAddress = ipAddressWrapper.InputComponent.Text.Split(':');
                     gameSettings.GameIPAddress = IPAddress.Parse(ipAddress[0]);
                     gameSettings.GamePort = int.Parse(ipAddress[1]);
                 }
@@ -174,7 +174,7 @@ namespace FpsGame.Screens
                     Random random = new Random();
                     PlayerSettings playerSettings = new PlayerSettings()
                     {
-                        Name = playerNameWrapper.InputComponent.UiWidget.Text,
+                        Name = playerNameWrapper.InputComponent.Text,
                         Color = new Vector3((float)random.NextDouble(), (float)random.NextDouble(), (float)random.NextDouble()),
                     };
 
