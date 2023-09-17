@@ -10,6 +10,8 @@ using System.Net;
 using System.Linq;
 using MyraTextBox = Myra.Graphics2D.UI.TextBox;
 using MyraCombo = Myra.Graphics2D.UI.ComboBox;
+using FpsGame.Ui.Styles;
+using FontStashSharp;
 
 namespace FpsGame.Screens
 {
@@ -36,8 +38,12 @@ namespace FpsGame.Screens
             this.gameSettings = gameSettings;
 
             panel = new VerticalPanel("panel");
-            titleLabel = new Label("title", "Game Setup");
-            titleLabel.UiWidget.HorizontalAlignment = Myra.Graphics2D.UI.HorizontalAlignment.Center;
+            titleLabel = new Label("title", "Game Setup", new Style()
+            {
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(16),
+                FontScale = new Vector2(1.5f, 1.5f)
+            });
             panel.AddWidget(titleLabel);
             
             createGameNameInput();

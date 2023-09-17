@@ -1,4 +1,6 @@
-﻿using System;
+﻿using FontStashSharp;
+using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,5 +16,6 @@ namespace FpsGame.Ui.Styles
         public Thickness? Margin;
         public HorizontalAlignment? HorizontalAlignment;
         public VerticalAlignment? VerticalAlignment;
+        public Vector2? FontScale;
     }
 }
