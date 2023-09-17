@@ -16,7 +16,7 @@ namespace FpsGame.Ui.Components
             Margin = new Styles.Thickness(4),
         };
 
-        public string Text { get { return UiWidget.Text; } }
+        public string Text { get { return UiWidget.Text; } set { UiWidget.Text = value; } }
 
         public TextBox(string id) 
             : base(id)
