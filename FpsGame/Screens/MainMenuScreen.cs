@@ -33,11 +33,11 @@ namespace FpsGame.Screens
             : base(game, screenManager)
         {
             panel = new VerticalPanel("panel");
-            titleLabel = new Label("game-title", "Proc-Gen's Multiplayer FPS Sandbox", new Style()
+            titleLabel = new Label("game-title", "Bamfoodle's Multiplayer FPS Sandbox", new Style()
             {
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Margin = new Thickness(32),
-                FontScale = new Vector2(2.5f, 2.5f)
+                FontScale = new Vector2(2.25f, 2.25f)
             });
 
             newGameButton = new Button("new-game", "New Singleplayer Game", NewGameButtonClick, ButtonStyle);

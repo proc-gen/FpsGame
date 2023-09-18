@@ -139,7 +139,7 @@ namespace FpsGame.Screens
         public override void Update(GameTime gameTime)
         {
             continueButton.UiWidget.Enabled = 
-                (gameSettings.GameMode == GameMode.MultiplayerJoin 
+                (gameSettings.GameMode == GameMode.SinglePlayer || gameSettings.GameMode == GameMode.MultiplayerJoin 
                     || !string.IsNullOrWhiteSpace(gameNameWrapper.InputComponent.Text))
                 && (gameSettings.GameMode == GameMode.SinglePlayer || gameSettings.GameMode == GameMode.MultiplayerJoin
                     || (IPAddress.TryParse(ipAddressSelectionWrapper.InputComponent.UiWidget.SelectedItem.Text, out IPAddress _dummy) 
@@ -158,7 +158,7 @@ namespace FpsGame.Screens
             {
                 if(gameSettings.GameMode == GameMode.SinglePlayer)
                 {
-                    gameSettings.GameName = gameNameWrapper.InputComponent.Text;
+                    gameSettings.GameName = string.Empty;
                     gameSettings.GameIPAddress = IPAddress.Loopback;
                     gameSettings.GamePort = 12345;
                 }

@@ -23,6 +23,9 @@ namespace FpsGame
 
         protected override void Initialize()
         {
+            graphics.PreferredBackBufferWidth = 1920;
+            graphics.PreferredBackBufferHeight = 1080;
+            //graphics.ToggleFullScreen();
             screenManager = new ScreenManager(this);
             screenManager.AddScreen(ScreenNames.MainMenu, new MainMenuScreen(this, screenManager));
             screenManager.SetActiveScreen(ScreenNames.MainMenu);
