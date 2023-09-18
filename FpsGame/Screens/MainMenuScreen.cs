@@ -22,6 +22,13 @@ namespace FpsGame.Screens
         Button standaloneServerButton;
         Button exitButton;
 
+        static Style ButtonStyle = new Style()
+        {
+            HorizontalAlignment = HorizontalAlignment.Center,
+            Margin = new Thickness(4),
+            Padding = new Thickness(4),
+        };
+
         public MainMenuScreen(Game game, ScreenManager screenManager)
             : base(game, screenManager)
         {
@@ -32,36 +39,12 @@ namespace FpsGame.Screens
                 Margin = new Thickness(32),
                 FontScale = new Vector2(2.5f, 2.5f)
             });
-            newGameButton = new Button("new-game", "New Singleplayer Game", NewGameButtonClick, new Style()
-            {
-                HorizontalAlignment = HorizontalAlignment.Center,
-                Margin = new Thickness(4),
-                Padding = new Thickness(4),
-            });
-            multiPlayerHostButton = new Button("multiplayer-host", "Host Multiplayer Game", MultiplayerHostButtonClick, new Style()
-            {
-                HorizontalAlignment = HorizontalAlignment.Center,
-                Margin = new Thickness(4),
-                Padding = new Thickness(4),
-            });
-            multiplayerJoinButton = new Button("multiplayer-join", "Join Multiplayer Game", MultiplayerJoinButtonClick, new Style()
-            {
-                HorizontalAlignment = HorizontalAlignment.Center,
-                Margin = new Thickness(4),
-                Padding = new Thickness(4),
-            });
-            standaloneServerButton = new Button("standalone-server", "Standalone Server", StandaloneServerButtonClick, new Style()
-            {
-                HorizontalAlignment = HorizontalAlignment.Center,
-                Margin = new Thickness(4),
-                Padding = new Thickness(4),
-            });
-            exitButton = new Button("exit", "Exit", ExitButtonClick, new Style()
-            {
-                HorizontalAlignment = HorizontalAlignment.Center,
-                Margin = new Thickness(4),
-                Padding = new Thickness(4),
-            });
+
+            newGameButton = new Button("new-game", "New Singleplayer Game", NewGameButtonClick, ButtonStyle);
+            multiPlayerHostButton = new Button("multiplayer-host", "Host Multiplayer Game", MultiplayerHostButtonClick, ButtonStyle);
+            multiplayerJoinButton = new Button("multiplayer-join", "Join Multiplayer Game", MultiplayerJoinButtonClick, ButtonStyle);
+            standaloneServerButton = new Button("standalone-server", "Standalone Server", StandaloneServerButtonClick, ButtonStyle);
+            exitButton = new Button("exit", "Exit", ExitButtonClick, ButtonStyle);
             
             panel.AddWidget(titleLabel);
             panel.AddWidget(newGameButton);
