@@ -9,7 +9,7 @@ namespace FpsGame
 {
     public class Game1 : Game
     {
-        private GraphicsDeviceManager graphics;
+        public GraphicsDeviceManager graphics;
         private SpriteBatch spriteBatch;
         private ScreenManager screenManager;
         private DepthStencilState depthStencil;
