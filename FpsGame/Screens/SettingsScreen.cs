@@ -17,7 +17,12 @@ namespace FpsGame.Screens
     {
         VerticalPanel panel;
         Label titleLabel;
-        InputWrapper<ComboBox, MyraComboBox> screenResolutions;
+        InputWrapper<ComboBox, MyraComboBox> screenResolutionsWrapper;
+        DisplayModeCollection resolutions;
+        DisplayMode currentResolution;
+
+        Grid buttonGrid;
+        Button applyButton;
         Button backButton;
 
         static Style ButtonStyle = new Style()
@@ -39,8 +44,16 @@ namespace FpsGame.Screens
             });
             panel.AddWidget(titleLabel);
 
-            var resolutions = game.GraphicsDevice.Adapter.SupportedDisplayModes;
-            var currentResolution = game.GraphicsDevice.Adapter.CurrentDisplayMode;
+            createResolutionSelection();
+            createButtons();            
+
+            RootWidget = panel.UiWidget;
+        }
+
+        private void createResolutionSelection()
+        {
+            resolutions = Game.GraphicsDevice.Adapter.SupportedDisplayModes;
+            currentResolution = Game.GraphicsDevice.Adapter.CurrentDisplayMode;
 
             List<ListItem> availableResolutions = new List<ListItem>();
             foreach (var resolution in resolutions.OrderByDescending(a => a.Width).ThenByDescending(a => a.Height))
@@ -54,13 +67,21 @@ namespace FpsGame.Screens
             var resolutionLabel = new Label("resolution-label", "Resolution");
             var resolutionSelection = new ComboBox("resolution-selection", availableResolutions);
             resolutionSelection.UiWidget.SelectedIndex = availableResolutions.IndexOf(availableResolutions.Where(a => a.MyraListItem.Text == formatResolution(currentResolution)).First());
-            screenResolutions = new InputWrapper<ComboBox, MyraComboBox>("resolution", resolutionLabel, resolutionSelection);
-            panel.AddWidget(screenResolutions.Grid);
+            screenResolutionsWrapper = new InputWrapper<ComboBox, MyraComboBox>("resolution", resolutionLabel, resolutionSelection);
+            panel.AddWidget(screenResolutionsWrapper.Grid);
+        }
 
+        private void createButtons()
+        {
+            applyButton = new Button("apply", "Apply", ApplyButtonClick);
+            applyButton.UiWidget.GridColumn = 0;
+            applyButton.UiWidget.Enabled = false;
             backButton = new Button("back", "Back to Main Menu", BackButtonClick, ButtonStyle);
-            panel.AddWidget(backButton);
-
-            RootWidget = panel.UiWidget;
+            backButton.UiWidget.GridColumn = 1;
+            buttonGrid = new Grid("button-grid");
+            buttonGrid.AddWidget(applyButton);
+            buttonGrid.AddWidget(backButton);
+            panel.AddWidget(buttonGrid);
         }
 
         public override void Render(GameTime gameTime)
@@ -70,7 +91,29 @@ namespace FpsGame.Screens
 
         public override void Update(GameTime gameTime)
         {
-            
+            var selectedResolution = resolutions.Where(a => formatResolution(a) == screenResolutionsWrapper.InputComponent.UiWidget.SelectedItem.Text).FirstOrDefault();
+
+            if (selectedResolution != currentResolution)
+            {
+                applyButton.UiWidget.Enabled = true;
+            }
+        }
+
+        protected void ApplyButtonClick(object e, EventArgs eventArgs)
+        {
+            if(applyButton.UiWidget.Enabled)
+            {
+                var selectedResolution = resolutions.Where(a => formatResolution(a) == screenResolutionsWrapper.InputComponent.UiWidget.SelectedItem.Text).FirstOrDefault();
+                if(selectedResolution != null)
+                {
+                    ((Game1)Game).graphics.PreferredBackBufferWidth = selectedResolution.Width;
+                    ((Game1)Game).graphics.PreferredBackBufferHeight = selectedResolution.Height;
+                    ((Game1)Game).graphics.ApplyChanges();
+                    currentResolution = selectedResolution;
+                }
+
+                applyButton.UiWidget.Enabled = false;
+            }
         }
 
         protected void BackButtonClick(object e, EventArgs eventArgs)
