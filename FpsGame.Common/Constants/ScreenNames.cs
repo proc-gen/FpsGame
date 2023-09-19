@@ -12,5 +12,6 @@ namespace FpsGame.Common.Constants
         public const string Game = "game";
         public const string GameSetup = "game-setup";
         public const string Server = "server";
+        public const string Settings = "settings";
     }
 }

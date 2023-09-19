@@ -20,6 +20,7 @@ namespace FpsGame.Screens
         Button multiPlayerHostButton;
         Button multiplayerJoinButton;
         Button standaloneServerButton;
+        Button settingsButton;
         Button exitButton;
 
         static Style ButtonStyle = new Style()
@@ -44,6 +45,7 @@ namespace FpsGame.Screens
             multiPlayerHostButton = new Button("multiplayer-host", "Host Multiplayer Game", MultiplayerHostButtonClick, ButtonStyle);
             multiplayerJoinButton = new Button("multiplayer-join", "Join Multiplayer Game", MultiplayerJoinButtonClick, ButtonStyle);
             standaloneServerButton = new Button("standalone-server", "Standalone Server", StandaloneServerButtonClick, ButtonStyle);
+            settingsButton = new Button("settings", "Settings", SettingsButtonClick, ButtonStyle);
             exitButton = new Button("exit", "Exit", ExitButtonClick, ButtonStyle);
             
             panel.AddWidget(titleLabel);
@@ -51,6 +53,7 @@ namespace FpsGame.Screens
             panel.AddWidget(multiPlayerHostButton);
             panel.AddWidget(multiplayerJoinButton);
             panel.AddWidget(standaloneServerButton);
+            panel.AddWidget(settingsButton);
             panel.AddWidget(exitButton);
 
             RootWidget = panel.UiWidget;
@@ -94,6 +97,12 @@ namespace FpsGame.Screens
         {
             ScreenManager.AddScreen(ScreenNames.GameSetup, new GameSetupScreen(Game, ScreenManager, new GameSettings() { GameMode = GameMode.StandaloneServer }));
             ScreenManager.SetActiveScreen(ScreenNames.GameSetup);
+        }
+
+        protected void SettingsButtonClick(object e, EventArgs eventArgs)
+        {
+            ScreenManager.AddScreen(ScreenNames.Settings, new SettingsScreen(Game, ScreenManager));
+            ScreenManager.SetActiveScreen(ScreenNames.Settings);
         }
 
         protected void ExitButtonClick(object e, EventArgs eventArgs)
