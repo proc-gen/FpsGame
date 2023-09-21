@@ -1,4 +1,5 @@
 ﻿using FpsGame.Common.ClientData;
+using FpsGame.Common.Constants;
 using FpsGame.Ui.Components;
 using Newtonsoft.Json.Linq;
 using System;
@@ -22,8 +23,11 @@ namespace FpsGame.MessageProcessors
 
         public void ProcessMessage(JObject data)
         {
-            gameSettings.GameName = data["GameName"].ToString();
-            gameNameLabel.UpdateText(gameSettings.GameName);
+            if (gameSettings.GameMode != GameMode.SinglePlayer)
+            {
+                gameSettings.GameName = data["GameName"].ToString();
+                gameNameLabel.UpdateText(gameSettings.GameName);
+            }
         }
     }
 }

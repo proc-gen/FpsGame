@@ -127,14 +127,20 @@ namespace FpsGame.Screens
 
         private void initUIComponents()
         {
-            hostLocationLabel = new Label("host-location", gameSettings.GameIPAddress.ToString() + ":" + gameSettings.GamePort, new Style()
+            if(gameSettings.GameMode != GameMode.SinglePlayer)
             {
-                Margin = new Thickness(0),
-            });
-            gameNameLabel = new Label("game-name", gameSettings.GameName, new Style()
-            {
-                Margin = new Thickness(0),
-            });
+                hostLocationLabel = new Label("host-location", gameSettings.GameIPAddress.ToString() + ":" + gameSettings.GamePort, new Style()
+                {
+                    Margin = new Thickness(0),
+                });
+                gameNameLabel = new Label("game-name", gameSettings.GameName, new Style()
+                {
+                    Margin = new Thickness(0),
+                });
+                gameInfoPanel.AddWidget(gameNameLabel);
+                gameInfoPanel.AddWidget(hostLocationLabel);
+            }
+            
             playerPositionLabel = new Label("player-position", string.Empty, new Style()
             {
                 Margin = new Thickness(0),
@@ -145,8 +151,7 @@ namespace FpsGame.Screens
                 HorizontalAlignment = HorizontalAlignment.Left,
                 VerticalAlignment = VerticalAlignment.Top,
             });
-            gameInfoPanel.AddWidget(gameNameLabel);
-            gameInfoPanel.AddWidget(hostLocationLabel);
+            
             gameInfoPanel.AddWidget(playerPositionLabel);
             gameInfoPanel.UiWidget.Background = new SolidBrush(new Color(.1f, .1f, .1f));
             gameInfoPanel.UiWidget.Opacity = .75f;
@@ -316,7 +321,8 @@ namespace FpsGame.Screens
         {
             if (Player != EntityReference.Null)
             {
-                playerPositionLabel.UpdateText(Player.Entity.Get<Camera>().Position.ToString());
+                var position = Player.Entity.Get<Camera>().Position;
+                playerPositionLabel.UpdateText($"( {position.X:#.##}, {position.Y:#.##}, {position.Z:#.##} )");
             }
         }
 

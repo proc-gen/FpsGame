@@ -2,6 +2,7 @@
 using FpsGame.Common.Constants;
 using FpsGame.Ui;
 using FpsGame.Ui.Components;
+using FpsGame.Ui.Styles;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -14,29 +15,45 @@ namespace FpsGame.Screens
     public class MainMenuScreen : Screen
     {
         VerticalPanel panel;
-        Label label;
+        Label titleLabel;
         Button newGameButton;
         Button multiPlayerHostButton;
         Button multiplayerJoinButton;
         Button standaloneServerButton;
+        Button settingsButton;
         Button exitButton;
+
+        static Style ButtonStyle = new Style()
+        {
+            HorizontalAlignment = HorizontalAlignment.Center,
+            Margin = new Thickness(4),
+            Padding = new Thickness(4),
+        };
 
         public MainMenuScreen(Game game, ScreenManager screenManager)
             : base(game, screenManager)
         {
             panel = new VerticalPanel("panel");
-            label = new Label("title", "Main Menu");
-            newGameButton = new Button("new-game", "New Singleplayer Game", NewGameButtonClick);
-            multiPlayerHostButton = new Button("multiplayer-host", "Host Multiplayer Game", MultiplayerHostButtonClick);
-            multiplayerJoinButton = new Button("multiplayer-join", "Join Multiplayer Game", MultiplayerJoinButtonClick);
-            standaloneServerButton = new Button("standalone-server", "Standalone Server", StandaloneServerButtonClick);
-            exitButton = new Button("exit", "Exit", ExitButtonClick);
+            titleLabel = new Label("game-title", "Bamfoodle's Multiplayer FPS Sandbox", new Style()
+            {
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(32),
+                FontScale = new Vector2(2.25f, 2.25f)
+            });
+
+            newGameButton = new Button("new-game", "New Singleplayer Game", NewGameButtonClick, ButtonStyle);
+            multiPlayerHostButton = new Button("multiplayer-host", "Host Multiplayer Game", MultiplayerHostButtonClick, ButtonStyle);
+            multiplayerJoinButton = new Button("multiplayer-join", "Join Multiplayer Game", MultiplayerJoinButtonClick, ButtonStyle);
+            standaloneServerButton = new Button("standalone-server", "Standalone Server", StandaloneServerButtonClick, ButtonStyle);
+            settingsButton = new Button("settings", "Settings", SettingsButtonClick, ButtonStyle);
+            exitButton = new Button("exit", "Exit", ExitButtonClick, ButtonStyle);
             
-            panel.AddWidget(label);
+            panel.AddWidget(titleLabel);
             panel.AddWidget(newGameButton);
             panel.AddWidget(multiPlayerHostButton);
             panel.AddWidget(multiplayerJoinButton);
             panel.AddWidget(standaloneServerButton);
+            panel.AddWidget(settingsButton);
             panel.AddWidget(exitButton);
 
             RootWidget = panel.UiWidget;
@@ -80,6 +97,12 @@ namespace FpsGame.Screens
         {
             ScreenManager.AddScreen(ScreenNames.GameSetup, new GameSetupScreen(Game, ScreenManager, new GameSettings() { GameMode = GameMode.StandaloneServer }));
             ScreenManager.SetActiveScreen(ScreenNames.GameSetup);
+        }
+
+        protected void SettingsButtonClick(object e, EventArgs eventArgs)
+        {
+            ScreenManager.AddScreen(ScreenNames.Settings, new SettingsScreen(Game, ScreenManager));
+            ScreenManager.SetActiveScreen(ScreenNames.Settings);
         }
 
         protected void ExitButtonClick(object e, EventArgs eventArgs)

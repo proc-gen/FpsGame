@@ -9,7 +9,7 @@ namespace FpsGame
 {
     public class Game1 : Game
     {
-        private GraphicsDeviceManager graphics;
+        public GraphicsDeviceManager graphics;
         private SpriteBatch spriteBatch;
         private ScreenManager screenManager;
         private DepthStencilState depthStencil;
@@ -23,6 +23,9 @@ namespace FpsGame
 
         protected override void Initialize()
         {
+            graphics.PreferredBackBufferWidth = GraphicsDevice.Adapter.CurrentDisplayMode.Width;
+            graphics.PreferredBackBufferHeight = GraphicsDevice.Adapter.CurrentDisplayMode.Height;
+            graphics.ToggleFullScreen();
             screenManager = new ScreenManager(this);
             screenManager.AddScreen(ScreenNames.MainMenu, new MainMenuScreen(this, screenManager));
             screenManager.SetActiveScreen(ScreenNames.MainMenu);

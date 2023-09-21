@@ -8,6 +8,10 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Linq;
+using MyraTextBox = Myra.Graphics2D.UI.TextBox;
+using MyraCombo = Myra.Graphics2D.UI.ComboBox;
+using FpsGame.Ui.Styles;
+using FontStashSharp;
 
 namespace FpsGame.Screens
 {
@@ -17,16 +21,14 @@ namespace FpsGame.Screens
 
         VerticalPanel panel; 
         Label titleLabel;
-        Label gameNameLabel;
-        TextBox gameNameTextBox;
-        Label playerNameLabel;
-        TextBox playerNameTextBox;
-        Label ipAddressLabel;
-        TextBox ipAddressTextBox;
-        Label ipAddressSelectionLabel;
-        ComboBox ipAddressSelection;
-        Label ipAddressPortSelectionLabel;
-        TextBox ipAddressPort;
+
+        InputWrapper<TextBox, MyraTextBox> gameNameWrapper;
+        InputWrapper<TextBox, MyraTextBox> playerNameWrapper;
+        InputWrapper<TextBox, MyraTextBox> ipAddressWrapper;
+        InputWrapper<ComboBox, MyraCombo> ipAddressSelectionWrapper;
+        InputWrapper<TextBox, MyraTextBox> ipAddressPortSelectionWrapper;
+
+        Grid buttonGrid;
         Button continueButton;
         Button backButton;
 
@@ -36,63 +38,97 @@ namespace FpsGame.Screens
             this.gameSettings = gameSettings;
 
             panel = new VerticalPanel("panel");
-            titleLabel = new Label("title", "Game Setup");
-            
-            continueButton = new Button("continue", gameSettings.GameMode == GameMode.MultiplayerJoin ? "Join Game" : "Start Game", ContinueButtonClick);
-            backButton = new Button("back", "Back to Main Menu", BackButtonClick);
-            
+            titleLabel = new Label("title", "Game Setup", new Style()
+            {
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(16),
+                FontScale = new Vector2(1.5f, 1.5f)
+            });
             panel.AddWidget(titleLabel);
             
-            if(gameSettings.GameMode != GameMode.MultiplayerJoin)
-            {
-                gameNameLabel = new Label("game-name-label", "Game Name: ");
-                gameNameTextBox = new TextBox("game-name");
-                panel.AddWidget(gameNameLabel);
-                panel.AddWidget(gameNameTextBox);
-
-                if(gameSettings.GameMode != GameMode.SinglePlayer)
-                {
-                    var availableIps = IPAddressUtils.GetAllLocalIPv4();
-                    List<ListItem> availableIpListItems = new List<ListItem>();
-
-                    foreach (var ip in availableIps)
-                    {
-                        availableIpListItems.Add(new ListItem(ip.ToString()));
-                    }
-
-                    ipAddressSelectionLabel = new Label("ip-address-selection-label", "Hosting address:");
-                    ipAddressSelection = new ComboBox("ip-address-selection", availableIpListItems);
-                    ipAddressSelection.UiWidget.SelectedIndex = 0;
-
-                    ipAddressPortSelectionLabel = new Label("ip-address-port-selection-label", "Hosting port:");
-                    ipAddressPort = new TextBox("ip-address-port", "12345");
-
-                    panel.AddWidget(ipAddressSelectionLabel);
-                    panel.AddWidget(ipAddressSelection);
-                    panel.AddWidget(ipAddressPortSelectionLabel);
-                    panel.AddWidget(ipAddressPort);
-                }
-            }
-            else
-            {
-                ipAddressLabel = new Label("ip-address-label", "Host Address: ");
-                ipAddressTextBox = new TextBox("ip-address");
-                panel.AddWidget(ipAddressLabel);
-                panel.AddWidget(ipAddressTextBox);
-            }
-
-            if(gameSettings.GameMode != GameMode.StandaloneServer)
-            {
-                playerNameLabel = new Label("player-name-label", "Player Name: ");
-                playerNameTextBox = new TextBox("player-name");
-                panel.AddWidget(playerNameLabel);
-                panel.AddWidget(playerNameTextBox);
-            }
-            
-            panel.AddWidget(continueButton);
-            panel.AddWidget(backButton);
+            createGameNameInput();
+            createIpAddressSelection();
+            createIpAddressEntry();
+            createPlayerNameEntry();
+            createButtons();
 
             RootWidget = panel.UiWidget;
+        }
+
+        private void createGameNameInput()
+        {
+            if (gameSettings.GameMode == GameMode.MultiplayerHost
+                || gameSettings.GameMode == GameMode.StandaloneServer)
+            {
+                var gameNameLabel = new Label("game-name-label", "Game Name: ");
+                var gameNameTextBox = new TextBox("game-name");
+                gameNameWrapper = new InputWrapper<TextBox, MyraTextBox>("game-name", gameNameLabel, gameNameTextBox);
+
+                panel.AddWidget(gameNameWrapper.Grid);
+            }
+        }
+
+        private void createIpAddressSelection()
+        {
+            if (gameSettings.GameMode == GameMode.MultiplayerHost
+                || gameSettings.GameMode == GameMode.StandaloneServer)
+            {
+                var availableIps = IPAddressUtils.GetAllLocalIPv4();
+                List<ListItem> availableIpListItems = new List<ListItem>();
+
+                foreach (var ip in availableIps)
+                {
+                    availableIpListItems.Add(new ListItem(ip.ToString()));
+                }
+
+                var ipAddressSelectionLabel = new Label("ip-address-selection-label", "Hosting Address:");
+                var ipAddressSelection = new ComboBox("ip-address-selection", availableIpListItems);
+                ipAddressSelection.UiWidget.SelectedIndex = 0;
+                ipAddressSelectionWrapper = new InputWrapper<ComboBox, MyraCombo>("ip-address-selection", ipAddressSelectionLabel, ipAddressSelection);
+                panel.AddWidget(ipAddressSelectionWrapper.Grid);
+
+                var ipAddressPortSelectionLabel = new Label("ip-address-port-selection-label", "Hosting Port:");
+                var ipAddressPort = new TextBox("ip-address-port", "12345");
+                ipAddressPortSelectionWrapper = new InputWrapper<TextBox, MyraTextBox>("ip-address-port", ipAddressPortSelectionLabel, ipAddressPort);
+                panel.AddWidget(ipAddressPortSelectionWrapper.Grid);
+            }
+        }
+
+        private void createIpAddressEntry()
+        {
+            if(gameSettings.GameMode == GameMode.MultiplayerJoin)
+            {
+                var ipAddressLabel = new Label("ip-address-label", "Host Address: ");
+                var ipAddressTextBox = new TextBox("ip-address");
+                ipAddressWrapper = new InputWrapper<TextBox, MyraTextBox>("ip-address", ipAddressLabel, ipAddressTextBox);
+                panel.AddWidget(ipAddressWrapper.Grid);
+            }
+        }
+
+        private void createPlayerNameEntry()
+        {
+            if(gameSettings.GameMode != GameMode.StandaloneServer) 
+            {
+                var playerNameLabel = new Label("player-name-label", "Player Name: ");
+                var playerNameTextBox = new TextBox("player-name");
+                playerNameWrapper = new InputWrapper<TextBox, MyraTextBox>("player-name", playerNameLabel, playerNameTextBox);
+
+                panel.AddWidget(playerNameWrapper.Grid);
+            }
+        }
+
+        private void createButtons()
+        {
+            continueButton = new Button("continue", gameSettings.GameMode == GameMode.MultiplayerJoin ? "Join Game" : "Start Game", ContinueButtonClick);
+            continueButton.UiWidget.GridColumn = 0;
+            backButton = new Button("back", "Back to Main Menu", BackButtonClick);
+            backButton.UiWidget.GridColumn = 1;
+
+            buttonGrid = new Grid("button-grid");
+            buttonGrid.AddWidget(continueButton);
+            buttonGrid.AddWidget(backButton);
+
+            panel.AddWidget(buttonGrid);
         }
 
         public override void Render(GameTime gameTime)
@@ -102,20 +138,18 @@ namespace FpsGame.Screens
 
         public override void Update(GameTime gameTime)
         {
-            IPAddress dummy = null;
-            int dummyPort;
             continueButton.UiWidget.Enabled = 
-                (gameSettings.GameMode == GameMode.MultiplayerJoin 
-                    || !string.IsNullOrWhiteSpace(gameNameTextBox.Text))
+                (gameSettings.GameMode == GameMode.SinglePlayer || gameSettings.GameMode == GameMode.MultiplayerJoin 
+                    || !string.IsNullOrWhiteSpace(gameNameWrapper.InputComponent.Text))
                 && (gameSettings.GameMode == GameMode.SinglePlayer || gameSettings.GameMode == GameMode.MultiplayerJoin
-                    || (IPAddress.TryParse(ipAddressSelection.UiWidget.SelectedItem.Text, out dummy) 
-                        && int.TryParse(ipAddressPort.Text, out dummyPort)))
+                    || (IPAddress.TryParse(ipAddressSelectionWrapper.InputComponent.UiWidget.SelectedItem.Text, out IPAddress _dummy) 
+                        && int.TryParse(ipAddressPortSelectionWrapper.InputComponent.Text, out int _dummyPort)))
                 && (gameSettings.GameMode != GameMode.MultiplayerJoin
-                    || (ipAddressTextBox.Text.Contains(':')
-                        && IPAddress.TryParse(ipAddressTextBox.Text.Split(':')[0], out dummy)
-                        && int.TryParse(ipAddressTextBox.Text.Split(':')[1], out dummyPort)))
+                    || (ipAddressWrapper.InputComponent.Text.Contains(':')
+                        && IPAddress.TryParse(ipAddressWrapper.InputComponent.Text.Split(':')[0], out IPAddress _dummy2)
+                        && int.TryParse(ipAddressWrapper.InputComponent.Text.Split(':')[1], out int _dummyPort2)))
                 && (gameSettings.GameMode == GameMode.StandaloneServer
-                    || !string.IsNullOrWhiteSpace(playerNameTextBox.Text));
+                    || !string.IsNullOrWhiteSpace(playerNameWrapper.InputComponent.Text));
         }
 
         protected void ContinueButtonClick(object e, EventArgs eventArgs)
@@ -124,19 +158,19 @@ namespace FpsGame.Screens
             {
                 if(gameSettings.GameMode == GameMode.SinglePlayer)
                 {
-                    gameSettings.GameName = gameNameTextBox.Text;
+                    gameSettings.GameName = string.Empty;
                     gameSettings.GameIPAddress = IPAddress.Loopback;
                     gameSettings.GamePort = 12345;
                 }
                 else if (gameSettings.GameMode != GameMode.MultiplayerJoin)
                 {
-                    gameSettings.GameName = gameNameTextBox.Text;
-                    gameSettings.GameIPAddress = IPAddress.Parse(ipAddressSelection.UiWidget.SelectedItem.Text);
-                    gameSettings.GamePort = int.Parse(ipAddressPort.Text);
+                    gameSettings.GameName = gameNameWrapper.InputComponent.UiWidget.Text;
+                    gameSettings.GameIPAddress = IPAddress.Parse(ipAddressSelectionWrapper.InputComponent.UiWidget.SelectedItem.Text);
+                    gameSettings.GamePort = int.Parse(ipAddressPortSelectionWrapper.InputComponent.Text);
                 }
                 else
                 {
-                    string[] ipAddress = ipAddressTextBox.Text.Split(':');
+                    string[] ipAddress = ipAddressWrapper.InputComponent.Text.Split(':');
                     gameSettings.GameIPAddress = IPAddress.Parse(ipAddress[0]);
                     gameSettings.GamePort = int.Parse(ipAddress[1]);
                 }
@@ -146,7 +180,7 @@ namespace FpsGame.Screens
                     Random random = new Random();
                     PlayerSettings playerSettings = new PlayerSettings()
                     {
-                        Name = playerNameTextBox.Text,
+                        Name = playerNameWrapper.InputComponent.Text,
                         Color = new Vector3((float)random.NextDouble(), (float)random.NextDouble(), (float)random.NextDouble()),
                     };
 

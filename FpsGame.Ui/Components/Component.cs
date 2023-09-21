@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MyraLabel = Myra.Graphics2D.UI.Label;
 
 namespace FpsGame.Ui.Components
 {
@@ -41,6 +42,21 @@ namespace FpsGame.Ui.Components
                 if (style.Padding.HasValue)
                 {
                     UiWidget.Padding = new Myra.Graphics2D.Thickness(style.Padding.Value.Left, style.Padding.Value.Top, style.Padding.Value.Right, style.Padding.Value.Bottom);
+                }
+
+                if(style.FontScale.HasValue)
+                {
+                    UiWidget.Scale = style.FontScale.Value;
+                }
+
+                if(style.HorizontalAlignment.HasValue)
+                {
+                    UiWidget.HorizontalAlignment = style.HorizontalAlignment.Value.GetMyraHorizontalAlignment();
+                }
+
+                if (style.VerticalAlignment.HasValue)
+                {
+                    UiWidget.VerticalAlignment = style.VerticalAlignment.Value.GetMyraVerticalAlignment();
                 }
             }
         }
