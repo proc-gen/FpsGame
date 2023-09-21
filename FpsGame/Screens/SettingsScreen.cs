@@ -17,9 +17,13 @@ namespace FpsGame.Screens
     {
         VerticalPanel panel;
         Label titleLabel;
+
         InputWrapper<ComboBox, MyraComboBox> screenResolutionsWrapper;
         DisplayModeCollection resolutions;
         DisplayMode currentResolution;
+
+        InputWrapper<ComboBox, MyraComboBox> windowModeWrapper;
+        string currentWindowMode;
 
         Grid buttonGrid;
         Button applyButton;
@@ -45,6 +49,7 @@ namespace FpsGame.Screens
             panel.AddWidget(titleLabel);
 
             createResolutionSelection();
+            createWindowModeSelection();
             createButtons();            
 
             RootWidget = panel.UiWidget;
@@ -71,6 +76,38 @@ namespace FpsGame.Screens
             panel.AddWidget(screenResolutionsWrapper.Grid);
         }
 
+        private void createWindowModeSelection()
+        {
+            if(((Game1)Game).graphics.IsFullScreen)
+            {
+                currentWindowMode = WindowMode.Fullscreen;
+            }
+            else
+            {
+                if(Game.Window.IsBorderless)
+                {
+                    currentWindowMode = WindowMode.BorderlessWindow;
+                }
+                else
+                {
+                    currentWindowMode = WindowMode.Window;
+                }
+            }
+
+            List<ListItem> windowModes = new List<ListItem>()
+            {
+                new ListItem(WindowMode.Fullscreen),
+                new ListItem(WindowMode.Window),
+                new ListItem(WindowMode.BorderlessWindow),
+            };
+
+            var windowModeLabel = new Label("window-mode-label", "Window Mode");
+            var windowModeSelection = new ComboBox("window-mode-selection", windowModes);
+            windowModeSelection.UiWidget.SelectedIndex = windowModes.IndexOf(windowModes.Where(a => a.MyraListItem.Text == currentWindowMode.ToString()).First());
+            windowModeWrapper = new InputWrapper<ComboBox, MyraComboBox>("window-mode", windowModeLabel, windowModeSelection);
+            panel.AddWidget(windowModeWrapper.Grid);
+        }
+
         private void createButtons()
         {
             applyButton = new Button("apply", "Apply", ApplyButtonClick);
@@ -92,8 +129,9 @@ namespace FpsGame.Screens
         public override void Update(GameTime gameTime)
         {
             var selectedResolution = resolutions.Where(a => formatResolution(a) == screenResolutionsWrapper.InputComponent.UiWidget.SelectedItem.Text).FirstOrDefault();
-
-            if (selectedResolution != currentResolution)
+            var selectedWindowMode = windowModeWrapper.InputComponent.UiWidget.SelectedItem.Text;
+            if (selectedResolution != currentResolution
+                || selectedWindowMode != currentWindowMode)
             {
                 applyButton.UiWidget.Enabled = true;
             }
@@ -104,12 +142,34 @@ namespace FpsGame.Screens
             if(applyButton.UiWidget.Enabled)
             {
                 var selectedResolution = resolutions.Where(a => formatResolution(a) == screenResolutionsWrapper.InputComponent.UiWidget.SelectedItem.Text).FirstOrDefault();
-                if(selectedResolution != null)
+                var selectedWindowMode = windowModeWrapper.InputComponent.UiWidget.SelectedItem.Text;
+
+                if (selectedResolution != currentResolution)
                 {
                     ((Game1)Game).graphics.PreferredBackBufferWidth = selectedResolution.Width;
                     ((Game1)Game).graphics.PreferredBackBufferHeight = selectedResolution.Height;
                     ((Game1)Game).graphics.ApplyChanges();
                     currentResolution = selectedResolution;
+                }
+
+                if(selectedWindowMode != currentWindowMode)
+                {
+                    if(selectedWindowMode == WindowMode.Fullscreen ||
+                        currentWindowMode == WindowMode.Fullscreen)
+                    {
+                        ((Game1)Game).graphics.ToggleFullScreen();
+                    }
+
+                    if(selectedWindowMode == WindowMode.BorderlessWindow)
+                    {
+                        Game.Window.IsBorderless = true;
+                    }
+                    else if(selectedWindowMode == WindowMode.Window)
+                    {
+                        Game.Window.IsBorderless = false;
+                    }
+
+                    currentWindowMode = selectedWindowMode;
                 }
 
                 applyButton.UiWidget.Enabled = false;
