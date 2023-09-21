@@ -29,13 +29,13 @@ namespace FpsGame
         protected override void Initialize()
         {
             Window.AllowUserResizing = false;
-            settings = JsonFileManager.LoadFile<SettingsContainer>("settings.json", true);
+            settings = JsonFileManager.LoadFile<SettingsContainer>(GameFiles.Settings, true);
 
             if (string.IsNullOrEmpty(settings.Resolution))
             {
                 settings.Resolution = SettingsScreen.FormatResolution(GraphicsDevice.Adapter.CurrentDisplayMode);
                 settings.WindowMode = WindowMode.Fullscreen;
-                JsonFileManager.SaveFile(settings, "settings.json");
+                JsonFileManager.SaveFile(settings, GameFiles.Settings);
 
                 graphics.PreferredBackBufferWidth = GraphicsDevice.Adapter.CurrentDisplayMode.Width;
                 graphics.PreferredBackBufferHeight = GraphicsDevice.Adapter.CurrentDisplayMode.Height;

@@ -165,7 +165,7 @@ namespace FpsGame.Screens
                     ((Game1)Game).settings.WindowMode = currentWindowMode;
                 }
 
-                JsonFileManager.SaveFile(((Game1)Game).settings, "settings.json");
+                JsonFileManager.SaveFile(((Game1)Game).settings, GameFiles.Settings);
                 applyButton.UiWidget.Enabled = false;
             }
         }
