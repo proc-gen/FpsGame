@@ -1,4 +1,5 @@
 ﻿using FpsGame.Common.Constants;
+using FpsGame.Common.Utils;
 using FpsGame.Ui;
 using FpsGame.Ui.Components;
 using FpsGame.Ui.Styles;
@@ -58,41 +59,31 @@ namespace FpsGame.Screens
         private void createResolutionSelection()
         {
             resolutions = Game.GraphicsDevice.Adapter.SupportedDisplayModes;
-            currentResolution = Game.GraphicsDevice.Adapter.CurrentDisplayMode;
 
             List<ListItem> availableResolutions = new List<ListItem>();
             foreach (var resolution in resolutions.OrderByDescending(a => a.Width).ThenByDescending(a => a.Height))
             {
                 if (resolution.Width > 1000)
                 {
-                    availableResolutions.Add(new ListItem(formatResolution(resolution)));
+                    availableResolutions.Add(new ListItem(FormatResolution(resolution)));
                 }
             }
 
+            var currentWidth = ((Game1)Game).graphics.PreferredBackBufferWidth;
+            var currentHeight = ((Game1)Game).graphics.PreferredBackBufferHeight;
+
+            currentResolution = resolutions.Where(a => FormatResolution(a) == FormatResolution(currentWidth, currentHeight)).First();
+
             var resolutionLabel = new Label("resolution-label", "Resolution");
             var resolutionSelection = new ComboBox("resolution-selection", availableResolutions);
-            resolutionSelection.UiWidget.SelectedIndex = availableResolutions.IndexOf(availableResolutions.Where(a => a.MyraListItem.Text == formatResolution(currentResolution)).First());
+            resolutionSelection.UiWidget.SelectedIndex = availableResolutions.IndexOf(availableResolutions.Where(a => a.MyraListItem.Text == FormatResolution(currentResolution)).First());
             screenResolutionsWrapper = new InputWrapper<ComboBox, MyraComboBox>("resolution", resolutionLabel, resolutionSelection);
             panel.AddWidget(screenResolutionsWrapper.Grid);
         }
 
         private void createWindowModeSelection()
         {
-            if(((Game1)Game).graphics.IsFullScreen)
-            {
-                currentWindowMode = WindowMode.Fullscreen;
-            }
-            else
-            {
-                if(Game.Window.IsBorderless)
-                {
-                    currentWindowMode = WindowMode.BorderlessWindow;
-                }
-                else
-                {
-                    currentWindowMode = WindowMode.Window;
-                }
-            }
+            currentWindowMode = ((Game1)Game).settings.WindowMode;
 
             List<ListItem> windowModes = new List<ListItem>()
             {
@@ -128,7 +119,7 @@ namespace FpsGame.Screens
 
         public override void Update(GameTime gameTime)
         {
-            var selectedResolution = resolutions.Where(a => formatResolution(a) == screenResolutionsWrapper.InputComponent.UiWidget.SelectedItem.Text).FirstOrDefault();
+            var selectedResolution = resolutions.Where(a => FormatResolution(a) == screenResolutionsWrapper.InputComponent.UiWidget.SelectedItem.Text).FirstOrDefault();
             var selectedWindowMode = windowModeWrapper.InputComponent.UiWidget.SelectedItem.Text;
             if (selectedResolution != currentResolution
                 || selectedWindowMode != currentWindowMode)
@@ -141,7 +132,7 @@ namespace FpsGame.Screens
         {
             if(applyButton.UiWidget.Enabled)
             {
-                var selectedResolution = resolutions.Where(a => formatResolution(a) == screenResolutionsWrapper.InputComponent.UiWidget.SelectedItem.Text).FirstOrDefault();
+                var selectedResolution = resolutions.Where(a => FormatResolution(a) == screenResolutionsWrapper.InputComponent.UiWidget.SelectedItem.Text).FirstOrDefault();
                 var selectedWindowMode = windowModeWrapper.InputComponent.UiWidget.SelectedItem.Text;
 
                 if (selectedResolution != currentResolution)
@@ -150,6 +141,7 @@ namespace FpsGame.Screens
                     ((Game1)Game).graphics.PreferredBackBufferHeight = selectedResolution.Height;
                     ((Game1)Game).graphics.ApplyChanges();
                     currentResolution = selectedResolution;
+                    ((Game1)Game).settings.Resolution = FormatResolution(currentResolution);
                 }
 
                 if(selectedWindowMode != currentWindowMode)
@@ -170,8 +162,10 @@ namespace FpsGame.Screens
                     }
 
                     currentWindowMode = selectedWindowMode;
+                    ((Game1)Game).settings.WindowMode = currentWindowMode;
                 }
 
+                JsonFileManager.SaveFile(((Game1)Game).settings, "settings.json");
                 applyButton.UiWidget.Enabled = false;
             }
         }
@@ -181,9 +175,14 @@ namespace FpsGame.Screens
             ScreenManager.SetActiveScreen(ScreenNames.MainMenu);
         }
 
-        private string formatResolution(DisplayMode resolution)
+        public static string FormatResolution(DisplayMode resolution)
         {
-            return $"{resolution.Width} x {resolution.Height}";
+            return FormatResolution(resolution.Width, resolution.Height);
+        }
+
+        public static string FormatResolution(int width, int height)
+        {
+            return $"{width} x {height}";
         }
     }
 }
