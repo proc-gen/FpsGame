@@ -73,6 +73,11 @@ namespace FpsGame.Ui.Components
             Grid.AddWidget(ValueLabel);
         }
 
+        public void AddOnValueChanged(EventHandler<ValueChangedEventArgs<float>> eventHandler)
+        {
+            Slider.ValueChanged += eventHandler;
+        }
+
         private void OnValueChanged(object sender, ValueChangedEventArgs<float> e)
         {
             if (sender != UiWidget)

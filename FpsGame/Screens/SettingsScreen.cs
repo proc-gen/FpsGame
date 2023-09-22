@@ -13,6 +13,8 @@ using System.Threading.Tasks;
 using MyraComboBox = Myra.Graphics2D.UI.ComboBox;
 using MyraHorizontalSlider = Myra.Graphics2D.UI.HorizontalSlider;
 using MyraGrid = Myra.Graphics2D.UI.Grid;
+using FpsGame.Containers;
+using Myra.Utility;
 
 namespace FpsGame.Screens
 {
@@ -31,9 +33,14 @@ namespace FpsGame.Screens
         InputWrapper<HorizontalSlider, MyraGrid> mouseSensitivityWrapper;
         float mouseSensitivity;
 
+        InputWrapper<HorizontalSlider, MyraGrid> controllerSensitivityWrapper;
+        float controllerSensitivity;
+
         Grid buttonGrid;
         Button applyButton;
         Button backButton;
+
+        SettingsContainer settings;
 
         static Style ButtonStyle = new Style()
         {
@@ -45,6 +52,8 @@ namespace FpsGame.Screens
         public SettingsScreen(Game game, ScreenManager screenManager) 
             : base(game, screenManager)
         {
+            settings = ((Game1)Game).settings;
+
             panel = new VerticalPanel("panel");
             titleLabel = new Label("title", "Settings", new Style()
             {
@@ -57,6 +66,7 @@ namespace FpsGame.Screens
             createResolutionSelection();
             createWindowModeSelection();
             createMouseSensitivitySlider();
+            createControllerSensitivitySlider();
             createButtons();            
 
             RootWidget = panel.UiWidget;
@@ -89,7 +99,7 @@ namespace FpsGame.Screens
 
         private void createWindowModeSelection()
         {
-            currentWindowMode = ((Game1)Game).settings.WindowMode;
+            currentWindowMode = settings.WindowMode;
 
             List<ListItem> windowModes = new List<ListItem>()
             {
@@ -107,11 +117,23 @@ namespace FpsGame.Screens
 
         private void createMouseSensitivitySlider()
         {
-            mouseSensitivity = 0.5f;
+            mouseSensitivity = settings.MouseSensitivity;
             var mouseSensitivityLabel = new Label("mouse-sensitivity-label", "Mouse Sensitivity");
             var mouseSensitivitySlider = new HorizontalSlider("mouse-sensitivity-slider", 1, 100, 0.01f, mouseSensitivity, "P0");
+            mouseSensitivitySlider.AddOnValueChanged(OnMouseSensitivityChanged);
             mouseSensitivityWrapper = new InputWrapper<HorizontalSlider, MyraGrid>("mouse-sensitivity", mouseSensitivityLabel, mouseSensitivitySlider);
+            
             panel.AddWidget(mouseSensitivityWrapper.Grid);
+        }
+
+        private void createControllerSensitivitySlider()
+        {
+            controllerSensitivity = settings.ControllerSensitivity;
+            var controllerSensitivityLabel = new Label("controller-sensitivity-label", "Controller Sensitivity");
+            var controllerSensitivitySlider = new HorizontalSlider("controller-sensitivity-slider", 1, 20, 0.5f, controllerSensitivity, "0.#");
+            controllerSensitivitySlider.AddOnValueChanged(OnControllerSensitivityChanged);
+            controllerSensitivityWrapper = new InputWrapper<HorizontalSlider, MyraGrid>("controller-sensitivity", controllerSensitivityLabel, controllerSensitivitySlider);
+            panel.AddWidget(controllerSensitivityWrapper.Grid);
         }
 
         private void createButtons()
@@ -156,7 +178,7 @@ namespace FpsGame.Screens
                     ((Game1)Game).graphics.PreferredBackBufferHeight = selectedResolution.Height;
                     ((Game1)Game).graphics.ApplyChanges();
                     currentResolution = selectedResolution;
-                    ((Game1)Game).settings.Resolution = FormatResolution(currentResolution);
+                    settings.Resolution = FormatResolution(currentResolution);
                 }
 
                 if(selectedWindowMode != currentWindowMode)
@@ -177,17 +199,27 @@ namespace FpsGame.Screens
                     }
 
                     currentWindowMode = selectedWindowMode;
-                    ((Game1)Game).settings.WindowMode = currentWindowMode;
+                    settings.WindowMode = currentWindowMode;
                 }
 
-                JsonFileManager.SaveFile(((Game1)Game).settings, GameFiles.Settings);
                 applyButton.UiWidget.Enabled = false;
             }
         }
 
         protected void BackButtonClick(object e, EventArgs eventArgs)
         {
+            JsonFileManager.SaveFile(settings, GameFiles.Settings);
             ScreenManager.SetActiveScreen(ScreenNames.MainMenu);
+        }
+
+        protected void OnMouseSensitivityChanged(object sender, ValueChangedEventArgs<float> e)
+        {
+            settings.MouseSensitivity = mouseSensitivityWrapper.InputComponent.Value;
+        }
+
+        protected void OnControllerSensitivityChanged(object sender, ValueChangedEventArgs<float> e)
+        {
+            settings.ControllerSensitivity = controllerSensitivityWrapper.InputComponent.Value;
         }
 
         public static string FormatResolution(DisplayMode resolution)
