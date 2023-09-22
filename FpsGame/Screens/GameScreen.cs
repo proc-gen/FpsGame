@@ -26,6 +26,7 @@ using FpsGame.UiComponents;
 using FpsGame.Common.Utils;
 using FpsGame.MessageProcessors;
 using Myra.Graphics2D.Brushes;
+using FpsGame.Containers;
 
 namespace FpsGame.Screens
 {
@@ -70,12 +71,15 @@ namespace FpsGame.Screens
 
         AssetImporter importer;
 
+        SettingsContainer settings;
+
         public GameScreen(Game game, ScreenManager screenManager, GameSettings gameSettings, PlayerSettings playerSettings)
             : base(game, screenManager)
         {
             this.gameSettings = gameSettings;
             this.playerSettings = playerSettings;
-            
+            settings = ((Game1)Game).settings;
+
             loadAssets();
             initECS();
             initClientServer();           
@@ -119,8 +123,8 @@ namespace FpsGame.Screens
                 server = new Server.Server(token.Token, gameSettings);
             }
 
-            playerSettings.MouseSensitivity = 0.5f;
-            playerSettings.ControllerSensitivity = 5f;
+            playerSettings.MouseSensitivity = settings.MouseSensitivity;
+            playerSettings.ControllerSensitivity = settings.ControllerSensitivity;
             client = new Client(AddDataToProcess, gameSettings, playerSettings);
             tasks.Add(Task.Run(() => client.Join(token.Token), token.Token));
         }
@@ -193,7 +197,6 @@ namespace FpsGame.Screens
             processInputDataLocal(kState, mState, gState);
             processServerData();
             processInputDataToSend(kState, mState, gState);
-            processPlayerSettingsChanged(kState, gState);
             updateHudData();
 
             server?.Update(gameTime);
@@ -283,46 +286,12 @@ namespace FpsGame.Screens
             }
         }
 
-        private void processPlayerSettingsChanged(KeyboardState kState, GamePadState gState)
-        {
-            if(Game.IsActive)
-            {
-                bool settingsChanged = false;
-                if (kState.IsKeyDown(Keys.Left))
-                {
-                    playerSettings.MouseSensitivity = MathF.Max(0.01f, playerSettings.MouseSensitivity - 0.01f);
-                    settingsChanged = true;
-                }
-                if(kState.IsKeyDown(Keys.Right))
-                {
-                    playerSettings.MouseSensitivity = MathF.Min(1.0f, playerSettings.MouseSensitivity + 0.01f);
-                    settingsChanged = true;
-                }
-
-                if (gState.DPad.Left == ButtonState.Pressed)
-                {
-                    playerSettings.ControllerSensitivity = MathF.Max(0.1f, playerSettings.ControllerSensitivity - 0.1f);
-                    settingsChanged = true;
-                }
-                if (gState.DPad.Right == ButtonState.Pressed)
-                {
-                    playerSettings.ControllerSensitivity = MathF.Min(10.0f, playerSettings.ControllerSensitivity + 0.1f);
-                    settingsChanged = true;
-                }
-
-                if (settingsChanged)
-                {
-                    client.SendInputData(playerSettings);
-                }
-            }
-        }
-
         private void updateHudData()
         {
             if (Player != EntityReference.Null)
             {
                 var position = Player.Entity.Get<Camera>().Position;
-                playerPositionLabel.UpdateText($"( {position.X:#.##}, {position.Y:#.##}, {position.Z:#.##} )");
+                playerPositionLabel.UpdateText($"( {position.X:0.##}, {position.Y:0.##}, {position.Z:0.##} )");
             }
         }
 
