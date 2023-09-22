@@ -11,6 +11,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MyraComboBox = Myra.Graphics2D.UI.ComboBox;
+using MyraHorizontalSlider = Myra.Graphics2D.UI.HorizontalSlider;
+using MyraGrid = Myra.Graphics2D.UI.Grid;
 
 namespace FpsGame.Screens
 {
@@ -25,6 +27,9 @@ namespace FpsGame.Screens
 
         InputWrapper<ComboBox, MyraComboBox> windowModeWrapper;
         string currentWindowMode;
+
+        InputWrapper<HorizontalSlider, MyraGrid> mouseSensitivityWrapper;
+        float mouseSensitivity;
 
         Grid buttonGrid;
         Button applyButton;
@@ -51,6 +56,7 @@ namespace FpsGame.Screens
 
             createResolutionSelection();
             createWindowModeSelection();
+            createMouseSensitivitySlider();
             createButtons();            
 
             RootWidget = panel.UiWidget;
@@ -97,6 +103,15 @@ namespace FpsGame.Screens
             windowModeSelection.UiWidget.SelectedIndex = windowModes.IndexOf(windowModes.Where(a => a.MyraListItem.Text == currentWindowMode.ToString()).First());
             windowModeWrapper = new InputWrapper<ComboBox, MyraComboBox>("window-mode", windowModeLabel, windowModeSelection);
             panel.AddWidget(windowModeWrapper.Grid);
+        }
+
+        private void createMouseSensitivitySlider()
+        {
+            mouseSensitivity = 0.5f;
+            var mouseSensitivityLabel = new Label("mouse-sensitivity-label", "Mouse Sensitivity");
+            var mouseSensitivitySlider = new HorizontalSlider("mouse-sensitivity-slider", 1, 100, 0.01f, mouseSensitivity, "P0");
+            mouseSensitivityWrapper = new InputWrapper<HorizontalSlider, MyraGrid>("mouse-sensitivity", mouseSensitivityLabel, mouseSensitivitySlider);
+            panel.AddWidget(mouseSensitivityWrapper.Grid);
         }
 
         private void createButtons()

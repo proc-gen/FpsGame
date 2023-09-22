@@ -31,5 +31,10 @@ namespace FpsGame.Ui.Components
         {
             UiWidget.Widgets.Add(component.UiWidget);
         }
+
+        public void AddWidget(Widget widget)
+        {
+            UiWidget.Widgets.Add(widget);
+        }
     }
 }
