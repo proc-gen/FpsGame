@@ -131,7 +131,14 @@ namespace FpsGame.Screens
 
         private void initUIComponents()
         {
-            if(gameSettings.GameMode != GameMode.SinglePlayer)
+            gameInfoPanel = new VerticalPanel("game-info", new Style()
+            {
+                Margin = new Thickness(0),
+                HorizontalAlignment = HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Top,
+            });
+
+            if (gameSettings.GameMode != GameMode.SinglePlayer)
             {
                 hostLocationLabel = new Label("host-location", gameSettings.GameIPAddress.ToString() + ":" + gameSettings.GamePort, new Style()
                 {
@@ -148,12 +155,6 @@ namespace FpsGame.Screens
             playerPositionLabel = new Label("player-position", string.Empty, new Style()
             {
                 Margin = new Thickness(0),
-            });
-            gameInfoPanel = new VerticalPanel("game-info", new Style()
-            {
-                Margin = new Thickness(0),
-                HorizontalAlignment = HorizontalAlignment.Left,
-                VerticalAlignment = VerticalAlignment.Top,
             });
             
             gameInfoPanel.AddWidget(playerPositionLabel);
