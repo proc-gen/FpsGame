@@ -4,7 +4,7 @@
 
 This project is an experiment into making a cross-platform multiplayer fps game with the MonoGame library.
 
-- Last updated: 9/10/2023
+- Last updated: 9/22/2023
 
 ## Building the Project
 
@@ -57,12 +57,10 @@ I don't have a test system for this at the moment. If you know how to get it run
   - Hold the right mouse button down to look around
   - Tab to show the player list
   - Esc to quit the game
-  - Left arrow to decrease mouse sensitivity
-  - Right arrow to increase mouse sensitivity
 - Controller
   - Left Joystick to move
   - Right Joystick to look around
   - A to Jump
   - Start to quit the game
-  - DPad Left to decrease controller sensitivity
-  - DPad Right to increase controller sensitivity
+
+  Mouse and controller look sensitivity can be changed in the settings menu

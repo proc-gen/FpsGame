@@ -28,6 +28,13 @@ namespace FpsGame
 
         protected override void Initialize()
         {
+            LoadUserDefinedSettings();
+            InitializeScreenManager();            
+            base.Initialize();
+        }
+
+        private void LoadUserDefinedSettings()
+        {
             Window.AllowUserResizing = false;
             settings = JsonFileManager.LoadFile<SettingsContainer>(GameFiles.Settings, true);
 
@@ -57,11 +64,13 @@ namespace FpsGame
                 }
                 graphics.ApplyChanges();
             }
-            
+        }
+
+        private void InitializeScreenManager()
+        {
             screenManager = new ScreenManager(this);
             screenManager.AddScreen(ScreenNames.MainMenu, new MainMenuScreen(this, screenManager));
             screenManager.SetActiveScreen(ScreenNames.MainMenu);
-            base.Initialize();
         }
 
         protected override void LoadContent()

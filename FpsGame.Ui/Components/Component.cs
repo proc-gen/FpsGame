@@ -20,7 +20,7 @@ namespace FpsGame.Ui.Components
             Id = id;
         }
 
-        protected void UpdateStyle(Style style)
+        public void UpdateStyle(Style style)
         {
             if (UiWidget != null)
             {
