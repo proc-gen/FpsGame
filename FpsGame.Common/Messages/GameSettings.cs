@@ -16,6 +16,8 @@ namespace FpsGame.Common.ClientData
         public string GameName { get; set; }
         public IPAddress GameIPAddress { get; set; }
         public int GamePort { get; set; }
+        public string LevelName { get; set; }
+        public string LevelFile { get; set; }
 
         public string MessageType()
         {

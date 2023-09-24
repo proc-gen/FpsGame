@@ -12,6 +12,8 @@ using MyraTextBox = Myra.Graphics2D.UI.TextBox;
 using MyraCombo = Myra.Graphics2D.UI.ComboBox;
 using FpsGame.Ui.Styles;
 using FontStashSharp;
+using System.IO;
+using FpsGame.Common.Level;
 
 namespace FpsGame.Screens
 {
@@ -27,6 +29,9 @@ namespace FpsGame.Screens
         InputWrapper<TextBox, MyraTextBox> ipAddressWrapper;
         InputWrapper<ComboBox, MyraCombo> ipAddressSelectionWrapper;
         InputWrapper<TextBox, MyraTextBox> ipAddressPortSelectionWrapper;
+        InputWrapper<ComboBox, MyraCombo> levelSelectionWrapper;
+
+        List<ListItem> levels;
 
         Grid buttonGrid;
         Button continueButton;
@@ -50,6 +55,7 @@ namespace FpsGame.Screens
             createIpAddressSelection();
             createIpAddressEntry();
             createPlayerNameEntry();
+            createLevelSelection();
             createButtons();
 
             RootWidget = panel.UiWidget;
@@ -117,6 +123,28 @@ namespace FpsGame.Screens
             }
         }
 
+        private void createLevelSelection()
+        {
+            if(gameSettings.GameMode != GameMode.MultiplayerJoin)
+            {
+                var levelSelectionLabel = new Label("level-selection-label", "Level:");
+                levels = new List<ListItem>();
+
+                var levelDirectory = new DirectoryInfo("Levels");
+                foreach(var file in levelDirectory.GetFiles())
+                {
+                    var level = new LevelFromFile(null, null, Path.Combine("Levels", file.Name));
+                    level.GetLevelInfo();
+                    levels.Add(new ListItem(level.LevelData.LevelName, file.Name));
+                }
+
+                var levelSelection = new ComboBox("level-selection", levels);
+                levelSelection.UiWidget.SelectedIndex = 0;
+                levelSelectionWrapper = new InputWrapper<ComboBox, MyraCombo>("level-selection", levelSelectionLabel, levelSelection);
+                panel.AddWidget(levelSelectionWrapper.Grid);
+            }
+        }
+
         private void createButtons()
         {
             continueButton = new Button("continue", gameSettings.GameMode == GameMode.MultiplayerJoin ? "Join Game" : "Start Game", ContinueButtonClick);
@@ -161,12 +189,16 @@ namespace FpsGame.Screens
                     gameSettings.GameName = string.Empty;
                     gameSettings.GameIPAddress = IPAddress.Loopback;
                     gameSettings.GamePort = 12345;
+                    gameSettings.LevelFile = levels[levelSelectionWrapper.InputComponent.UiWidget.SelectedIndex.GetValueOrDefault(0)].Value;
+                    gameSettings.LevelName = levelSelectionWrapper.InputComponent.UiWidget.SelectedItem.Text;
                 }
                 else if (gameSettings.GameMode != GameMode.MultiplayerJoin)
                 {
                     gameSettings.GameName = gameNameWrapper.InputComponent.UiWidget.Text;
                     gameSettings.GameIPAddress = IPAddress.Parse(ipAddressSelectionWrapper.InputComponent.UiWidget.SelectedItem.Text);
                     gameSettings.GamePort = int.Parse(ipAddressPortSelectionWrapper.InputComponent.Text);
+                    gameSettings.LevelFile = levels[levelSelectionWrapper.InputComponent.UiWidget.SelectedIndex.GetValueOrDefault(0)].Value;
+                    gameSettings.LevelName = levelSelectionWrapper.InputComponent.UiWidget.SelectedItem.Text;
                 }
                 else
                 {

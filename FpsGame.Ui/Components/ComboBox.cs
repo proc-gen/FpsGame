@@ -76,10 +76,19 @@ namespace FpsGame.Ui.Components
     public class ListItem
     {
         public MyraListItem MyraListItem { get; private set; }
+        public string Value;
 
-        public ListItem(string text)
+        public ListItem(string text, string value = "")
         {
             MyraListItem = new MyraListItem(text);
+            if(string.IsNullOrEmpty(value))
+            {
+                Value = text;
+            }
+            else
+            {
+                Value = value;
+            }
         }
     }
 }

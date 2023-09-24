@@ -17,6 +17,11 @@ namespace FpsGame.Screens
 {
     public class ServerScreen : Screen, IDisposable
     {
+        static Style LabelStyle = new Style()
+        {
+            Margin = new Thickness(0),
+        };
+
         private bool disposedValue = false;
         Server.Server server;
         CancellationTokenSource token = new CancellationTokenSource();
@@ -24,6 +29,7 @@ namespace FpsGame.Screens
 
         Label hostLocationLabel;
         Label gameNameLabel;
+        Label levelNameLabel;
         VerticalPanel gameInfoPanel;
 
         VerticalPanel messagesPanel;
@@ -38,14 +44,9 @@ namespace FpsGame.Screens
         {
             this.gameSettings = gameSettings;
 
-            hostLocationLabel = new Label("host-location", gameSettings.GameIPAddress.ToString() + ":" + gameSettings.GamePort, new Style()
-            {
-                Margin = new Thickness(0),
-            });
-            gameNameLabel = new Label("game-name", gameSettings.GameName, new Style()
-            {
-                Margin = new Thickness(0),
-            });
+            hostLocationLabel = new Label("host-location", gameSettings.GameIPAddress.ToString() + ":" + gameSettings.GamePort, LabelStyle);
+            gameNameLabel = new Label("game-name", gameSettings.GameName, LabelStyle);
+            levelNameLabel = new Label("level-name", gameSettings.LevelName, LabelStyle);
             gameInfoPanel = new VerticalPanel("game-info", new Style()
             {
                 Margin = new Thickness(0),
@@ -54,6 +55,7 @@ namespace FpsGame.Screens
             });
             gameInfoPanel.AddWidget(gameNameLabel);
             gameInfoPanel.AddWidget(hostLocationLabel);
+            gameInfoPanel.AddWidget(levelNameLabel);
 
             chatBox = new ChatBox();
             messagesPanel = new VerticalPanel("messages-panel", new Style()

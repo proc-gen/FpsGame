@@ -12,11 +12,16 @@ namespace FpsGame.Common.Level
     {
         protected World world;
         protected PhysicsWorld physicsWorld;
+
+        public LevelData LevelData { get; protected set; }
+
         public Level(World world, PhysicsWorld physicsWorld)
         {
             this.world = world;
             this.physicsWorld = physicsWorld;
         }
+
+        public abstract void GetLevelInfo();
 
         public abstract void PopulateLevel();
     }

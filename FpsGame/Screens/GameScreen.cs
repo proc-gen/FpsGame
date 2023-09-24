@@ -32,6 +32,11 @@ namespace FpsGame.Screens
 {
     public class GameScreen : Screen, IDisposable
     {
+        static Style LabelStyle = new Style()
+        {
+            Margin = new Thickness(0),
+        };
+
         private bool disposedValue = false;
         private Matrix view = Matrix.CreateLookAt(new Vector3(0, 0, 10), new Vector3(0, 0, 0), Vector3.UnitY);
         private Matrix projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45), 800f / 480f, 0.1f, 100f);
@@ -57,6 +62,7 @@ namespace FpsGame.Screens
 
         Label hostLocationLabel;
         Label gameNameLabel;
+        Label levelNameLabel;
         Label playerPositionLabel;
         VerticalPanel gameInfoPanel;
 
@@ -91,11 +97,7 @@ namespace FpsGame.Screens
         {
             importer = new AssetImporter(Game.GraphicsDevice);
 
-            Models.Add("cube", importer.LoadModel("Content/cube.fbx"));
-            Models.Add("sphere", importer.LoadModel("Content/sphere.fbx"));
             Models.Add("capsule", importer.LoadModel("Content/capsule.fbx"));
-            Models.Add("floor-tile", importer.LoadModel("Content/floor-tile.fbx"));
-            Models.Add("metal-wall", importer.LoadModel("Content/metal-wall.fbx"));
         }
 
         private void initECS()
@@ -140,22 +142,15 @@ namespace FpsGame.Screens
 
             if (gameSettings.GameMode != GameMode.SinglePlayer)
             {
-                hostLocationLabel = new Label("host-location", gameSettings.GameIPAddress.ToString() + ":" + gameSettings.GamePort, new Style()
-                {
-                    Margin = new Thickness(0),
-                });
-                gameNameLabel = new Label("game-name", gameSettings.GameName, new Style()
-                {
-                    Margin = new Thickness(0),
-                });
+                hostLocationLabel = new Label("host-location", gameSettings.GameIPAddress.ToString() + ":" + gameSettings.GamePort, LabelStyle);
+                gameNameLabel = new Label("game-name", gameSettings.GameName, LabelStyle);
                 gameInfoPanel.AddWidget(gameNameLabel);
                 gameInfoPanel.AddWidget(hostLocationLabel);
             }
-            
-            playerPositionLabel = new Label("player-position", string.Empty, new Style()
-            {
-                Margin = new Thickness(0),
-            });
+            levelNameLabel = new Label("level-name", string.Empty, LabelStyle);
+            gameInfoPanel.AddWidget(levelNameLabel);
+
+            playerPositionLabel = new Label("player-position", string.Empty, LabelStyle);
             
             gameInfoPanel.AddWidget(playerPositionLabel);
             gameInfoPanel.UiWidget.Background = new SolidBrush(new Color(.1f, .1f, .1f));
@@ -185,7 +180,7 @@ namespace FpsGame.Screens
         {
             MessageProcessors.Add("SerializableWorld", new SerializableWorldProcessor(world, queryDescriptions));
             MessageProcessors.Add("ChatMessage", new ChatMessageProcessor(chatBox));
-            MessageProcessors.Add("GameSettings", new GameSettingsProcessor(gameSettings, gameNameLabel));
+            MessageProcessors.Add("GameSettings", new GameSettingsProcessor(gameSettings, gameNameLabel, levelNameLabel, Models, importer));
             MessageProcessors.Add("PlayersInfo", new PlayersInfoProcessor(playersTable));
         }
 
