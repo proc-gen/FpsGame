@@ -65,7 +65,7 @@ namespace FpsGame.Server.MessageBroadcasters
                 {
                     var serializedWorld = SerializableWorld.SerializeWorld(world, true);
                     serializedWorld.PlayerId = client.GetPlayerId();
-                    client.Send(new GameSettings() { GameName = gameSettings.GameName });
+                    client.Send(new GameSettings() { GameName = gameSettings.GameName, LevelName = gameSettings.LevelName });
                     client.Send(serializer.Serialize(serializedWorld));
                     client.Status = ServerSideClientStatus.InGame;
 

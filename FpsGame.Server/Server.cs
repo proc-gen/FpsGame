@@ -77,6 +77,7 @@ namespace FpsGame.Server
 
             level = new LevelFromFile(world, physicsWorld, Path.Combine("Levels", gameSettings.LevelFile));
             level.PopulateLevel();
+            gameSettings.LevelName = level.LevelData.LevelName;
 
             queryDescriptions = new Dictionary<QueryDescriptions, QueryDescription>()
             {

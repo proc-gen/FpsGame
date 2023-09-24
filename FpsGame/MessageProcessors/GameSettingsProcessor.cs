@@ -14,11 +14,13 @@ namespace FpsGame.MessageProcessors
     {
         GameSettings gameSettings;
         Label gameNameLabel;
+        Label levelNameLabel;
 
-        public GameSettingsProcessor(GameSettings gameSettings, Label gameNameLabel) 
+        public GameSettingsProcessor(GameSettings gameSettings, Label gameNameLabel, Label levelNameLabel) 
         {
             this.gameSettings = gameSettings;
             this.gameNameLabel = gameNameLabel;
+            this.levelNameLabel = levelNameLabel;
         }
 
         public void ProcessMessage(JObject data)
@@ -28,6 +30,9 @@ namespace FpsGame.MessageProcessors
                 gameSettings.GameName = data["GameName"].ToString();
                 gameNameLabel.UpdateText(gameSettings.GameName);
             }
+
+            gameSettings.LevelName = data["LevelName"].ToString();
+            levelNameLabel.UpdateText(gameSettings.LevelName);
         }
     }
 }
