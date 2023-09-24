@@ -97,11 +97,7 @@ namespace FpsGame.Screens
         {
             importer = new AssetImporter(Game.GraphicsDevice);
 
-            Models.Add("cube", importer.LoadModel("Content/cube.fbx"));
-            Models.Add("sphere", importer.LoadModel("Content/sphere.fbx"));
             Models.Add("capsule", importer.LoadModel("Content/capsule.fbx"));
-            Models.Add("floor-tile", importer.LoadModel("Content/floor-tile.fbx"));
-            Models.Add("metal-wall", importer.LoadModel("Content/metal-wall.fbx"));
         }
 
         private void initECS()
@@ -184,7 +180,7 @@ namespace FpsGame.Screens
         {
             MessageProcessors.Add("SerializableWorld", new SerializableWorldProcessor(world, queryDescriptions));
             MessageProcessors.Add("ChatMessage", new ChatMessageProcessor(chatBox));
-            MessageProcessors.Add("GameSettings", new GameSettingsProcessor(gameSettings, gameNameLabel, levelNameLabel));
+            MessageProcessors.Add("GameSettings", new GameSettingsProcessor(gameSettings, gameNameLabel, levelNameLabel, Models, importer));
             MessageProcessors.Add("PlayersInfo", new PlayersInfoProcessor(playersTable));
         }
 
