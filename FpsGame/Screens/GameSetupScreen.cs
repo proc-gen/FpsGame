@@ -190,6 +190,7 @@ namespace FpsGame.Screens
                     gameSettings.GameIPAddress = IPAddress.Loopback;
                     gameSettings.GamePort = 12345;
                     gameSettings.LevelFile = levels[levelSelectionWrapper.InputComponent.UiWidget.SelectedIndex.GetValueOrDefault(0)].Value;
+                    gameSettings.LevelName = levelSelectionWrapper.InputComponent.UiWidget.SelectedItem.Text;
                 }
                 else if (gameSettings.GameMode != GameMode.MultiplayerJoin)
                 {
@@ -197,6 +198,7 @@ namespace FpsGame.Screens
                     gameSettings.GameIPAddress = IPAddress.Parse(ipAddressSelectionWrapper.InputComponent.UiWidget.SelectedItem.Text);
                     gameSettings.GamePort = int.Parse(ipAddressPortSelectionWrapper.InputComponent.Text);
                     gameSettings.LevelFile = levels[levelSelectionWrapper.InputComponent.UiWidget.SelectedIndex.GetValueOrDefault(0)].Value;
+                    gameSettings.LevelName = levelSelectionWrapper.InputComponent.UiWidget.SelectedItem.Text;
                 }
                 else
                 {
