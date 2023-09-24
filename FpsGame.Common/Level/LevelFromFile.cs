@@ -24,11 +24,19 @@ namespace FpsGame.Common.Level
             LevelPath = levelPath;
         }
 
+        public override void GetLevelInfo()
+        {
+            LevelData = JsonFileManager.LoadFile<LevelData>(LevelPath);
+        }
+
         public override void PopulateLevel()
         {
-            LevelData levelData = JsonFileManager.LoadFile<LevelData>(LevelPath);
-
-            foreach(var levelObject in levelData.LevelObjects)
+            if(LevelData == null)
+            {
+                GetLevelInfo();
+            }
+            
+            foreach(var levelObject in LevelData.LevelObjects)
             {
                 if(levelObject.IsDynamic)
                 {
