@@ -70,7 +70,7 @@ namespace FpsGame.Common.Level
         {
             world.Create(
                 new RenderModel() { Model = levelObject.ModelName },
-                new Position() { X = levelObject.Position.X + levelObject.PositionOffset.Y, Y = levelObject.Position.X + levelObject.PositionOffset.Y, Z = levelObject.Position.Z + levelObject.PositionOffset.Z },
+                new Position() { X = levelObject.Position.X + levelObject.PositionOffset.X, Y = levelObject.Position.Y + levelObject.PositionOffset.Y, Z = levelObject.Position.Z + levelObject.PositionOffset.Z },
                 new Rotation() { X = levelObject.Rotation.X, Y = levelObject.Rotation.Y, Z = levelObject.Rotation.Z },
                 new Scale() { X = levelObject.Scale.X, Y = levelObject.Scale.Y, Z = levelObject.Scale.Z },
                 new FullSerializeOnly()
@@ -82,7 +82,7 @@ namespace FpsGame.Common.Level
         {
             world.Create(
                 new RenderModel() { Model = levelObject.ModelName },
-                new Position() { X = levelObject.Position.X + levelObject.PositionOffset.Y, Y = levelObject.Position.X + levelObject.PositionOffset.Y, Z = levelObject.Position.Z + levelObject.PositionOffset.Z },
+                new Position() { X = levelObject.Position.X + levelObject.PositionOffset.X, Y = levelObject.Position.Y + levelObject.PositionOffset.Y, Z = levelObject.Position.Z + levelObject.PositionOffset.Z },
                 new Rotation() { X = levelObject.Rotation.X, Y = levelObject.Rotation.Y, Z = levelObject.Rotation.Z },
                 new Scale() { X = levelObject.Scale.X, Y = levelObject.Scale.Y, Z = levelObject.Scale.Z },
                 physicsWorld.AddStatic(new StaticDescription(new RigidPose(levelObject.Position, Quaternion.CreateFromYawPitchRoll(levelObject.Rotation.Y, levelObject.Rotation.X, levelObject.Rotation.Z)), physicsWorld.Simulation.Shapes.Add(physicsObject))),
@@ -119,7 +119,7 @@ namespace FpsGame.Common.Level
         {
             world.Create(
                 new RenderModel() { Model = levelObject.ModelName },
-                new Position() { X = levelObject.Position.X + levelObject.PositionOffset.Y, Y = levelObject.Position.X + levelObject.PositionOffset.Y, Z = levelObject.Position.Z + levelObject.PositionOffset.Z },
+                new Position() { X = levelObject.Position.X + levelObject.PositionOffset.X, Y = levelObject.Position.Y + levelObject.PositionOffset.Y, Z = levelObject.Position.Z + levelObject.PositionOffset.Z },
                 new Rotation() { X = levelObject.Rotation.X, Y = levelObject.Rotation.Y, Z = levelObject.Rotation.Z },
                 new Scale() { X = levelObject.Scale.X, Y = levelObject.Scale.Y, Z = levelObject.Scale.Z }
             );
@@ -130,7 +130,7 @@ namespace FpsGame.Common.Level
         {
             world.Create(
                 new RenderModel() { Model = levelObject.ModelName },
-                new Position() { X = levelObject.Position.X + levelObject.PositionOffset.Y, Y = levelObject.Position.X + levelObject.PositionOffset.Y, Z = levelObject.Position.Z + levelObject.PositionOffset.Z },
+                new Position() { X = levelObject.Position.X + levelObject.PositionOffset.X, Y = levelObject.Position.Y + levelObject.PositionOffset.Y, Z = levelObject.Position.Z + levelObject.PositionOffset.Z },
                 new Rotation() { X = levelObject.Rotation.X, Y = levelObject.Rotation.Y, Z = levelObject.Rotation.Z },
                 new Scale() { X = levelObject.Scale.X, Y = levelObject.Scale.Y, Z = levelObject.Scale.Z },
                 physicsWorld.AddMoveableObject(levelObject.Position, physicsObject, levelObject.Mass)

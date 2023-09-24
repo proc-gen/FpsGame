@@ -75,7 +75,8 @@ namespace FpsGame.Server
             world = World.Create();
             physicsWorld = new PhysicsWorld();
 
-            level = new LevelGenerator(world, physicsWorld);
+            //level = new LevelGenerator(world, physicsWorld);
+            level = new LevelFromFile(world, physicsWorld, Path.Combine("Levels","test-level.json"));
             level.PopulateLevel();
 
             queryDescriptions = new Dictionary<QueryDescriptions, QueryDescription>()
